@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 const Campaign = require('../models/Campaign');
 const Donation = require('../models/Donation');
+const {
+  verifyDonationReceipt,
+  validateReceiptUrl,
+  VerificationError,
+} = require('../services/LinkEt');
 
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -26,6 +31,7 @@ exports.getDonationsByCampaign = async (req, res) => {
 
     const [donations, total] = await Promise.all([
       Donation.find(filter)
+        .select('-receiptKey')
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
@@ -44,90 +50,78 @@ exports.getDonationsByCampaign = async (req, res) => {
 };
 
 // POST /donations/:campaignId
-// Body: { amount, donorName?, message? }
-// Creates a donation with status "pending". The campaign total is only
-// updated once the payment is confirmed (see updatePaymentStatus).
+// Body: { receiptUrl, donorName?, message? }
+//
+// The donor first pays by telebirr / CBE / Zemen / BoA / Awash, then submits
+// the receipt link. We verify it with links.et and record the donation using
+// the amount on the receipt (never an amount typed by the donor).
 exports.createDonation = async (req, res) => {
   try {
     const { campaignId } = req.params;
-    const { amount, donorName, message } = req.body;
+    const { receiptUrl, donorName, message } = req.body;
 
     if (!isValidId(campaignId)) {
       return res.status(400).json({ message: 'Invalid campaign ID' });
     }
 
-    const parsedAmount = Number(amount);
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      return res.status(400).json({ message: 'Amount must be a number greater than 0' });
+    if (typeof receiptUrl !== 'string' || !receiptUrl.trim()) {
+      return res.status(400).json({ message: 'receiptUrl is required' });
     }
 
     if (message && String(message).length > 500) {
       return res.status(400).json({ message: 'Message must be 500 characters or fewer' });
     }
 
+    // Cheap local checks first so we don't spend a verification on bad input
+    validateReceiptUrl(receiptUrl);
+
     const campaign = await Campaign.findById(campaignId).select('_id');
     if (!campaign) {
       return res.status(404).json({ message: 'Campaign not found' });
     }
 
+    const verified = await verifyDonationReceipt(receiptUrl);
+
     const donation = await Donation.create({
       campaignId,
-      amount: parsedAmount,
-      // undefined lets the schema default ("Anonymous") apply
-      donorName: donorName?.trim() || undefined,
+      amount: verified.amount,
+      donorName: donorName?.trim() || undefined, // schema default: "Anonymous"
       message: message?.trim() || undefined,
+      paymentStatus: 'completed',
+      provider: verified.provider,
+      receiptKey: verified.receiptKey,
+    });
+
+    await Campaign.findByIdAndUpdate(campaignId, {
+      $inc: { raisedAmount: verified.amount },
     });
 
     res.status(201).json({
-      message: 'Donation created, awaiting payment confirmation',
-      donation,
+      message: 'Donation verified. Thank you!',
+      donation: {
+        _id: donation._id,
+        campaignId: donation.campaignId,
+        amount: donation.amount,
+        donorName: donation.donorName,
+        message: donation.message,
+        paymentStatus: donation.paymentStatus,
+        provider: donation.provider,
+        createdAt: donation.createdAt,
+      },
     });
   } catch (err) {
-    console.error('createDonation error:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-// PATCH /donations/:donationId/status
-// Body: { status: "completed" | "failed" }
-// Call this from your payment provider's webhook / callback (not from the
-// public client) once the payment result is known.
-exports.updatePaymentStatus = async (req, res) => {
-  try {
-    const { donationId } = req.params;
-    const { status } = req.body;
-
-    if (!isValidId(donationId)) {
-      return res.status(400).json({ message: 'Invalid donation ID' });
+    if (err instanceof VerificationError) {
+      return res.status(err.status).json({ message: err.message, code: err.code });
     }
 
-    if (!['completed', 'failed'].includes(status)) {
-      return res.status(400).json({ message: 'Status must be "completed" or "failed"' });
-    }
-
-    // Only a pending donation can transition, which prevents double-counting
-    // if the webhook fires more than once.
-    const donation = await Donation.findOneAndUpdate(
-      { _id: donationId, paymentStatus: 'pending' },
-      { paymentStatus: status },
-      { new: true }
-    );
-
-    if (!donation) {
+    // Unique index on receiptKey: this receipt was already counted
+    if (err.code === 11000) {
       return res
         .status(409)
-        .json({ message: 'Donation not found or already processed' });
+        .json({ message: 'This receipt has already been used for a donation', code: 'duplicate_receipt' });
     }
 
-    if (status === 'completed') {
-      await Campaign.findByIdAndUpdate(donation.campaignId, {
-        $inc: { raisedAmount: donation.amount },
-      });
-    }
-
-    res.json({ message: `Donation marked as ${status}`, donation });
-  } catch (err) {
-    console.error('updatePaymentStatus error:', err);
+    console.error('createDonation error:', err.message);
     res.status(500).json({ message: 'Server error' });
   }
 };

@@ -1,4 +1,7 @@
 // Run with: node test-api.js
+// Optional: set TEST_RECEIPT_URL to a real receipt link (paid to your
+// EXPECTED_RECEIVER_NAME) to also test verification end to end:
+//   $env:TEST_RECEIPT_URL="https://..."; node test-api.js   (PowerShell)
 // Requires the server to be running (npm run dev) and Node 18+.
 
 const BASE = process.env.BASE_URL || "http://localhost:5000";
@@ -82,48 +85,58 @@ const run = async () => {
   check("PATCH updates title", r.status === 200 && r.data?.title.includes("updated"));
   check("PATCH ignores raisedAmount", r.data?.raisedAmount === 0);
 
-  console.log("\nDonations");
-  r = await call("POST", `/api/donations/${campaignId}`, {
-    amount: 250,
-    donorName: "Test Donor",
-    message: "Good luck!",
+  console.log("\nDonations (input checks, no links.et call needed)");
+  r = await call("POST", `/api/donations/${campaignId}`, {});
+  check("missing receiptUrl returns 400", r.status === 400);
+
+  r = await call("POST", `/api/donations/${campaignId}`, { receiptUrl: "not a url" });
+  check("invalid receiptUrl returns 400", r.status === 400);
+
+  r = await call("POST", `/api/donations/${campaignId}`, { receiptUrl: "https://example.com/receipt/123" });
+  check("unsupported host returns 400", r.status === 400 && r.data?.code === "unsupported_provider");
+
+  r = await call("POST", `/api/donations/64b7f0f0f0f0f0f0f0f0f0f0`, {
+    receiptUrl: "https://transactioninfo.ethiotelecom.et/receipt/ABCD1234EF",
   });
-  check("POST donation returns 201", r.status === 201, JSON.stringify(r.data));
-  const donationId = r.data?.donation?._id;
-  check("donation starts as pending", r.data?.donation?.paymentStatus === "pending");
+  check("unknown campaign returns 404", r.status === 404);
 
-  r = await call("POST", `/api/donations/${campaignId}`, { amount: -5 });
-  check("negative amount returns 400", r.status === 400);
-
-  r = await call("POST", `/api/donations/64b7f0f0f0f0f0f0f0f0f0f0`, { amount: 10 });
-  check("donation to unknown campaign returns 404", r.status === 404);
+  r = await call("PATCH", `/api/donations/anything/status`, { status: "completed" });
+  check("old status route is gone (404)", r.status === 404);
 
   r = await call("GET", `/api/donations/${campaignId}`);
-  check("pending donation is not listed publicly", r.status === 200 && r.data?.donations.length === 0);
+  check("donations list works and is empty", r.status === 200 && r.data?.donations.length === 0);
 
-  r = await call("GET", `/api/campaigns/${campaignId}`);
-  check("raisedAmount still 0 while pending", r.data?.raisedAmount === 0);
+  const receiptUrl = process.env.TEST_RECEIPT_URL;
+  if (receiptUrl) {
+    console.log("\nReal receipt (TEST_RECEIPT_URL, uses one links.et verification)");
+    r = await call("POST", `/api/donations/${campaignId}`, {
+      receiptUrl,
+      donorName: "Test Donor",
+      message: "Good luck!",
+    });
+    check("verified receipt returns 201", r.status === 201, JSON.stringify(r.data));
+    const paid = r.data?.donation?.amount;
+    check("amount comes from the receipt", typeof paid === "number" && paid > 0);
+    check("donation is completed", r.data?.donation?.paymentStatus === "completed");
 
-  console.log("\nPayment confirmation");
-  r = await call("PATCH", `/api/donations/${donationId}/status`, { status: "bogus" });
-  check("invalid status returns 400", r.status === 400);
+    r = await call("POST", `/api/donations/${campaignId}`, { receiptUrl });
+    check("same receipt again returns 409", r.status === 409, JSON.stringify(r.data));
 
-  r = await call("PATCH", `/api/donations/${donationId}/status`, { status: "completed" });
-  check("marking completed returns 200", r.status === 200, JSON.stringify(r.data));
+    r = await call("GET", `/api/campaigns/${campaignId}`);
+    check("raisedAmount equals the receipt amount (counted once)", r.data?.raisedAmount === paid, `got ${r.data?.raisedAmount}`);
 
-  r = await call("PATCH", `/api/donations/${donationId}/status`, { status: "completed" });
-  check("confirming twice returns 409 (no double count)", r.status === 409);
-
-  r = await call("GET", `/api/donations/${campaignId}`);
-  check("completed donation is now listed", r.data?.donations.length === 1);
-
-  r = await call("GET", `/api/campaigns/${campaignId}`);
-  check("raisedAmount is now 250", r.data?.raisedAmount === 250, `got ${r.data?.raisedAmount}`);
-  check("progress is 25%", r.data?.progress === 25, `got ${r.data?.progress}`);
+    r = await call("GET", `/api/donations/${campaignId}`);
+    check("donation is listed", r.data?.donations.length === 1);
+    check("receiptKey is not exposed", r.data?.donations[0]?.receiptKey === undefined);
+  } else {
+    console.log("\n  (skipped real receipt test: set TEST_RECEIPT_URL to run it)");
+  }
 
   console.log("\nDelete rules");
-  r = await call("DELETE", `/api/campaigns/${campaignId}`);
-  check("cannot delete campaign that has donations (409)", r.status === 409);
+  if (receiptUrl) {
+    r = await call("DELETE", `/api/campaigns/${campaignId}`);
+    check("cannot delete campaign that has donations (409)", r.status === 409);
+  }
 
   r = await call("POST", "/api/campaigns", {
     title: "[TEST] Temp", story: "Delete me", goalAmount: 10,
@@ -137,6 +150,7 @@ const run = async () => {
 
   console.log(`\n${passed} passed, ${failed} failed`);
   console.log(`Note: one "[TEST] School fees" campaign remains in your database.`);
+  if (receiptUrl) console.log("Note: the test receipt is now used up, so it cannot be used to donate again.");
   process.exit(failed ? 1 : 0);
 };
 

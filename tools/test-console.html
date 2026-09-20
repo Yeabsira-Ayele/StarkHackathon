@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backend test console</title>
+<style>
+  :root {
+    --bg: #f3f5f7; --surface: #ffffff; --ink: #16202a; --muted: #5d6b78; --line: #d9e0e6;
+    --accent: #0b7a6b; --accent-ink: #ffffff; --danger: #b3261e; --ok: #17803d; --warn: #8a5a00;
+    --r: 6px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f151b; --surface: #172029; --ink: #e6edf3; --muted: #93a2b0; --line: #2a3743;
+      --accent: #3cc4ae; --accent-ink: #06211c; --danger: #ff8a80; --ok: #5fd38a; --warn: #f0b957;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 20px; margin: 0; }
+  h2 { font-size: 16px; margin: 0 0 12px; }
+  h3 { font-size: 14px; margin: 20px 0 8px; }
+  p { margin: 0 0 8px; }
+  .muted { color: var(--muted); font-size: 13px; }
+
+  header { display: flex; flex-wrap: wrap; align-items: end; gap: 12px 16px; margin-bottom: 16px; }
+  header .title { flex: 1 1 220px; }
+  header .server { flex: 2 1 320px; display: flex; gap: 8px; align-items: end; }
+  header .server label { flex: 1; }
+
+  .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 2px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+  .pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .pill.up::before { background: var(--ok); }
+  .pill.down::before { background: var(--danger); }
+
+  .grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 16px; align-items: start; }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+  .col { display: grid; gap: 16px; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  input, select, textarea {
+    display: block; width: 100%; margin-top: 4px; font: inherit; color: var(--ink);
+    background: var(--bg); border: 1px solid var(--line); border-radius: var(--r); padding: 8px 10px;
+  }
+  textarea { resize: vertical; min-height: 72px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  button { font: inherit; cursor: pointer; border-radius: var(--r); padding: 8px 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  button.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+  button:disabled { opacity: .6; cursor: progress; }
+
+  details.form > summary { cursor: pointer; font-weight: 600; font-size: 16px; }
+  details.form[open] > summary { margin-bottom: 12px; }
+
+  .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
+  ul.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .item { width: 100%; text-align: left; display: block; padding: 10px 12px; }
+  .item[aria-current="true"] { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+  .item .top { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; }
+  .item .cat { font-weight: 400; color: var(--muted); font-size: 13px; }
+  .bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; margin: 8px 0 4px; }
+  .bar > i { display: block; height: 100%; background: var(--accent); }
+  .nums { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+
+  .story { white-space: pre-wrap; margin: 8px 0 12px; }
+  .head { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
+
+  .msg { margin: 10px 0 0; padding: 8px 10px; border-radius: var(--r); border: 1px solid var(--line); font-size: 14px; }
+  .msg.ok { border-color: var(--ok); color: var(--ok); }
+  .msg.err { border-color: var(--danger); color: var(--danger); }
+
+  .donation { padding: 8px 0; border-top: 1px solid var(--line); }
+  .donation:first-child { border-top: 0; }
+  .donation .who { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; }
+
+  #log { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  #log summary { cursor: pointer; display: flex; gap: 8px; align-items: baseline; }
+  #log .st { font-weight: 700; min-width: 34px; }
+  #log .st.ok { color: var(--ok); } #log .st.warn { color: var(--warn); } #log .st.bad { color: var(--danger); }
+  #log .ms { margin-left: auto; color: var(--muted); font-size: 12px; }
+  #log code.path { font: 13px ui-monospace, "Cascadia Mono", Consolas, monospace; overflow-wrap: anywhere; }
+  pre { margin: 6px 0 0; padding: 10px; overflow: auto; max-height: 260px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r); font: 12px/1.45 ui-monospace, "Cascadia Mono", Consolas, monospace; }
+
+  @media (prefers-reduced-motion: no-preference) { .bar > i { transition: width .3s ease; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="title">
+      <h1>Backend test console</h1>
+      <p class="muted">Try the crowdfunding API before the frontend is ready.</p>
+    </div>
+    <div class="server">
+      <label>Server URL
+        <input id="serverUrl" type="url" value="http://localhost:5000" spellcheck="false">
+      </label>
+      <button id="check" type="button">Check connection</button>
+    </div>
+    <span id="status" class="pill" role="status">Not checked</span>
+  </header>
+
+  <div class="grid">
+
+    <!-- Left column: campaigns -->
+    <div class="col">
+      <details class="panel form" open>
+        <summary>Create a campaign</summary>
+        <form id="createForm">
+          <label>Title <input name="title" required maxlength="120"></label>
+          <label>Story <textarea name="story" required></textarea></label>
+          <div class="row">
+            <label>Goal amount (ETB) <input name="goalAmount" type="number" min="1" step="any" required></label>
+            <label>Category
+              <select name="category">
+                <option value="other">other</option>
+                <option value="medical">medical</option>
+                <option value="education">education</option>
+                <option value="emergency">emergency</option>
+                <option value="business">business</option>
+              </select>
+            </label>
+          </div>
+          <div class="row">
+            <label>Creator name <input name="creatorName" placeholder="Anonymous"></label>
+            <label>Image URL <input name="imageUrl" type="url" placeholder="optional"></label>
+          </div>
+          <button class="primary" type="submit">Create campaign</button>
+          <div id="createMsg" class="msg" hidden></div>
+        </form>
+      </details>
+
+      <section class="panel">
+        <h2>Campaigns <span id="total" class="muted"></span></h2>
+        <div class="filters">
+          <label>Search title <input id="search" type="search" placeholder="e.g. school"></label>
+          <label>Category
+            <select id="filterCategory">
+              <option value="">all</option>
+              <option>medical</option><option>education</option><option>emergency</option>
+              <option>business</option><option>other</option>
+            </select>
+          </label>
+        </div>
+        <ul id="campaigns" class="list"></ul>
+      </section>
+    </div>
+
+    <!-- Right column: selected campaign + log -->
+    <div class="col">
+      <section class="panel">
+        <p id="empty" class="muted">Select a campaign on the left to see its details, donate and list donations.</p>
+
+        <div id="detail" hidden>
+          <div class="head">
+            <div>
+              <h2 id="dTitle" style="margin-bottom:2px"></h2>
+              <p id="dMeta" class="muted"></p>
+            </div>
+            <button id="deleteBtn" class="danger" type="button">Delete</button>
+          </div>
+          <p id="dStory" class="story"></p>
+          <div class="bar"><i id="dBar" style="width:0%"></i></div>
+          <div class="nums"><span id="dRaised"></span><span id="dGoal"></span></div>
+          <div id="deleteMsg" class="msg" hidden></div>
+
+          <h3>Donate with a payment receipt</h3>
+          <p class="muted">Pay first by telebirr, CBE, Zemen, Bank of Abyssinia or Awash to the account set in <code>EXPECTED_RECEIVER_NAME</code>, then paste the receipt link. The amount is read from the receipt.</p>
+          <form id="donateForm">
+            <label>Receipt link <input name="receiptUrl" type="url" required placeholder="https://transactioninfo.ethiotelecom.et/receipt/…" spellcheck="false"></label>
+            <div class="row">
+              <label>Your name <input name="donorName" placeholder="Anonymous"></label>
+              <label>Message <input name="message" maxlength="500" placeholder="optional"></label>
+            </div>
+            <button id="donateBtn" class="primary" type="submit">Verify and donate</button>
+            <div id="donateMsg" class="msg" hidden></div>
+          </form>
+
+          <h3>Donations <span id="dCount" class="muted"></span></h3>
+          <div id="donations"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Requests and responses</h2>
+        <p class="muted">Every call this page makes appears here, newest first.</p>
+        <ul id="log"></ul>
+      </section>
+    </div>
+
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const $ = (sel) => document.querySelector(sel);
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const money = (n) => Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }) + " ETB";
+
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch { /* storage unavailable */ } },
+};
+
+let serverUrl = store.get("serverUrl") || "http://localhost:5000";
+let selectedId = null;
+$("#serverUrl").value = serverUrl;
+
+// ---------------------------------------------------------------- API
+
+// The receipt link is like a credential, so the log only shows its host.
+function redact(body) {
+  if (!body || !body.receiptUrl) return body;
+  let host = "…";
+  try { host = new URL(body.receiptUrl).hostname; } catch { /* keep placeholder */ }
+  return { ...body, receiptUrl: host + "/(hidden)" };
+}
+
+function setStatus(up) {
+  const el = $("#status");
+  el.className = "pill " + (up ? "up" : "down");
+  el.textContent = up ? "Server reachable" : "Cannot reach server";
+}
+
+async function api(method, path, body, opts = {}) {
+  const shownPath = (opts.root ? "" : "/api") + path;
+  const url = serverUrl.replace(/\/+$/, "") + shownPath;
+  const started = performance.now();
+  let status = 0, data = null, networkError = null;
+
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: body ? { "Content-Type": "application/json" } : undefined,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    status = res.status;
+    try { data = await res.json(); } catch { data = null; }
+    setStatus(true);
+  } catch (err) {
+    networkError = err.message;
+    setStatus(false);
+  }
+
+  addLog({ method, path: shownPath, status, data, networkError, body: redact(body), ms: Math.round(performance.now() - started) });
+  return { status, data, networkError };
+}
+
+function addLog(e) {
+  const log = $("#log");
+  log.querySelectorAll("details").forEach((d) => { d.open = false; });
+
+  const tone = e.networkError || e.status >= 500 ? "bad" : e.status >= 400 ? "warn" : "ok";
+  const shown = e.networkError
+    ? { error: e.networkError, hint: "Is the server running? Is the Server URL correct?" }
+    : e.data;
+  const sent = e.body ? "// request body\n" + JSON.stringify(e.body, null, 2) + "\n\n// response\n" : "";
+
+  const li = document.createElement("li");
+  li.innerHTML =
+    `<details open><summary><span class="st ${tone}">${e.status || "ERR"}</span>` +
+    `<code class="path">${esc(e.method)} ${esc(e.path)}</code><span class="ms">${e.ms} ms</span></summary>` +
+    `<pre>${esc(sent + JSON.stringify(shown, null, 2))}</pre></details>`;
+  log.prepend(li);
+  while (log.children.length > 15) log.lastChild.remove();
+}
+
+function showMsg(el, kind, text) {
+  el.hidden = false;
+  el.className = "msg " + kind;
+  el.textContent = text;
+}
+
+// ---------------------------------------------------------- connection
+
+async function checkConnection() {
+  await api("GET", "/", null, { root: true });
+}
+
+$("#check").addEventListener("click", checkConnection);
+$("#serverUrl").addEventListener("change", (e) => {
+  serverUrl = e.target.value.trim() || "http://localhost:5000";
+  store.set("serverUrl", serverUrl);
+  checkConnection().then(loadCampaigns);
+});
+
+// ----------------------------------------------------------- campaigns
+
+function barHtml(c) {
+  const pct = Math.min(Number(c.progress ?? 0), 100);
+  return `<div class="bar"><i style="width:${pct}%"></i></div>` +
+         `<div class="nums"><span>${money(c.raisedAmount)} raised</span><span>${pct}% of ${money(c.goalAmount)}</span></div>`;
+}
+
+async function loadCampaigns() {
+  const params = new URLSearchParams({ limit: "20" });
+  const category = $("#filterCategory").value;
+  const search = $("#search").value.trim();
+  if (category) params.set("category", category);
+  if (search) params.set("search", search);
+
+  const { status, data } = await api("GET", "/campaigns?" + params);
+  const list = $("#campaigns");
+
+  if (status !== 200) {
+    list.innerHTML = `<li class="muted">Could not load campaigns. See the log below.</li>`;
+    $("#total").textContent = "";
+    return;
+  }
+
+  $("#total").textContent = `(${data.pagination.total})`;
+  if (data.campaigns.length === 0) {
+    list.innerHTML = `<li class="muted">No campaigns yet. Create one above.</li>`;
+    return;
+  }
+
+  list.innerHTML = data.campaigns.map((c) =>
+    `<li><button type="button" class="item" data-id="${esc(c._id)}" aria-current="${c._id === selectedId}">` +
+    `<span class="top"><span>${esc(c.title)}</span><span class="cat">${esc(c.category)}</span></span>` +
+    barHtml(c) + `</button></li>`
+  ).join("");
+}
+
+$("#campaigns").addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-id]");
+  if (btn) selectCampaign(btn.dataset.id);
+});
+
+let searchTimer;
+$("#search").addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(loadCampaigns, 300); });
+$("#filterCategory").addEventListener("change", loadCampaigns);
+
+$("#createForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const msg = $("#createMsg");
+  const f = Object.fromEntries(new FormData(form));
+  const payload = {
+    title: f.title, story: f.story, goalAmount: Number(f.goalAmount), category: f.category,
+    creatorName: f.creatorName || undefined, imageUrl: f.imageUrl || undefined,
+  };
+
+  const { status, data, networkError } = await api("POST", "/campaigns", payload);
+  if (status === 201) {
+    showMsg(msg, "ok", "Campaign created.");
+    form.reset();
+    await loadCampaigns();
+    selectCampaign(data._id);
+  } else {
+    showMsg(msg, "err", networkError ? "Cannot reach the server." : (data?.message || "Something went wrong."));
+  }
+});
+
+// ------------------------------------------------------ campaign detail
+
+async function selectCampaign(id) {
+  selectedId = id;
+  $("#donateMsg").hidden = true;
+  $("#deleteMsg").hidden = true;
+
+  const [c, d] = await Promise.all([
+    api("GET", `/campaigns/${id}`),
+    api("GET", `/donations/${id}?limit=20`),
+  ]);
+  if (c.status !== 200) { showMsg($("#deleteMsg"), "err", c.data?.message || "Could not load campaign."); return; }
+
+  const camp = c.data;
+  $("#empty").hidden = true;
+  $("#detail").hidden = false;
+  $("#dTitle").textContent = camp.title;
+  $("#dMeta").textContent = `${camp.category} · by ${camp.creatorName} · created ${new Date(camp.createdAt).toLocaleDateString()}`;
+  $("#dStory").textContent = camp.story;
+  $("#dBar").style.width = Math.min(camp.progress, 100) + "%";
+  $("#dRaised").textContent = money(camp.raisedAmount) + " raised";
+  $("#dGoal").textContent = `${camp.progress}% of ${money(camp.goalAmount)}`;
+
+  renderDonations(d.status === 200 ? d.data : null);
+
+  document.querySelectorAll("#campaigns .item").forEach((b) => b.setAttribute("aria-current", String(b.dataset.id === id)));
+}
+
+function renderDonations(payload) {
+  const box = $("#donations");
+  if (!payload) { box.innerHTML = `<p class="muted">Could not load donations.</p>`; $("#dCount").textContent = ""; return; }
+
+  $("#dCount").textContent = `(${payload.pagination.total})`;
+  if (payload.donations.length === 0) {
+    box.innerHTML = `<p class="muted">No verified donations yet.</p>`;
+    return;
+  }
+  box.innerHTML = payload.donations.map((x) =>
+    `<div class="donation"><div class="who"><span>${esc(x.donorName)}</span><span>${money(x.amount)}</span></div>` +
+    `<div class="muted">${esc(x.provider || "")} · ${new Date(x.createdAt).toLocaleString()}</div>` +
+    (x.message ? `<div>${esc(x.message)}</div>` : "") + `</div>`
+  ).join("");
+}
+
+$("#donateForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const btn = $("#donateBtn");
+  const msg = $("#donateMsg");
+  const f = Object.fromEntries(new FormData(form));
+
+  btn.disabled = true;
+  const label = btn.textContent;
+  btn.textContent = "Verifying receipt…"; // the bank lookup can take a while
+  msg.hidden = true;
+
+  const { status, data, networkError } = await api("POST", `/donations/${selectedId}`, {
+    receiptUrl: f.receiptUrl.trim(),
+    donorName: f.donorName || undefined,
+    message: f.message || undefined,
+  });
+
+  btn.disabled = false;
+  btn.textContent = label;
+
+  if (status === 201) {
+    showMsg(msg, "ok", `Verified: ${money(data.donation.amount)} via ${data.donation.provider}. Thank you!`);
+    form.reset();
+    await Promise.all([selectCampaign(selectedId), loadCampaigns()]);
+  } else if (networkError) {
+    showMsg(msg, "err", "Cannot reach the server.");
+  } else {
+    showMsg(msg, "err", `${data?.message || "Something went wrong."}${data?.code ? ` (${data.code})` : ""}`);
+  }
+});
+
+$("#deleteBtn").addEventListener("click", async () => {
+  if (!confirm("Delete this campaign?")) return;
+  const { status, data } = await api("DELETE", `/campaigns/${selectedId}`);
+  if (status === 200) {
+    selectedId = null;
+    $("#detail").hidden = true;
+    $("#empty").hidden = false;
+    loadCampaigns();
+  } else {
+    showMsg($("#deleteMsg"), "err", data?.message || "Could not delete.");
+  }
+});
+
+// -------------------------------------------------------------- start
+checkConnection().then(loadCampaigns);
+</script>
+</body>
+</html>

@@ -1,37 +1,50 @@
 export const mockCampaigns = [
   {
-    _id: "652f1c2e8b1e4a0012a3b456",
-    title: "Surgery Fund for Sara",
-    story: "My sister needs urgent surgery and we need help covering the medical expenses.",
-    goalAmount: 30000,
-    raisedAmount: 5000,
-    creatorName: "Anonymous",
+    id: "1",
+    title: "Urgent Heart Surgery for Sara",
     category: "medical",
-    status: "approved",
-    createdAt: "2026-09-19T10:00:00.000Z"
+    description: "Sara is a 7-year-old student in Addis Ababa needing emergency cardiac surgery. Help us cover her hospital and recovery costs.",
+    goal: 350000,
+    raised: 245000,
+    image: "https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=800&q=80",
+    organizer: "Abebe Bikila",
+    location: "Addis Ababa, Ethiopia",
+    status: "approved"
   },
   {
-    _id: "652f1c2e8b1e4a0012a3b457",
-    title: "University Tuition Support",
-    story: "I need help paying my university tuition fees for this semester.",
-    goalAmount: 20000,
-    raisedAmount: 8500,
-    creatorName: "Abebe",
+    id: "2",
+    title: "Bahir Dar Community Library Tech Lab",
     category: "education",
-    status: "approved",
-    createdAt: "2026-09-18T14:30:00.000Z"
+    description: "Building a computer training lab with 15 modern PCs to empower local high school students with digital literacy skills.",
+    goal: 200000,
+    raised: 185000,
+    image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80",
+    organizer: "Marta Tadesse",
+    location: "Bahir Dar, Ethiopia",
+    status: "approved"
   },
   {
-    _id: "652f1c2e8b1e4a0012a3b458",
-    title: "Small Business Startup",
-    story: "I am raising funds to launch a small community retail shop.",
-    goalAmount: 50000,
-    raisedAmount: 12000,
-    creatorName: "Mimi",
+    id: "3",
+    title: "Clean Water Well Construction",
+    category: "emergency",
+    description: "Constructing a solar-powered water borehole to provide clean drinking water to over 400 rural households.",
+    goal: 500000,
+    raised: 512000,
+    image: "https://images.unsplash.com/photo-1541252260730-0412e8e2108e?auto=format&fit=crop&w=800&q=80",
+    organizer: "Yonas Gebre",
+    location: "Hawassa, Ethiopia",
+    status: "approved"
+  },
+  {
+    id: "4",
+    title: "Women Micro-Entrepreneurship Fund",
     category: "business",
-    status: "approved",
-    createdAt: "2026-09-17T09:15:00.000Z"
+    description: "Providing micro-grants and equipment to 20 women entrepreneurs launching traditional craft businesses.",
+    goal: 150000,
+    raised: 68000,
+    image: "https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=800&q=80",
+    organizer: "Selamawit Alemu",
+    location: "Gonder, Ethiopia",
+    status: "approved"
   }
 ];
-
-export default mockCampaigns;

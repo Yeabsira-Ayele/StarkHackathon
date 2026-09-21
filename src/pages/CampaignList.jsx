@@ -5,19 +5,16 @@ import { mockCampaigns } from '../mock/mockCampaigns';
 export default function CampaignList({ campaignsData = mockCampaigns, onSelectCampaign }) {
     const [selectedCategory, setSelectedCategory] = useState('all');
 
-  // Extract campaign array from either direct array or backend { campaigns: [...] } object
     const rawCampaignList = Array.isArray(campaignsData) 
     ? campaignsData 
     : (campaignsData?.campaigns || []);
 
-  // Ensure only approved campaigns appear in the public feed
     const approvedCampaigns = rawCampaignList.filter(
     c => !c.status || c.status === 'approved'
     );
 
     const categories = ['all', 'medical', 'education', 'emergency', 'business', 'other'];
 
-  // Filter campaigns based on category
     const filteredCampaigns = selectedCategory === 'all'
     ? approvedCampaigns
     : approvedCampaigns.filter(c => c.category === selectedCategory);
@@ -27,8 +24,8 @@ export default function CampaignList({ campaignsData = mockCampaigns, onSelectCa
         
       {/* Banner */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '2.25rem', fontWeight: '800', color: '#111827', marginBottom: '8px' }}>
-            Lewegene (ለወገኔ) Crowdfunding
+        <h1 style={{ fontSize: '2.25rem', fontWeight: '800', color: '#111827', marginBottom: '8px', lineHeight: '1.2' }}>
+            Lewegene (ለወገኔ)
         </h1>
         <p style={{ color: '#4b5563', fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto' }}>
             Support urgent medical needs, education, emergency relief, and community projects across Ethiopia.
@@ -79,7 +76,7 @@ export default function CampaignList({ campaignsData = mockCampaigns, onSelectCa
         }}>
             {filteredCampaigns.map(campaign => (
             <CampaignCard 
-                key={campaign._id} 
+                key={campaign._id || campaign.id} 
                 campaign={campaign} 
                 onSelectCampaign={onSelectCampaign}
             />

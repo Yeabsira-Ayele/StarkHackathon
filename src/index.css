@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-primary: var(--primary);
+  --color-accent: var(--accent);
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-border: var(--border-color);
+  --color-error: var(--error);
+}
+
+:root {
+  --primary: #09090b;
+  --accent: #4f46e5;
+  --background: #fbfbfc;
+  --surface: #ffffff;
+  --border-color: #e4e4e7;
+  --error: #e11d48;
+}
+
+.dark {
+  --primary: #ffffff;
+  --accent: #4f46e5;
+  --background: #09090b;
+  --surface: #121215;
+  --border-color: #27272a;
+  --error: #e11d48;
+}
+
+/* Specific semantic classes requested by user */
+.bg-primary { background-color: var(--primary) !important; }
+.text-primary { color: var(--primary) !important; }
+.bg-accent { background-color: var(--accent) !important; }
+.text-accent { color: var(--accent) !important; }
+.bg-background { background-color: var(--background) !important; }
+.bg-surface { background-color: var(--surface) !important; }
+.border-border { border-color: var(--border-color) !important; }
+.bg-error { background-color: var(--error) !important; }
+.text-error { color: var(--error) !important; }
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--primary);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}

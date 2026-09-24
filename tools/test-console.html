@@ -101,6 +101,9 @@
       <label>Server URL
         <input id="serverUrl" type="url" value="http://localhost:5000" spellcheck="false">
       </label>
+      <label>Admin key
+        <input id="adminKey" type="password" spellcheck="false">
+      </label>
       <button id="check" type="button">Check connection</button>
     </div>
     <span id="status" class="pill" role="status">Not checked</span>
@@ -210,8 +213,10 @@ const store = {
 };
 
 let serverUrl = store.get("serverUrl") || "http://localhost:5000";
+let adminKey = store.get("adminKey") || "";
 let selectedId = null;
 $("#serverUrl").value = serverUrl;
+$("#adminKey").value = adminKey;
 
 // ---------------------------------------------------------------- API
 
@@ -236,9 +241,13 @@ async function api(method, path, body, opts = {}) {
   let status = 0, data = null, networkError = null;
 
   try {
+    const headers = {};
+    if (body) headers["Content-Type"] = "application/json";
+    if (adminKey) headers["x-admin-key"] = adminKey;
+
     const res = await fetch(url, {
       method,
-      headers: body ? { "Content-Type": "application/json" } : undefined,
+      headers,
       body: body ? JSON.stringify(body) : undefined,
     });
     status = res.status;
@@ -289,6 +298,10 @@ $("#serverUrl").addEventListener("change", (e) => {
   serverUrl = e.target.value.trim() || "http://localhost:5000";
   store.set("serverUrl", serverUrl);
   checkConnection().then(loadCampaigns);
+});
+$("#adminKey").addEventListener("change", (e) => {
+  adminKey = e.target.value;
+  store.set("adminKey", adminKey);
 });
 
 // ----------------------------------------------------------- campaigns
@@ -375,7 +388,7 @@ async function selectCampaign(id) {
   $("#empty").hidden = true;
   $("#detail").hidden = false;
   $("#dTitle").textContent = camp.title;
-  $("#dMeta").textContent = `${camp.category} · by ${camp.creatorName} · created ${new Date(camp.createdAt).toLocaleDateString()}`;
+  $("#dMeta").textContent = `${camp.category} · ${camp.status} · by ${camp.creatorName} · created ${new Date(camp.createdAt).toLocaleDateString()}`;
   $("#dStory").textContent = camp.story;
   $("#dBar").style.width = Math.min(camp.progress, 100) + "%";
   $("#dRaised").textContent = money(camp.raisedAmount) + " raised";

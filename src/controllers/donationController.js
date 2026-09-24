@@ -75,9 +75,13 @@ exports.createDonation = async (req, res) => {
     // Cheap local checks first so we don't spend a verification on bad input
     validateReceiptUrl(receiptUrl);
 
-    const campaign = await Campaign.findById(campaignId).select('_id');
+    const campaign = await Campaign.findById(campaignId).select('_id status');
     if (!campaign) {
       return res.status(404).json({ message: 'Campaign not found' });
+    }
+
+    if (campaign.status !== 'approved') {
+      return res.status(403).json({ message: 'This campaign is not open for donations yet', code: 'campaign_not_approved' });
     }
 
     const verified = await verifyDonationReceipt(receiptUrl);

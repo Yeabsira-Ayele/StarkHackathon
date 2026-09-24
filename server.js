@@ -7,8 +7,10 @@ dotenv.config(); // must run before anything reads process.env
 const connectDB = require("./src/config/db");
 const campaignRoutes = require("./src/routes/CampaignRoutes");
 const donationRoutes = require("./src/routes/donationRoutes");
+const adminRoutes = require("./src/routes/adminRoutes");
 
 const app = express();
+if (process.env.TRUST_PROXY) app.set('trust proxy', Number(process.env.TRUST_PROXY));
 const PORT = process.env.PORT || 5000;
 
 // Middleware
@@ -23,6 +25,7 @@ app.get("/", (req, res) => {
 // API routes
 app.use("/api", campaignRoutes);
 app.use("/api", donationRoutes);
+app.use("/api", adminRoutes);
 
 // 404 handler
 app.use((req, res) => {

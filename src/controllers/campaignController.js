@@ -21,7 +21,7 @@ exports.getCampaigns = async (req, res) => {
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 50);
 
-    const filter = {};
+    const filter = { status: 'approved' };
 
     if (category) {
       if (!CATEGORIES.includes(category)) {
@@ -70,6 +70,10 @@ exports.getCampaignById = async (req, res) => {
 
     const campaign = await Campaign.findById(id).lean();
     if (!campaign) {
+      return res.status(404).json({ message: 'Campaign not found' });
+    }
+
+    if (campaign.status === 'rejected') {
       return res.status(404).json({ message: 'Campaign not found' });
     }
 

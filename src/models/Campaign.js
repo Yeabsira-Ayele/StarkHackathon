@@ -8,6 +8,7 @@ const campaignSchema = new mongoose.Schema({
   creatorName: { type: String, default: 'Anonymous' },
   category: { type: String, enum: ['medical', 'education', 'emergency', 'business', 'other'], default: 'other' },
   imageUrl: { type: String },
+  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending', index: true },
   createdAt: { type: Date, default: Date.now }
 });
 

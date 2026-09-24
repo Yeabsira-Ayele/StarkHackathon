@@ -1,0 +1,1508 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+src/
+  config/
+    db.js
+  controllers/
+    campaignController.js
+    donationController.js
+  models/
+    Campaign.js
+    Donation.js
+  routes/
+    CampaignRoutes.js
+    donationRoutes.js
+  services/
+    LinkEt.js
+tools/
+  test-api.js
+  test-console.html
+.gitignore
+package.json
+server.js
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="src/config/db.js">
+const mongoose = require("mongoose");
+
+const connectDB = async () => {
+  const uri = process.env.MONGO_URI;
+
+  if (!uri) {
+    console.error("MONGO_URI is missing. Add it to your .env file.");
+    process.exit(1);
+  }
+
+  try {
+    await mongoose.connect(uri);
+    console.log("MongoDB connected");
+  } catch (err) {
+    console.error("Failed to connect to MongoDB:", err.message);
+    process.exit(1);
+  }
+};
+
+module.exports = connectDB;
+</file>
+
+<file path="src/controllers/campaignController.js">
+const mongoose = require('mongoose');
+const Campaign = require('../models/Campaign');
+
+const CATEGORIES = ['medical', 'education', 'emergency', 'business', 'other'];
+const EDITABLE_FIELDS = ['title', 'story', 'goalAmount', 'category', 'imageUrl', 'creatorName'];
+
+const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const withProgress = (campaign) => ({
+  ...campaign,
+  progress: campaign.goalAmount
+    ? Math.min(Math.round((campaign.raisedAmount / campaign.goalAmount) * 100), 100)
+    : 0,
+});
+
+// GET /campaigns?category=medical&search=school&sort=newest|oldest|mostFunded&page=1&limit=10
+exports.getCampaigns = async (req, res) => {
+  try {
+    const { category, search, sort = 'newest' } = req.query;
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 50);
+
+    const filter = {};
+
+    if (category) {
+      if (!CATEGORIES.includes(category)) {
+        return res.status(400).json({ message: `Category must be one of: ${CATEGORIES.join(', ')}` });
+      }
+      filter.category = category;
+    }
+
+    if (search) {
+      filter.title = { $regex: escapeRegex(String(search).trim()), $options: 'i' };
+    }
+
+    const sortOptions = {
+      newest: { createdAt: -1 },
+      oldest: { createdAt: 1 },
+      mostFunded: { raisedAmount: -1 },
+    };
+
+    const [campaigns, total] = await Promise.all([
+      Campaign.find(filter)
+        .sort(sortOptions[sort] || sortOptions.newest)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      Campaign.countDocuments(filter),
+    ]);
+
+    res.json({
+      campaigns: campaigns.map(withProgress),
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    });
+  } catch (err) {
+    console.error('getCampaigns error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// GET /campaigns/:id
+exports.getCampaignById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidId(id)) {
+      return res.status(400).json({ message: 'Invalid campaign ID' });
+    }
+
+    const campaign = await Campaign.findById(id).lean();
+    if (!campaign) {
+      return res.status(404).json({ message: 'Campaign not found' });
+    }
+
+    res.json(withProgress(campaign));
+  } catch (err) {
+    console.error('getCampaignById error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// POST /campaigns
+// Body: { title, story, goalAmount, creatorName?, category?, imageUrl? }
+exports.createCampaign = async (req, res) => {
+  try {
+    const { title, story, goalAmount, creatorName, category, imageUrl } = req.body;
+
+    if (!title?.trim() || !story?.trim()) {
+      return res.status(400).json({ message: 'Title and story are required' });
+    }
+
+    const parsedGoal = Number(goalAmount);
+    if (!Number.isFinite(parsedGoal) || parsedGoal <= 0) {
+      return res.status(400).json({ message: 'Goal amount must be a number greater than 0' });
+    }
+
+    if (category && !CATEGORIES.includes(category)) {
+      return res.status(400).json({ message: `Category must be one of: ${CATEGORIES.join(', ')}` });
+    }
+
+    const campaign = await Campaign.create({
+      title: title.trim(),
+      story: story.trim(),
+      goalAmount: parsedGoal,
+      creatorName: creatorName?.trim() || undefined, // schema default: "Anonymous"
+      category: category || undefined, // schema default: "other"
+      imageUrl: imageUrl?.trim() || undefined,
+      // raisedAmount is intentionally not accepted from the client
+    });
+
+    res.status(201).json(campaign);
+  } catch (err) {
+    console.error('createCampaign error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// PATCH /campaigns/:id
+// Only whitelisted fields can be updated (never raisedAmount).
+exports.updateCampaign = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidId(id)) {
+      return res.status(400).json({ message: 'Invalid campaign ID' });
+    }
+
+    const updates = {};
+    for (const field of EDITABLE_FIELDS) {
+      if (req.body[field] !== undefined) updates[field] = req.body[field];
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: 'No valid fields to update' });
+    }
+
+    if ('title' in updates || 'story' in updates) {
+      for (const field of ['title', 'story']) {
+        if (field in updates && !String(updates[field]).trim()) {
+          return res.status(400).json({ message: `${field} cannot be empty` });
+        }
+      }
+    }
+
+    if ('goalAmount' in updates) {
+      updates.goalAmount = Number(updates.goalAmount);
+      if (!Number.isFinite(updates.goalAmount) || updates.goalAmount <= 0) {
+        return res.status(400).json({ message: 'Goal amount must be a number greater than 0' });
+      }
+    }
+
+    if ('category' in updates && !CATEGORIES.includes(updates.category)) {
+      return res.status(400).json({ message: `Category must be one of: ${CATEGORIES.join(', ')}` });
+    }
+
+    const campaign = await Campaign.findByIdAndUpdate(id, updates, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!campaign) {
+      return res.status(404).json({ message: 'Campaign not found' });
+    }
+
+    res.json(campaign);
+  } catch (err) {
+    console.error('updateCampaign error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// DELETE /campaigns/:id
+// Blocked once a campaign has received money, so donation records
+// are never orphaned.
+exports.deleteCampaign = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidId(id)) {
+      return res.status(400).json({ message: 'Invalid campaign ID' });
+    }
+
+    const campaign = await Campaign.findById(id);
+    if (!campaign) {
+      return res.status(404).json({ message: 'Campaign not found' });
+    }
+
+    if (campaign.raisedAmount > 0) {
+      return res
+        .status(409)
+        .json({ message: 'Cannot delete a campaign that has already received donations' });
+    }
+
+    await campaign.deleteOne();
+    res.json({ message: 'Campaign deleted' });
+  } catch (err) {
+    console.error('deleteCampaign error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+</file>
+
+<file path="src/models/Campaign.js">
+const mongoose = require('mongoose');
+
+const campaignSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  story: { type: String, required: true },
+  goalAmount: { type: Number, required: true },
+  raisedAmount: { type: Number, default: 0 },
+  creatorName: { type: String, default: 'Anonymous' },
+  category: { type: String, enum: ['medical', 'education', 'emergency', 'business', 'other'], default: 'other' },
+  imageUrl: { type: String },
+  createdAt: { type: Date, default: Date.now }
+});
+
+module.exports = mongoose.model('Campaign', campaignSchema);
+</file>
+
+<file path="src/routes/CampaignRoutes.js">
+const express = require('express');
+const router = express.Router();
+const campaignController = require('../controllers/campaignController');
+
+router.get('/campaigns', campaignController.getCampaigns);
+router.get('/campaigns/:id', campaignController.getCampaignById);
+router.post('/campaigns', campaignController.createCampaign);
+
+// Add auth middleware to these two once you have user accounts
+router.patch('/campaigns/:id', campaignController.updateCampaign);
+router.delete('/campaigns/:id', campaignController.deleteCampaign);
+
+module.exports = router;
+</file>
+
+<file path="src/services/LinkEt.js">
+// Verifies payment receipts through links.et (https://links.et/agents.md).
+// The donor pays by telebirr / CBE / etc. and submits the receipt link;
+// we ask links.et to fetch the receipt from the bank and check it.
+//
+// Never log or return the receipt URL: it is a lookup key for someone's
+// transaction and links.et asks integrators to treat it like a credential.
+
+// Only providers whose receipt fields are documented are accepted for now.
+const ALLOWED_HOSTS = new Set([
+  "transactioninfo.ethiotelecom.et", // telebirr
+  "apps.cbe.com.et", // CBE (PDF)
+  "mb.cbe.com.et", // CBE (JSON)
+  "mbreciept.cbe.com.et", // CBE (JSON)
+  "share.zemenbank.com", // Zemen
+  "cs.bankofabyssinia.com", // Bank of Abyssinia
+  "awashpay.awashbank.com", // Awash
+]);
+
+const SUPPORTED_LABEL = "telebirr, CBE, Zemen Bank, Bank of Abyssinia and Awash Bank";
+
+class VerificationError extends Error {
+  constructor(message, status = 422, code = "verification_failed") {
+    super(message);
+    this.name = "VerificationError";
+    this.status = status;
+    this.code = code;
+  }
+}
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// ---------------------------------------------------------------- helpers
+
+// Amounts arrive as numbers (CBE, Zemen, BoA) or strings like "100 Birr" / "1,000.50 ETB".
+const parseAmount = (value) => {
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  if (typeof value !== "string") return null;
+  const match = value.replace(/,/g, "").match(/-?\d+(\.\d+)?/);
+  if (!match) return null;
+  const n = Number(match[0]);
+  return Number.isFinite(n) ? n : null;
+};
+
+const normalizeName = (name) =>
+  String(name || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+
+const receiverMatches = (receiverName) => {
+  const expected = (process.env.EXPECTED_RECEIVER_NAME || "")
+    .split(",")
+    .map(normalizeName)
+    .filter(Boolean);
+
+  if (expected.length === 0) {
+    if (process.env.NODE_ENV === "production") {
+      throw new VerificationError(
+        "Payment verification is not configured",
+        503,
+        "not_configured"
+      );
+    }
+    console.warn(
+      "[links.et] EXPECTED_RECEIVER_NAME is not set: any receipt will be accepted. Set it before going live."
+    );
+    return true;
+  }
+
+  const actual = normalizeName(receiverName);
+  if (!actual) return false;
+  return expected.some((e) => actual.includes(e) || e.includes(actual));
+};
+
+// ------------------------------------------------------------- validation
+
+const validateReceiptUrl = (raw) => {
+  let url;
+  try {
+    url = new URL(String(raw).trim());
+  } catch {
+    throw new VerificationError("The receipt link is not a valid URL", 400, "invalid_receipt_url");
+  }
+
+  if (!["https:", "http:"].includes(url.protocol) || !ALLOWED_HOSTS.has(url.hostname)) {
+    throw new VerificationError(
+      `Unsupported receipt link. Supported: ${SUPPORTED_LABEL}.`,
+      400,
+      "unsupported_provider"
+    );
+  }
+
+  return url.toString();
+};
+
+// -------------------------------------------------------- links.et calls
+
+const linksFetch = async (path, init = {}) => {
+  const key = process.env.LINKS_ET_API_KEY;
+  const base = (process.env.LINKS_ET_URL || "https://links.et").replace(/\/+$/, "");
+
+  try {
+    return await fetch(base + path, {
+      ...init,
+      headers: { "x-api-key": key, "content-type": "application/json" },
+      signal: AbortSignal.timeout(35000),
+    });
+  } catch (err) {
+    console.error("[links.et] request failed:", err.name);
+    throw new VerificationError(
+      "Could not reach the verification service. Please try again.",
+      503,
+      "service_unreachable"
+    );
+  }
+};
+
+const readJson = async (res) => {
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
+};
+
+const errorCode = (data) =>
+  data && typeof data.error === "object" && data.error ? data.error.code : undefined;
+
+// One verification attempt. Uses waitMs so we never hold a request for
+// over a minute; on 202 we poll the status URL until it resolves.
+const attempt = async (url) => {
+  let res = await linksFetch("/api/verify", {
+    method: "POST",
+    body: JSON.stringify({ url, waitMs: 20000 }),
+  });
+  let data = await readJson(res);
+
+  if (res.status === 202 && typeof data?.statusUrl === "string" && data.statusUrl.startsWith("/api/verify/")) {
+    const statusUrl = data.statusUrl;
+    for (let i = 0; i < 15; i++) {
+      await sleep(1500);
+      res = await linksFetch(statusUrl, { method: "GET" });
+      data = await readJson(res);
+      if (res.status !== 202 && typeof data?.ok === "boolean") break;
+    }
+  }
+
+  return { status: res.status, data };
+};
+
+const isRetryable = ({ status, data }) =>
+  status === 502 || (status === 400 && !errorCode(data));
+
+const fetchReceipt = async (url) => {
+  let result = await attempt(url);
+  if (isRetryable(result)) {
+    await sleep(1000 + Math.random() * 1000);
+    result = await attempt(url);
+  }
+  return result;
+};
+
+const throwForFailure = ({ status, data }) => {
+  const code = errorCode(data);
+
+  if (status === 401) {
+    console.error("[links.et] API key rejected:", code);
+    throw new VerificationError("Payment verification is misconfigured. Please contact support.", 503, "not_configured");
+  }
+  if (status === 429 && code === "rate_limited") {
+    throw new VerificationError("Too many verifications right now. Please try again in a minute.", 503, "rate_limited");
+  }
+  if (status === 429) {
+    console.error("[links.et] quota problem:", code);
+    throw new VerificationError("Verification is temporarily unavailable. Please try again later.", 503, "quota_exceeded");
+  }
+  if (status === 503) {
+    throw new VerificationError("That bank's receipt service is down right now. Please try again later.", 503, "provider_down");
+  }
+  if (status === 202) {
+    throw new VerificationError("Verification is still processing. Please try again shortly.", 503, "still_processing");
+  }
+  throw new VerificationError(
+    "We could not verify this receipt. Check the link and try again.",
+    422,
+    "receipt_not_verified"
+  );
+};
+
+// ------------------------------------------------------ receipt parsing
+
+// Turns each provider's receipt into one shape. Fields per source come from
+// https://links.et/docs/verify.md. Always switch on receipt.source.
+const normalizeReceipt = (receipt) => {
+  const done = (o) => o;
+
+  switch (receipt?.source) {
+    case "telebirr-html":
+      return done({
+        provider: "telebirr",
+        reference: receipt.receiptNo,
+        amount: parseAmount(receipt.settledAmount), // amount received, without fees
+        receiverName: receipt.creditedPartyName,
+        statusOk: /^completed$/i.test(receipt.transactionStatus || ""),
+      });
+
+    case "cbe-pdf":
+    case "mb-json":
+      return done({
+        provider: "cbe",
+        reference: receipt.reference,
+        amount: parseAmount(receipt.transferredAmount),
+        receiverName: receipt.receiverName,
+        statusOk: true, // CBE receipts carry no status field
+      });
+
+    case "zemen-pdf":
+      return done({
+        provider: "zemen",
+        reference: receipt.reference,
+        amount: parseAmount(receipt.settledAmount),
+        receiverName: receipt.recipientName,
+        statusOk: /^completed$/i.test(receipt.transactionStatus || ""),
+      });
+
+    case "boa-json":
+      return done({
+        provider: "boa",
+        reference: receipt.transactionReference,
+        amount: parseAmount(receipt.transferredAmount),
+        receiverName: receipt.receiverName,
+        statusOk: /^success/i.test(receipt.upstreamStatus || ""),
+      });
+
+    case "awash-html":
+      return done({
+        provider: "awash",
+        reference: receipt.transaction?.transactionId,
+        amount: parseAmount(receipt.transaction?.amount),
+        receiverName: receipt.transaction?.beneficiaryName,
+        statusOk: true,
+      });
+
+    default:
+      throw new VerificationError(
+        `Unsupported receipt type. Supported: ${SUPPORTED_LABEL}.`,
+        422,
+        "unsupported_provider"
+      );
+  }
+};
+
+// Verifies a receipt URL end to end and returns what we need to record.
+const verifyDonationReceipt = async (rawUrl) => {
+  const url = validateReceiptUrl(rawUrl);
+
+  if (!process.env.LINKS_ET_API_KEY) {
+    throw new VerificationError("Payment verification is not configured", 503, "not_configured");
+  }
+
+  const result = await fetchReceipt(url);
+
+  if (result.status !== 200 || result.data?.ok !== true || !result.data?.receipt) {
+    throwForFailure(result);
+  }
+
+  const n = normalizeReceipt(result.data.receipt);
+  const reference = String(n.reference || "").trim().toUpperCase();
+
+  if (!reference) {
+    throw new VerificationError("The receipt has no transaction reference", 422, "invalid_receipt");
+  }
+  if (!n.statusOk) {
+    throw new VerificationError("This payment was not completed", 422, "payment_not_completed");
+  }
+  if (n.amount === null || n.amount <= 0) {
+    throw new VerificationError("Could not read a valid amount from the receipt", 422, "invalid_receipt");
+  }
+  if (!receiverMatches(n.receiverName)) {
+    throw new VerificationError(
+      "This payment was not sent to our donation account",
+      422,
+      "wrong_receiver"
+    );
+  }
+
+  return {
+    provider: n.provider,
+    amount: n.amount,
+    // Same bank reference can never be counted twice. CBE's two receipt
+    // formats share one provider key so they can't be used to bypass this.
+    receiptKey: `${n.provider}:${reference}`,
+  };
+};
+
+module.exports = {
+  verifyDonationReceipt,
+  validateReceiptUrl,
+  normalizeReceipt,
+  parseAmount,
+  VerificationError,
+};
+</file>
+
+<file path="tools/test-api.js">
+// Run with: node test-api.js
+// Optional: set TEST_RECEIPT_URL to a real receipt link (paid to your
+// EXPECTED_RECEIVER_NAME) to also test verification end to end:
+//   $env:TEST_RECEIPT_URL="https://..."; node test-api.js   (PowerShell)
+// Requires the server to be running (npm run dev) and Node 18+.
+
+const BASE = process.env.BASE_URL || "http://localhost:5000";
+
+let passed = 0;
+let failed = 0;
+
+const call = async (method, path, body) => {
+  const res = await fetch(BASE + path, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  let data = null;
+  try {
+    data = await res.json();
+  } catch {
+    // non-JSON response
+  }
+  return { status: res.status, data };
+};
+
+const check = (name, condition, extra = "") => {
+  if (condition) {
+    passed++;
+    console.log(`  PASS  ${name}`);
+  } else {
+    failed++;
+    console.log(`  FAIL  ${name} ${extra}`);
+  }
+};
+
+const run = async () => {
+  console.log(`Testing ${BASE}\n`);
+
+  console.log("Health");
+  let r = await call("GET", "/");
+  check("GET / returns 200", r.status === 200);
+
+  console.log("\nCampaigns");
+  r = await call("POST", "/api/campaigns", {
+    title: "[TEST] School fees for Abel",
+    story: "Helping Abel finish the school year.",
+    goalAmount: 1000,
+    category: "education",
+    creatorName: "Test User",
+  });
+  check("POST /api/campaigns returns 201", r.status === 201, JSON.stringify(r.data));
+  const campaignId = r.data?._id;
+  check("campaign has an _id", !!campaignId);
+  check("raisedAmount starts at 0", r.data?.raisedAmount === 0);
+
+  r = await call("POST", "/api/campaigns", { title: "No story" });
+  check("POST without story/goal returns 400", r.status === 400);
+
+  r = await call("POST", "/api/campaigns", {
+    title: "Bad", story: "x", goalAmount: -5,
+  });
+  check("negative goalAmount returns 400", r.status === 400);
+
+  r = await call("GET", "/api/campaigns?category=education");
+  check("GET /api/campaigns returns list", r.status === 200 && Array.isArray(r.data?.campaigns));
+
+  r = await call("GET", "/api/campaigns?category=nonsense");
+  check("invalid category filter returns 400", r.status === 400);
+
+  r = await call("GET", `/api/campaigns/${campaignId}`);
+  check("GET /api/campaigns/:id returns 200", r.status === 200);
+  check("progress is 0", r.data?.progress === 0);
+
+  r = await call("GET", "/api/campaigns/not-an-id");
+  check("invalid ID returns 400", r.status === 400);
+
+  r = await call("GET", "/api/campaigns/64b7f0f0f0f0f0f0f0f0f0f0");
+  check("unknown ID returns 404", r.status === 404);
+
+  r = await call("PATCH", `/api/campaigns/${campaignId}`, {
+    title: "[TEST] School fees (updated)",
+    raisedAmount: 999999, // should be ignored
+  });
+  check("PATCH updates title", r.status === 200 && r.data?.title.includes("updated"));
+  check("PATCH ignores raisedAmount", r.data?.raisedAmount === 0);
+
+  console.log("\nDonations (input checks, no links.et call needed)");
+  r = await call("POST", `/api/donations/${campaignId}`, {});
+  check("missing receiptUrl returns 400", r.status === 400);
+
+  r = await call("POST", `/api/donations/${campaignId}`, { receiptUrl: "not a url" });
+  check("invalid receiptUrl returns 400", r.status === 400);
+
+  r = await call("POST", `/api/donations/${campaignId}`, { receiptUrl: "https://example.com/receipt/123" });
+  check("unsupported host returns 400", r.status === 400 && r.data?.code === "unsupported_provider");
+
+  r = await call("POST", `/api/donations/64b7f0f0f0f0f0f0f0f0f0f0`, {
+    receiptUrl: "https://transactioninfo.ethiotelecom.et/receipt/ABCD1234EF",
+  });
+  check("unknown campaign returns 404", r.status === 404);
+
+  r = await call("PATCH", `/api/donations/anything/status`, { status: "completed" });
+  check("old status route is gone (404)", r.status === 404);
+
+  r = await call("GET", `/api/donations/${campaignId}`);
+  check("donations list works and is empty", r.status === 200 && r.data?.donations.length === 0);
+
+  const receiptUrl = process.env.TEST_RECEIPT_URL;
+  if (receiptUrl) {
+    console.log("\nReal receipt (TEST_RECEIPT_URL, uses one links.et verification)");
+    r = await call("POST", `/api/donations/${campaignId}`, {
+      receiptUrl,
+      donorName: "Test Donor",
+      message: "Good luck!",
+    });
+    check("verified receipt returns 201", r.status === 201, JSON.stringify(r.data));
+    const paid = r.data?.donation?.amount;
+    check("amount comes from the receipt", typeof paid === "number" && paid > 0);
+    check("donation is completed", r.data?.donation?.paymentStatus === "completed");
+
+    r = await call("POST", `/api/donations/${campaignId}`, { receiptUrl });
+    check("same receipt again returns 409", r.status === 409, JSON.stringify(r.data));
+
+    r = await call("GET", `/api/campaigns/${campaignId}`);
+    check("raisedAmount equals the receipt amount (counted once)", r.data?.raisedAmount === paid, `got ${r.data?.raisedAmount}`);
+
+    r = await call("GET", `/api/donations/${campaignId}`);
+    check("donation is listed", r.data?.donations.length === 1);
+    check("receiptKey is not exposed", r.data?.donations[0]?.receiptKey === undefined);
+  } else {
+    console.log("\n  (skipped real receipt test: set TEST_RECEIPT_URL to run it)");
+  }
+
+  console.log("\nDelete rules");
+  if (receiptUrl) {
+    r = await call("DELETE", `/api/campaigns/${campaignId}`);
+    check("cannot delete campaign that has donations (409)", r.status === 409);
+  }
+
+  r = await call("POST", "/api/campaigns", {
+    title: "[TEST] Temp", story: "Delete me", goalAmount: 10,
+  });
+  const tempId = r.data?._id;
+  r = await call("DELETE", `/api/campaigns/${tempId}`);
+  check("can delete empty campaign (200)", r.status === 200);
+
+  r = await call("GET", `/api/campaigns/${tempId}`);
+  check("deleted campaign returns 404", r.status === 404);
+
+  console.log(`\n${passed} passed, ${failed} failed`);
+  console.log(`Note: one "[TEST] School fees" campaign remains in your database.`);
+  if (receiptUrl) console.log("Note: the test receipt is now used up, so it cannot be used to donate again.");
+  process.exit(failed ? 1 : 0);
+};
+
+run().catch((err) => {
+  console.error("\nCould not reach the server. Is `npm run dev` running?\n", err.message);
+  process.exit(1);
+});
+</file>
+
+<file path="tools/test-console.html">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backend test console</title>
+<style>
+  :root {
+    --bg: #f3f5f7; --surface: #ffffff; --ink: #16202a; --muted: #5d6b78; --line: #d9e0e6;
+    --accent: #0b7a6b; --accent-ink: #ffffff; --danger: #b3261e; --ok: #17803d; --warn: #8a5a00;
+    --r: 6px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f151b; --surface: #172029; --ink: #e6edf3; --muted: #93a2b0; --line: #2a3743;
+      --accent: #3cc4ae; --accent-ink: #06211c; --danger: #ff8a80; --ok: #5fd38a; --warn: #f0b957;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 20px; margin: 0; }
+  h2 { font-size: 16px; margin: 0 0 12px; }
+  h3 { font-size: 14px; margin: 20px 0 8px; }
+  p { margin: 0 0 8px; }
+  .muted { color: var(--muted); font-size: 13px; }
+
+  header { display: flex; flex-wrap: wrap; align-items: end; gap: 12px 16px; margin-bottom: 16px; }
+  header .title { flex: 1 1 220px; }
+  header .server { flex: 2 1 320px; display: flex; gap: 8px; align-items: end; }
+  header .server label { flex: 1; }
+
+  .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 2px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+  .pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .pill.up::before { background: var(--ok); }
+  .pill.down::before { background: var(--danger); }
+
+  .grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 16px; align-items: start; }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+  .col { display: grid; gap: 16px; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  input, select, textarea {
+    display: block; width: 100%; margin-top: 4px; font: inherit; color: var(--ink);
+    background: var(--bg); border: 1px solid var(--line); border-radius: var(--r); padding: 8px 10px;
+  }
+  textarea { resize: vertical; min-height: 72px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  button { font: inherit; cursor: pointer; border-radius: var(--r); padding: 8px 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  button.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+  button:disabled { opacity: .6; cursor: progress; }
+
+  details.form > summary { cursor: pointer; font-weight: 600; font-size: 16px; }
+  details.form[open] > summary { margin-bottom: 12px; }
+
+  .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
+  ul.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .item { width: 100%; text-align: left; display: block; padding: 10px 12px; }
+  .item[aria-current="true"] { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+  .item .top { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; }
+  .item .cat { font-weight: 400; color: var(--muted); font-size: 13px; }
+  .bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; margin: 8px 0 4px; }
+  .bar > i { display: block; height: 100%; background: var(--accent); }
+  .nums { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+
+  .story { white-space: pre-wrap; margin: 8px 0 12px; }
+  .head { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
+
+  .msg { margin: 10px 0 0; padding: 8px 10px; border-radius: var(--r); border: 1px solid var(--line); font-size: 14px; }
+  .msg.ok { border-color: var(--ok); color: var(--ok); }
+  .msg.err { border-color: var(--danger); color: var(--danger); }
+
+  .donation { padding: 8px 0; border-top: 1px solid var(--line); }
+  .donation:first-child { border-top: 0; }
+  .donation .who { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; }
+
+  #log { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  #log summary { cursor: pointer; display: flex; gap: 8px; align-items: baseline; }
+  #log .st { font-weight: 700; min-width: 34px; }
+  #log .st.ok { color: var(--ok); } #log .st.warn { color: var(--warn); } #log .st.bad { color: var(--danger); }
+  #log .ms { margin-left: auto; color: var(--muted); font-size: 12px; }
+  #log code.path { font: 13px ui-monospace, "Cascadia Mono", Consolas, monospace; overflow-wrap: anywhere; }
+  pre { margin: 6px 0 0; padding: 10px; overflow: auto; max-height: 260px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r); font: 12px/1.45 ui-monospace, "Cascadia Mono", Consolas, monospace; }
+
+  @media (prefers-reduced-motion: no-preference) { .bar > i { transition: width .3s ease; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="title">
+      <h1>Backend test console</h1>
+      <p class="muted">Try the crowdfunding API before the frontend is ready.</p>
+    </div>
+    <div class="server">
+      <label>Server URL
+        <input id="serverUrl" type="url" value="http://localhost:5000" spellcheck="false">
+      </label>
+      <button id="check" type="button">Check connection</button>
+    </div>
+    <span id="status" class="pill" role="status">Not checked</span>
+  </header>
+
+  <div class="grid">
+
+    <!-- Left column: campaigns -->
+    <div class="col">
+      <details class="panel form" open>
+        <summary>Create a campaign</summary>
+        <form id="createForm">
+          <label>Title <input name="title" required maxlength="120"></label>
+          <label>Story <textarea name="story" required></textarea></label>
+          <div class="row">
+            <label>Goal amount (ETB) <input name="goalAmount" type="number" min="1" step="any" required></label>
+            <label>Category
+              <select name="category">
+                <option value="other">other</option>
+                <option value="medical">medical</option>
+                <option value="education">education</option>
+                <option value="emergency">emergency</option>
+                <option value="business">business</option>
+              </select>
+            </label>
+          </div>
+          <div class="row">
+            <label>Creator name <input name="creatorName" placeholder="Anonymous"></label>
+            <label>Image URL <input name="imageUrl" type="url" placeholder="optional"></label>
+          </div>
+          <button class="primary" type="submit">Create campaign</button>
+          <div id="createMsg" class="msg" hidden></div>
+        </form>
+      </details>
+
+      <section class="panel">
+        <h2>Campaigns <span id="total" class="muted"></span></h2>
+        <div class="filters">
+          <label>Search title <input id="search" type="search" placeholder="e.g. school"></label>
+          <label>Category
+            <select id="filterCategory">
+              <option value="">all</option>
+              <option>medical</option><option>education</option><option>emergency</option>
+              <option>business</option><option>other</option>
+            </select>
+          </label>
+        </div>
+        <ul id="campaigns" class="list"></ul>
+      </section>
+    </div>
+
+    <!-- Right column: selected campaign + log -->
+    <div class="col">
+      <section class="panel">
+        <p id="empty" class="muted">Select a campaign on the left to see its details, donate and list donations.</p>
+
+        <div id="detail" hidden>
+          <div class="head">
+            <div>
+              <h2 id="dTitle" style="margin-bottom:2px"></h2>
+              <p id="dMeta" class="muted"></p>
+            </div>
+            <button id="deleteBtn" class="danger" type="button">Delete</button>
+          </div>
+          <p id="dStory" class="story"></p>
+          <div class="bar"><i id="dBar" style="width:0%"></i></div>
+          <div class="nums"><span id="dRaised"></span><span id="dGoal"></span></div>
+          <div id="deleteMsg" class="msg" hidden></div>
+
+          <h3>Donate with a payment receipt</h3>
+          <p class="muted">Pay first by telebirr, CBE, Zemen, Bank of Abyssinia or Awash to the account set in <code>EXPECTED_RECEIVER_NAME</code>, then paste the receipt link. The amount is read from the receipt.</p>
+          <form id="donateForm">
+            <label>Receipt link <input name="receiptUrl" type="url" required placeholder="https://transactioninfo.ethiotelecom.et/receipt/…" spellcheck="false"></label>
+            <div class="row">
+              <label>Your name <input name="donorName" placeholder="Anonymous"></label>
+              <label>Message <input name="message" maxlength="500" placeholder="optional"></label>
+            </div>
+            <button id="donateBtn" class="primary" type="submit">Verify and donate</button>
+            <div id="donateMsg" class="msg" hidden></div>
+          </form>
+
+          <h3>Donations <span id="dCount" class="muted"></span></h3>
+          <div id="donations"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Requests and responses</h2>
+        <p class="muted">Every call this page makes appears here, newest first.</p>
+        <ul id="log"></ul>
+      </section>
+    </div>
+
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const $ = (sel) => document.querySelector(sel);
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const money = (n) => Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }) + " ETB";
+
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch { /* storage unavailable */ } },
+};
+
+let serverUrl = store.get("serverUrl") || "http://localhost:5000";
+let selectedId = null;
+$("#serverUrl").value = serverUrl;
+
+// ---------------------------------------------------------------- API
+
+// The receipt link is like a credential, so the log only shows its host.
+function redact(body) {
+  if (!body || !body.receiptUrl) return body;
+  let host = "…";
+  try { host = new URL(body.receiptUrl).hostname; } catch { /* keep placeholder */ }
+  return { ...body, receiptUrl: host + "/(hidden)" };
+}
+
+function setStatus(up) {
+  const el = $("#status");
+  el.className = "pill " + (up ? "up" : "down");
+  el.textContent = up ? "Server reachable" : "Cannot reach server";
+}
+
+async function api(method, path, body, opts = {}) {
+  const shownPath = (opts.root ? "" : "/api") + path;
+  const url = serverUrl.replace(/\/+$/, "") + shownPath;
+  const started = performance.now();
+  let status = 0, data = null, networkError = null;
+
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: body ? { "Content-Type": "application/json" } : undefined,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    status = res.status;
+    try { data = await res.json(); } catch { data = null; }
+    setStatus(true);
+  } catch (err) {
+    networkError = err.message;
+    setStatus(false);
+  }
+
+  addLog({ method, path: shownPath, status, data, networkError, body: redact(body), ms: Math.round(performance.now() - started) });
+  return { status, data, networkError };
+}
+
+function addLog(e) {
+  const log = $("#log");
+  log.querySelectorAll("details").forEach((d) => { d.open = false; });
+
+  const tone = e.networkError || e.status >= 500 ? "bad" : e.status >= 400 ? "warn" : "ok";
+  const shown = e.networkError
+    ? { error: e.networkError, hint: "Is the server running? Is the Server URL correct?" }
+    : e.data;
+  const sent = e.body ? "// request body\n" + JSON.stringify(e.body, null, 2) + "\n\n// response\n" : "";
+
+  const li = document.createElement("li");
+  li.innerHTML =
+    `<details open><summary><span class="st ${tone}">${e.status || "ERR"}</span>` +
+    `<code class="path">${esc(e.method)} ${esc(e.path)}</code><span class="ms">${e.ms} ms</span></summary>` +
+    `<pre>${esc(sent + JSON.stringify(shown, null, 2))}</pre></details>`;
+  log.prepend(li);
+  while (log.children.length > 15) log.lastChild.remove();
+}
+
+function showMsg(el, kind, text) {
+  el.hidden = false;
+  el.className = "msg " + kind;
+  el.textContent = text;
+}
+
+// ---------------------------------------------------------- connection
+
+async function checkConnection() {
+  await api("GET", "/", null, { root: true });
+}
+
+$("#check").addEventListener("click", checkConnection);
+$("#serverUrl").addEventListener("change", (e) => {
+  serverUrl = e.target.value.trim() || "http://localhost:5000";
+  store.set("serverUrl", serverUrl);
+  checkConnection().then(loadCampaigns);
+});
+
+// ----------------------------------------------------------- campaigns
+
+function barHtml(c) {
+  const pct = Math.min(Number(c.progress ?? 0), 100);
+  return `<div class="bar"><i style="width:${pct}%"></i></div>` +
+         `<div class="nums"><span>${money(c.raisedAmount)} raised</span><span>${pct}% of ${money(c.goalAmount)}</span></div>`;
+}
+
+async function loadCampaigns() {
+  const params = new URLSearchParams({ limit: "20" });
+  const category = $("#filterCategory").value;
+  const search = $("#search").value.trim();
+  if (category) params.set("category", category);
+  if (search) params.set("search", search);
+
+  const { status, data } = await api("GET", "/campaigns?" + params);
+  const list = $("#campaigns");
+
+  if (status !== 200) {
+    list.innerHTML = `<li class="muted">Could not load campaigns. See the log below.</li>`;
+    $("#total").textContent = "";
+    return;
+  }
+
+  $("#total").textContent = `(${data.pagination.total})`;
+  if (data.campaigns.length === 0) {
+    list.innerHTML = `<li class="muted">No campaigns yet. Create one above.</li>`;
+    return;
+  }
+
+  list.innerHTML = data.campaigns.map((c) =>
+    `<li><button type="button" class="item" data-id="${esc(c._id)}" aria-current="${c._id === selectedId}">` +
+    `<span class="top"><span>${esc(c.title)}</span><span class="cat">${esc(c.category)}</span></span>` +
+    barHtml(c) + `</button></li>`
+  ).join("");
+}
+
+$("#campaigns").addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-id]");
+  if (btn) selectCampaign(btn.dataset.id);
+});
+
+let searchTimer;
+$("#search").addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(loadCampaigns, 300); });
+$("#filterCategory").addEventListener("change", loadCampaigns);
+
+$("#createForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const msg = $("#createMsg");
+  const f = Object.fromEntries(new FormData(form));
+  const payload = {
+    title: f.title, story: f.story, goalAmount: Number(f.goalAmount), category: f.category,
+    creatorName: f.creatorName || undefined, imageUrl: f.imageUrl || undefined,
+  };
+
+  const { status, data, networkError } = await api("POST", "/campaigns", payload);
+  if (status === 201) {
+    showMsg(msg, "ok", "Campaign created.");
+    form.reset();
+    await loadCampaigns();
+    selectCampaign(data._id);
+  } else {
+    showMsg(msg, "err", networkError ? "Cannot reach the server." : (data?.message || "Something went wrong."));
+  }
+});
+
+// ------------------------------------------------------ campaign detail
+
+async function selectCampaign(id) {
+  selectedId = id;
+  $("#donateMsg").hidden = true;
+  $("#deleteMsg").hidden = true;
+
+  const [c, d] = await Promise.all([
+    api("GET", `/campaigns/${id}`),
+    api("GET", `/donations/${id}?limit=20`),
+  ]);
+  if (c.status !== 200) { showMsg($("#deleteMsg"), "err", c.data?.message || "Could not load campaign."); return; }
+
+  const camp = c.data;
+  $("#empty").hidden = true;
+  $("#detail").hidden = false;
+  $("#dTitle").textContent = camp.title;
+  $("#dMeta").textContent = `${camp.category} · by ${camp.creatorName} · created ${new Date(camp.createdAt).toLocaleDateString()}`;
+  $("#dStory").textContent = camp.story;
+  $("#dBar").style.width = Math.min(camp.progress, 100) + "%";
+  $("#dRaised").textContent = money(camp.raisedAmount) + " raised";
+  $("#dGoal").textContent = `${camp.progress}% of ${money(camp.goalAmount)}`;
+
+  renderDonations(d.status === 200 ? d.data : null);
+
+  document.querySelectorAll("#campaigns .item").forEach((b) => b.setAttribute("aria-current", String(b.dataset.id === id)));
+}
+
+function renderDonations(payload) {
+  const box = $("#donations");
+  if (!payload) { box.innerHTML = `<p class="muted">Could not load donations.</p>`; $("#dCount").textContent = ""; return; }
+
+  $("#dCount").textContent = `(${payload.pagination.total})`;
+  if (payload.donations.length === 0) {
+    box.innerHTML = `<p class="muted">No verified donations yet.</p>`;
+    return;
+  }
+  box.innerHTML = payload.donations.map((x) =>
+    `<div class="donation"><div class="who"><span>${esc(x.donorName)}</span><span>${money(x.amount)}</span></div>` +
+    `<div class="muted">${esc(x.provider || "")} · ${new Date(x.createdAt).toLocaleString()}</div>` +
+    (x.message ? `<div>${esc(x.message)}</div>` : "") + `</div>`
+  ).join("");
+}
+
+$("#donateForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const btn = $("#donateBtn");
+  const msg = $("#donateMsg");
+  const f = Object.fromEntries(new FormData(form));
+
+  btn.disabled = true;
+  const label = btn.textContent;
+  btn.textContent = "Verifying receipt…"; // the bank lookup can take a while
+  msg.hidden = true;
+
+  const { status, data, networkError } = await api("POST", `/donations/${selectedId}`, {
+    receiptUrl: f.receiptUrl.trim(),
+    donorName: f.donorName || undefined,
+    message: f.message || undefined,
+  });
+
+  btn.disabled = false;
+  btn.textContent = label;
+
+  if (status === 201) {
+    showMsg(msg, "ok", `Verified: ${money(data.donation.amount)} via ${data.donation.provider}. Thank you!`);
+    form.reset();
+    await Promise.all([selectCampaign(selectedId), loadCampaigns()]);
+  } else if (networkError) {
+    showMsg(msg, "err", "Cannot reach the server.");
+  } else {
+    showMsg(msg, "err", `${data?.message || "Something went wrong."}${data?.code ? ` (${data.code})` : ""}`);
+  }
+});
+
+$("#deleteBtn").addEventListener("click", async () => {
+  if (!confirm("Delete this campaign?")) return;
+  const { status, data } = await api("DELETE", `/campaigns/${selectedId}`);
+  if (status === 200) {
+    selectedId = null;
+    $("#detail").hidden = true;
+    $("#empty").hidden = false;
+    loadCampaigns();
+  } else {
+    showMsg($("#deleteMsg"), "err", data?.message || "Could not delete.");
+  }
+});
+
+// -------------------------------------------------------------- start
+checkConnection().then(loadCampaigns);
+</script>
+</body>
+</html>
+</file>
+
+<file path=".gitignore">
+node_modules/
+.env
+.env.*
+</file>
+
+<file path="server.js">
+const express = require("express");
+const dotenv = require("dotenv");
+const cors = require("cors");
+
+dotenv.config(); // must run before anything reads process.env
+
+const connectDB = require("./src/config/db");
+const campaignRoutes = require("./src/routes/CampaignRoutes");
+const donationRoutes = require("./src/routes/donationRoutes");
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Health check
+app.get("/", (req, res) => {
+  res.json({ message: "Server is running!" });
+});
+
+// API routes
+app.use("/api", campaignRoutes);
+app.use("/api", donationRoutes);
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error(err);
+  const status = err.status || 500;
+  res.status(status).json({
+    message: status === 500 ? "Server error" : err.message,
+  });
+});
+
+// Connect to MongoDB, then start listening
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server started on port ${PORT}`);
+  });
+});
+</file>
+
+<file path="src/controllers/donationController.js">
+const mongoose = require('mongoose');
+const Campaign = require('../models/Campaign');
+const Donation = require('../models/Donation');
+const {
+  verifyDonationReceipt,
+  validateReceiptUrl,
+  VerificationError,
+} = require('../services/LinkEt');
+
+const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+// GET /donations/:campaignId?page=1&limit=10
+// Public list of completed donations for a campaign (newest first)
+exports.getDonationsByCampaign = async (req, res) => {
+  try {
+    const { campaignId } = req.params;
+
+    if (!isValidId(campaignId)) {
+      return res.status(400).json({ message: 'Invalid campaign ID' });
+    }
+
+    const campaignExists = await Campaign.exists({ _id: campaignId });
+    if (!campaignExists) {
+      return res.status(404).json({ message: 'Campaign not found' });
+    }
+
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 50);
+
+    const filter = { campaignId, paymentStatus: 'completed' };
+
+    const [donations, total] = await Promise.all([
+      Donation.find(filter)
+        .select('-receiptKey')
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      Donation.countDocuments(filter),
+    ]);
+
+    res.json({
+      donations,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    });
+  } catch (err) {
+    console.error('getDonationsByCampaign error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// POST /donations/:campaignId
+// Body: { receiptUrl, donorName?, message? }
+//
+// The donor first pays by telebirr / CBE / Zemen / BoA / Awash, then submits
+// the receipt link. We verify it with links.et and record the donation using
+// the amount on the receipt (never an amount typed by the donor).
+exports.createDonation = async (req, res) => {
+  try {
+    const { campaignId } = req.params;
+    const { receiptUrl, donorName, message } = req.body;
+
+    if (!isValidId(campaignId)) {
+      return res.status(400).json({ message: 'Invalid campaign ID' });
+    }
+
+    if (typeof receiptUrl !== 'string' || !receiptUrl.trim()) {
+      return res.status(400).json({ message: 'receiptUrl is required' });
+    }
+
+    if (message && String(message).length > 500) {
+      return res.status(400).json({ message: 'Message must be 500 characters or fewer' });
+    }
+
+    // Cheap local checks first so we don't spend a verification on bad input
+    validateReceiptUrl(receiptUrl);
+
+    const campaign = await Campaign.findById(campaignId).select('_id');
+    if (!campaign) {
+      return res.status(404).json({ message: 'Campaign not found' });
+    }
+
+    const verified = await verifyDonationReceipt(receiptUrl);
+
+    const donation = await Donation.create({
+      campaignId,
+      amount: verified.amount,
+      donorName: donorName?.trim() || undefined, // schema default: "Anonymous"
+      message: message?.trim() || undefined,
+      paymentStatus: 'completed',
+      provider: verified.provider,
+      receiptKey: verified.receiptKey,
+    });
+
+    await Campaign.findByIdAndUpdate(campaignId, {
+      $inc: { raisedAmount: verified.amount },
+    });
+
+    res.status(201).json({
+      message: 'Donation verified. Thank you!',
+      donation: {
+        _id: donation._id,
+        campaignId: donation.campaignId,
+        amount: donation.amount,
+        donorName: donation.donorName,
+        message: donation.message,
+        paymentStatus: donation.paymentStatus,
+        provider: donation.provider,
+        createdAt: donation.createdAt,
+      },
+    });
+  } catch (err) {
+    if (err instanceof VerificationError) {
+      return res.status(err.status).json({ message: err.message, code: err.code });
+    }
+
+    // Unique index on receiptKey: this receipt was already counted
+    if (err.code === 11000) {
+      return res
+        .status(409)
+        .json({ message: 'This receipt has already been used for a donation', code: 'duplicate_receipt' });
+    }
+
+    console.error('createDonation error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+</file>
+
+<file path="src/models/Donation.js">
+const mongoose = require('mongoose');
+
+const donationSchema = new mongoose.Schema({
+  campaignId: { type: mongoose.Schema.Types.ObjectId, ref: 'Campaign', required: true },
+  amount: { type: Number, required: true },
+  donorName: { type: String, default: 'Anonymous' },
+  message: { type: String },
+  paymentStatus: { type: String, enum: ['pending', 'completed', 'failed'], default: 'pending' },
+
+  // Set when the donation is verified through links.et
+  provider: { type: String },
+  // "<provider>:<bank reference>". The unique index makes it impossible to
+  // count the same bank receipt twice, even under concurrent requests.
+  // (Only the reference is stored, never the receipt URL.)
+  receiptKey: { type: String, unique: true, sparse: true },
+
+  createdAt: { type: Date, default: Date.now }
+});
+
+module.exports = mongoose.model('Donation', donationSchema);
+</file>
+
+<file path="src/routes/donationRoutes.js">
+const express = require('express');
+const router = express.Router();
+const donationController = require('../controllers/donationController');
+
+// List completed donations for a campaign
+router.get('/donations/:campaignId', donationController.getDonationsByCampaign);
+
+// Submit a payment receipt link; verified through links.et, then recorded
+router.post('/donations/:campaignId', donationController.createDonation);
+
+module.exports = router;
+</file>
+
+<file path="package.json">
+{
+  "name": "starkhackathonbackend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yeabsira-Ayele/StarkHackathon.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Yeabsira-Ayele/StarkHackathon/issues"
+  },
+  "homepage": "https://github.com/Yeabsira-Ayele/StarkHackathon#readme",
+  "dependencies": {
+    "axios": "^1.20.0",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.1",
+    "express": "^5.2.1",
+    "mongoose": "^9.10.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
+</file>
+
+</files>

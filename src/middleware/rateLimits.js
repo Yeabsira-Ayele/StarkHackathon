@@ -15,7 +15,6 @@ const donationLimiter = rateLimit({
   limit: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  skipFailedRequests: true,
   message: { message: 'Too many requests, please try again later.', code: 'rate_limited' },
   skip: () => process.env.DISABLE_RATE_LIMIT === 'true',
 });

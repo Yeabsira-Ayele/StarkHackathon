@@ -1,0 +1,6 @@
+{
+  "name": "Design System & UI Component Package",
+  "description": "Production-ready React and Tailwind CSS UI component package with design tokens, atomic components, and an interactive style guide.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

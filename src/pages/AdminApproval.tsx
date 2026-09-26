@@ -3,7 +3,7 @@ import { Campaign } from '../types/index.ts';
 import { Button } from '../components/ui/Button.tsx';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/Table.tsx';
 import { Badge } from '../components/ui/Badge.tsx';
-import { Shield, CheckCircle, XCircle, ArrowLeft, RefreshCw, Eye } from 'lucide-react';
+import { Shield, CheckCircle, XCircle, ArrowLeft, RefreshCw, Eye, ShieldCheck } from 'lucide-react';
 
 export interface AdminApprovalProps {
   pendingCampaigns: Campaign[];

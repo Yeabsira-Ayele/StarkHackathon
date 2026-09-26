@@ -36,10 +36,10 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   };
 
   const colorStyles = {
-    accent: 'bg-accent',
-    sky: 'bg-accent', // mapped to theme accent
+    accent: 'bg-gradient-to-r from-[#173C32] via-[#245D4E] to-[#B08A45]',
+    sky: 'bg-[#1E3A5F]', // Prussian Banknote Blue
     slate: 'bg-zinc-800 dark:bg-zinc-200',
-    amber: 'bg-amber-500',
+    amber: 'bg-[#B08A45]',
   };
 
   return (

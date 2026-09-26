@@ -30,15 +30,15 @@ export const Button: React.FC<ButtonProps> = ({
 
   const variantStyles = {
     primary:
-      'bg-primary text-white dark:text-zinc-950 hover:opacity-90 active:scale-[0.99] shadow-xs',
+      'bg-[#173C32] dark:bg-[#23584A] text-[#F7F4EB] hover:bg-[#122F27] dark:hover:bg-[#1C473B] active:scale-[0.99] shadow-xs border border-[#173C32]/40',
     accent:
-      'bg-accent text-white hover:opacity-90 active:scale-[0.99] shadow-xs',
+      'bg-[#B08A45] hover:bg-[#9B7637] dark:bg-[#C5A059] dark:hover:bg-[#B38E46] text-[#1C1A17] font-semibold active:scale-[0.99] shadow-xs border border-[#8E6E32]/30',
     secondary:
-      'bg-zinc-100 dark:bg-zinc-800 text-primary hover:bg-zinc-200 dark:hover:bg-zinc-700/80',
+      'bg-surface-alt dark:bg-zinc-800 text-primary hover:bg-[#E8DFC8] dark:hover:bg-zinc-700/80 border border-border',
     outline:
-      'border border-border text-primary bg-transparent hover:bg-zinc-100/80 dark:hover:bg-zinc-800/80',
+      'border border-border text-primary bg-surface/80 hover:bg-surface-alt dark:hover:bg-zinc-800/80',
     ghost:
-      'text-primary bg-transparent hover:bg-zinc-100/80 dark:hover:bg-zinc-800/80',
+      'text-primary bg-transparent hover:bg-surface-alt dark:hover:bg-zinc-800/80',
     danger:
       'bg-error text-white hover:opacity-90 active:scale-[0.99] shadow-xs',
   };

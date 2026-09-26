@@ -1,42 +1,54 @@
 import React from 'react';
-import { ShieldCheck, Heart } from 'lucide-react';
+import { ShieldCheck, Heart, Award, Building2 } from 'lucide-react';
 
 interface FooterProps {
-  onNavigateToAdmin?: () => void;
   onNavigateToCampaigns?: () => void;
   onNavigateToCreate?: () => void;
+  onNavigateToDonorDashboard?: () => void;
+  onNavigateToFoundation?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
-  onNavigateToAdmin,
   onNavigateToCampaigns,
   onNavigateToCreate,
+  onNavigateToDonorDashboard,
+  onNavigateToFoundation,
 }) => {
   return (
-    <footer className="border-t border-border bg-surface mt-16 text-zinc-600 dark:text-zinc-400 transition-colors">
+    <footer className="border-t border-[#D8CEBA]/80 dark:border-[#313C36] bg-surface mt-16 text-zinc-600 dark:text-zinc-400 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          
           {/* Brand Col */}
           <div className="space-y-3 md:col-span-2">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-accent text-white flex items-center justify-center font-bold text-sm">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#173C32] to-[#B08A45] text-white flex items-center justify-center font-display font-bold text-sm shadow-xs">
                 ለ
               </div>
-              <span className="font-bold text-primary tracking-tight text-base">Lewegene · ለወገኔ</span>
+              <div>
+                <span className="font-display font-bold text-primary tracking-tight text-base block">
+                  LEWEGENE · ለወገን
+                </span>
+                <span className="text-[10px] text-accent font-ethiopic font-semibold">
+                  የኢትዮጵያ ማህበረሰብ ድጋፍ መድረክ
+                </span>
+              </div>
             </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-md leading-relaxed">
-              Ethiopia’s transparent community fundraising platform. Supporting healthcare, emergency relief, and civic mutual aid with direct digital settlements.
+
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-md leading-relaxed font-sans">
+              Ethiopian heritage × old-money digital philanthropy. Connecting compassionate local donors and global diaspora with verified foundations through audited Birr settlements.
             </p>
-            <div className="flex items-center gap-2 text-xs text-primary font-medium pt-1">
+
+            <div className="flex items-center gap-2 text-xs text-primary font-medium pt-1 font-mono">
               <ShieldCheck className="w-4 h-4 text-accent" />
-              <span>Payments in ETB verified via Telebirr and CBE Birr</span>
+              <span>ACSO Certified · Direct Telebirr &amp; CBE Birr Escrow Rails</span>
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Donor Links */}
           <div>
-            <h5 className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">
-              Explore
+            <h5 className="text-xs font-semibold text-primary uppercase tracking-wider mb-3 font-display">
+              Supporter Portal
             </h5>
             <ul className="space-y-2 text-xs text-zinc-500 dark:text-zinc-400">
               <li>
@@ -44,7 +56,38 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={onNavigateToCampaigns}
                   className="hover:text-primary transition-colors cursor-pointer"
                 >
-                  All Fundraisers
+                  Explore Causes
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={onNavigateToDonorDashboard}
+                  className="hover:text-primary transition-colors cursor-pointer"
+                >
+                  My Impact &amp; Certificates
+                </button>
+              </li>
+              <li>
+                <span className="text-zinc-400">Archival Contribution Receipts</span>
+              </li>
+              <li>
+                <span className="text-zinc-400">Zero-Fee Giving Guarantee</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Foundation Links */}
+          <div>
+            <h5 className="text-xs font-semibold text-primary uppercase tracking-wider mb-3 font-display">
+              Foundations &amp; NGOs
+            </h5>
+            <ul className="space-y-2 text-xs text-zinc-500 dark:text-zinc-400">
+              <li>
+                <button
+                  onClick={onNavigateToFoundation}
+                  className="hover:text-primary transition-colors cursor-pointer"
+                >
+                  Foundation Console
                 </button>
               </li>
               <li>
@@ -52,51 +95,26 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={onNavigateToCreate}
                   className="hover:text-primary transition-colors cursor-pointer"
                 >
-                  Start a Campaign
+                  Publish New Cause
                 </button>
               </li>
               <li>
-                <span className="text-zinc-400">How Giving Works</span>
+                <span className="text-zinc-400">ACSO Institutional Verification</span>
               </li>
               <li>
-                <span className="text-zinc-400">Trust & Safety</span>
+                <span className="text-zinc-400">Audited Milestone Reporting</span>
               </li>
-            </ul>
-          </div>
-
-          {/* Community & Moderation */}
-          <div>
-            <h5 className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">
-              Platform
-            </h5>
-            <ul className="space-y-2 text-xs text-zinc-500 dark:text-zinc-400">
-              <li>
-                <span className="text-zinc-500">Telebirr & CBE Birr Rails</span>
-              </li>
-              <li>
-                <span className="text-zinc-500">Voice Assistant Support</span>
-              </li>
-              {onNavigateToAdmin && (
-                <li className="pt-2">
-                  <button
-                    onClick={onNavigateToAdmin}
-                    className="text-[11px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 underline cursor-pointer"
-                  >
-                    Moderation Console
-                  </button>
-                </li>
-              )}
             </ul>
           </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-zinc-400">
+        <div className="mt-8 pt-6 border-t border-[#D8CEBA]/60 dark:border-[#313C36] flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-zinc-400">
           <div>
-            &copy; {new Date().getFullYear()} Lewegene. All rights reserved.
+            &copy; {new Date().getFullYear()} Lewegene Philanthropy. All rights reserved.
           </div>
-          <div className="flex items-center gap-1">
-            <span>Built with mutual solidarity for Ethiopian communities</span>
-            <Heart className="w-3 h-3 text-rose-500 inline fill-rose-500" />
+          <div className="flex items-center gap-1.5 font-mono text-[11px]">
+            <Award className="w-3.5 h-3.5 text-accent" />
+            <span>Preserving Heritage · Inspiring Compassion</span>
           </div>
         </div>
       </div>

@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { Button } from '../ui/Button.tsx';
 import { Input } from '../ui/Input.tsx';
 import { Select } from '../ui/Select.tsx';
-import { PaymentRail } from '../../types/index.ts';
-import { ShieldCheck, Heart } from 'lucide-react';
+import { ContributionCertificate, PaymentRail } from '../../types/index.ts';
+import { ShieldCheck, Heart, Award, ArrowRight } from 'lucide-react';
+import { toGeezNumber } from '../../services/utils/currencyUtils.ts';
 
 export interface DonateFormProps {
   campaignId: string;
   campaignTitle: string;
-  onDonationSuccess: (amount: number, donorName: string, rail: PaymentRail) => void;
+  impactMetric?: string;
+  onDonationSuccess: (cert: ContributionCertificate) => void;
   onSubmit: (payload: {
     amount: number;
     donorName: string;
@@ -18,11 +20,14 @@ export interface DonateFormProps {
 }
 
 export const DonateForm: React.FC<DonateFormProps> = ({
+  campaignTitle,
+  impactMetric,
   onSubmit,
+  onDonationSuccess,
 }) => {
-  const PRESET_AMOUNTS = [250, 500, 1000, 2500, 5000];
+  const PRESET_AMOUNTS = [100, 250, 500, 1000, 5000];
 
-  const [selectedAmount, setSelectedAmount] = useState<number>(1000);
+  const [selectedAmount, setSelectedAmount] = useState<number>(500);
   const [customAmount, setCustomAmount] = useState<string>('');
   const [donorName, setDonorName] = useState<string>('');
   const [isAnonymous, setIsAnonymous] = useState<boolean>(false);
@@ -55,13 +60,18 @@ export const DonateForm: React.FC<DonateFormProps> = ({
     setError(null);
 
     try {
-      await onSubmit({
+      const res = await onSubmit({
         amount: effectiveAmount,
-        donorName: isAnonymous ? 'Anonymous' : donorName || 'Anonymous',
+        donorName: isAnonymous ? 'Anonymous Patron' : donorName || 'Anonymous Patron',
         message: message.trim() || undefined,
         paymentRail,
       });
-      // Reset form
+
+      if (res && res.certificate) {
+        onDonationSuccess(res.certificate);
+      }
+
+      // Reset
       setMessage('');
       setCustomAmount('');
     } catch (err: any) {
@@ -79,11 +89,11 @@ export const DonateForm: React.FC<DonateFormProps> = ({
   ];
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Preset amount buttons */}
+    <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+      {/* Preset Banknote Amount Buttons */}
       <div>
         <label className="block text-xs font-semibold text-primary mb-2">
-          Select Amount (ETB)
+          Select Contribution Amount (ETB)
         </label>
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
           {PRESET_AMOUNTS.map((amt) => {
@@ -93,13 +103,14 @@ export const DonateForm: React.FC<DonateFormProps> = ({
                 key={amt}
                 type="button"
                 onClick={() => handleSelectPreset(amt)}
-                className={`py-2 px-2 text-xs font-bold rounded-lg border transition-all tabular-nums cursor-pointer ${
+                className={`py-2 px-1 text-center rounded-lg border transition-all tabular-nums cursor-pointer ${
                   isSelected
-                    ? 'bg-accent text-white border-accent shadow-xs'
-                    : 'bg-surface text-primary border-border hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                    ? 'bg-accent text-[#1C1A17] font-bold border-accent shadow-xs'
+                    : 'bg-surface text-primary border-border hover:bg-surface-alt'
                 }`}
               >
-                {amt.toLocaleString()} ETB
+                <span className="block text-xs font-bold">{amt.toLocaleString()} ETB</span>
+                <span className="block text-[10px] text-zinc-400 font-ethiopic">{toGeezNumber(amt)} : ብር</span>
               </button>
             );
           })}
@@ -119,10 +130,30 @@ export const DonateForm: React.FC<DonateFormProps> = ({
         />
       </div>
 
+      {/* Real-time Contribution Review Summary */}
+      <div className="p-3.5 rounded-xl border border-[#B08A45]/40 bg-[#F7F4EB] dark:bg-zinc-800/60 space-y-1.5 select-none">
+        <div className="flex justify-between items-center text-xs">
+          <span className="text-zinc-500 font-medium">Your Contribution:</span>
+          <span className="font-display font-bold text-accent text-sm tabular-nums">
+            {effectiveAmount.toLocaleString()} ETB ({toGeezNumber(effectiveAmount)} : ብር)
+          </span>
+        </div>
+        <div className="flex justify-between items-center text-[11px] text-zinc-500">
+          <span>Platform Fee:</span>
+          <span className="text-emerald-600 font-semibold">0% (100% to cause)</span>
+        </div>
+        {impactMetric && (
+          <p className="text-[11px] text-zinc-700 dark:text-zinc-300 pt-1 border-t border-[#D8CEBA]/50 dark:border-[#313C36]/50">
+            <span className="font-semibold text-accent">Direct Impact: </span>
+            {impactMetric}
+          </p>
+        )}
+      </div>
+
       {/* Payment Rail */}
       <div>
         <Select
-          label="Payment Method"
+          label="Select Local Payment Rail"
           options={railOptions}
           value={paymentRail}
           onChange={(e) => setPaymentRail(e.target.value as PaymentRail)}
@@ -132,55 +163,57 @@ export const DonateForm: React.FC<DonateFormProps> = ({
       {/* Donor Name & Anonymous Toggle */}
       <div className="space-y-2">
         <Input
-          label="Your Full Name (optional)"
+          label="Your Full Name (for Archival Certificate)"
           placeholder="e.g. Dawit Alemayehu"
           value={donorName}
           onChange={(e) => setDonorName(e.target.value)}
           disabled={isAnonymous}
         />
-        <label className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400 cursor-pointer select-none">
+
+        <label className="flex items-center gap-2 cursor-pointer pt-0.5">
           <input
             type="checkbox"
             checked={isAnonymous}
             onChange={(e) => setIsAnonymous(e.target.checked)}
-            className="rounded border-border text-accent focus:ring-accent"
+            className="rounded text-accent focus:ring-accent"
           />
-          <span>Give anonymously</span>
+          <span className="text-[11px] text-zinc-600 dark:text-zinc-400">
+            Contribute anonymously on public ledger
+          </span>
         </label>
       </div>
 
-      {/* Encouragement Message */}
+      {/* Heartfelt Note / Message */}
       <div>
-        <label className="block text-xs font-semibold text-primary mb-1.5">
-          Words of Encouragement (Optional)
+        <label className="block text-xs font-semibold text-primary mb-1">
+          Words of Encouragement (optional)
         </label>
         <textarea
           rows={2}
-          placeholder="Add a brief note of support..."
+          placeholder="Egziabher yimarat / Standing with you with love..."
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          className="w-full text-xs rounded-lg border border-border bg-surface p-2.5 text-primary placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+          className="w-full px-3 py-1.5 rounded-lg border border-border bg-surface text-primary text-xs focus:ring-1 focus:ring-accent leading-relaxed"
         />
       </div>
 
-      {error && <p className="text-xs font-medium text-error">{error}</p>}
+      {error && (
+        <div className="p-2 rounded-lg bg-red-50 dark:bg-red-950/60 border border-red-200 text-red-700 dark:text-red-300 text-xs">
+          {error}
+        </div>
+      )}
 
-      {/* Submit Button */}
+      {/* Confirm Button */}
       <Button
         type="submit"
         variant="accent"
         size="lg"
-        className="w-full justify-center text-sm font-bold shadow-xs"
+        className="w-full font-bold shadow-sm"
         isLoading={isSubmitting}
-        icon={<Heart className="w-4 h-4 fill-white/20" />}
+        icon={<Award className="w-4 h-4 text-[#1C1A17]" />}
       >
-        Donate {effectiveAmount > 0 ? `${effectiveAmount.toLocaleString()} ETB` : ''}
+        Confirm Contribution &amp; Issue Certificate
       </Button>
-
-      <div className="flex items-center justify-center gap-1.5 text-[11px] text-zinc-400">
-        <ShieldCheck className="w-3.5 h-3.5 text-accent" />
-        <span>Direct encrypted settlement via Telebirr & CBE Birr</span>
-      </div>
     </form>
   );
 };

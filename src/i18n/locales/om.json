@@ -1,0 +1,143 @@
+{
+  "common": {
+    "appName": "LEWEGENE",
+    "appTagline": "Galmee Gamtaa fi Deeggarsa Lammiilee Itoophiyaa",
+    "motto": "Lammiif Lammiitu Birmata.",
+    "donate": "Amma Gumaachaa",
+    "explore": "Dhimmoota Daawwadhaa",
+    "create": "Dhimma Haaraa Jalqabaa",
+    "share": "Qoodaa",
+    "viewDetails": "Bal'ina Ilaalaa",
+    "back": "Duubatti",
+    "loading": "Fe'amaa jira...",
+    "error": "Dogoggorri uumameera",
+    "retry": "Irra deebiin yaalaa",
+    "empty": "Wanti argame hin jiru",
+    "search": "Barbaadaa...",
+    "all": "Hunda",
+    "active": "Hojirra kan jiru",
+    "completed": "Kan xumurame",
+    "nearlyFunded": "Xumuraaf kan dhiyaate",
+    "currency": "Qarshii",
+    "patrons": "Gumaachitoota",
+    "raised": "Kan walitti qabame",
+    "goal": "Kaayyoo",
+    "acsoVerified": "ACSO dhaan kan mirkanaa'e",
+    "directEscrow": "Dhibbeentaa 100 Kallattiin Lammiileef"
+  },
+  "nav": {
+    "overview": "Fuula Duraa",
+    "explore": "Dhimmoota",
+    "foundations": "Dhaabbilee",
+    "myContributions": "Gumaacha Kiyya",
+    "impact": "Hojii Raawwatame",
+    "voiceAssistant": "Gargaaraa Sagalee",
+    "scholarxiv": "Kuusaa Qorannoo",
+    "language": "Afaan",
+    "theme": "Bifa"
+  },
+  "campaigns": {
+    "title": "Dhimmoota Mirkanaa'an",
+    "subtitle": "Pirojektoota hawaasaa kan lammileen kallattiin gumaachuu danda'an",
+    "sector": "Damee",
+    "status": "Haala",
+    "raisedOf": "Qarshii {{goal}} keessaa Qarshii {{raised}} walitti qabameera",
+    "underwrite": "Dhimma Kanaaf Gumaachaa",
+    "noResults": "Dhimmi barbaaddan hin argamne",
+    "resetFilters": "Filtara Haara'omsi",
+    "impactMetric": "Bu'aa Qabatamaa",
+    "beneficiaries": "Lammiilee Fayyadaman",
+    "location": "Bakka"
+  },
+  "donations": {
+    "title": "Gumaacha Tokkummaa Lammiilee",
+    "step1": "Hamma Qarshii",
+    "step2": "Oodeeffannoo",
+    "step3": "Mirkaneessuu",
+    "step4": "Waraqaa Ragaa",
+    "selectAmount": "Hamma Gumaachaa Filadhaa",
+    "customAmount": "Yookiin Hamma Barbaaddan Galchaa (ETB)",
+    "patronName": "Maqaa Gumaachaa (Yookiin Iccitii)",
+    "anonymous": "Maqaan koo iccitiin haa ta'u",
+    "message": "Ergaa Yookiin Yaada",
+    "clearingRail": "Karaa Kaffaltii Filadhaa",
+    "confirmPledge": "Gumaacha Mirkaneessi",
+    "settling": "Mirkanaa'aa jira...",
+    "certificateTitle": "Waraqaa Ragaa Gumaacha Dijitaalaa",
+    "certificateDesc": "Galmee seera qabeessa kuusaa biyyaalessaa irratti galmaa'e"
+  },
+  "fundraiser": {
+    "title": "Pirojektii Hawaasaa Haaraa Galmeessaa",
+    "subtitle": "Pirojektii heeyyame qabu lammiileef ifa godhaa",
+    "projectTitle": "Mata Duree Pirojektii",
+    "category": "Damee Hojii",
+    "targetGoal": "Hamma Qarshii Barbaadamu",
+    "story": "Seenaa fi Kaayyoo Pirojektichaa",
+    "beneficiaries": "Baay'ina Lammiilee Fayyadamanii",
+    "impactMetric": "Bu'aa Eegamu",
+    "location": "Bakka Hojicha",
+    "publish": "Ummataaf Ifa Godhi",
+    "publishing": "Galmeessaa jira..."
+  },
+  "auth": {
+    "login": "Seenaa",
+    "register": "Galmaa'aa",
+    "logout": "Bahaa",
+    "emailOrPhone": "Lakkoofsa Bilbilaa ykn Iimeelii",
+    "passcode": "Jecha Iccitii",
+    "fullName": "Maqaa Guutuu",
+    "role": "Gahee Fayyadamaa"
+  },
+  "profile": {
+    "title": "Eenyummaa Gumaachaa",
+    "totalDonated": "Waliigala Gumaachame",
+    "causesSupported": "Dhimmoota Deeggaraman",
+    "badges": "Medaliyaa Kabajaa",
+    "settings": "Qindaa'ina"
+  },
+  "admin": {
+    "title": "Teessoo To'annoo",
+    "pending": "Eegumsa Irra Kan Jiru",
+    "approve": "Mirkaneessi",
+    "reject": "Kufaa Godhi",
+    "auditTrail": "Galmee To'annoo"
+  },
+  "reports": {
+    "title": "Gabaasa Iftoominaa",
+    "totalDisbursed": "Waliigala Kan Daddarfe",
+    "beneficiaries": "Fayyadamtota",
+    "donors": "Gumaachitoota",
+    "escrowAudit": "To'annoo Eeskroo"
+  },
+  "voxide": {
+    "title": "Gargaaraa Sagalee",
+    "listening": "Dhaggeeffachaa jira...",
+    "speak": "Dubbachuuf maayikii cuqqaasaa",
+    "execute": "Ajaja Raawwadhu",
+    "capabilities": {
+      "goToPage": {
+        "description": "Fuula yookiin kutaa qoodamaa keessatti gara fuula biraatti adeemi."
+      },
+      "filterCampaigns": {
+        "description": "Dhimmoota gosaan calali (yaala, barnoota, balaa hatattamaa, hawaasa)."
+      },
+      "changeLanguage": {
+        "description": "Afaan agarsiisaa gara Afaan Oromoo (om), Ingiliffaa (en), ykn Amaariffaa (am) jijjiiri."
+      },
+      "startDonation": {
+        "description": "Dhimma tokkoof gumaacha qarshii jalqabsiisi akkasumas mirkaneessi."
+      }
+    },
+    "messages": {
+      "navigated": "Gara {{page}}tti deemameera.",
+      "filtered": "Dhimmoonni gosa {{category}}n calalaman.",
+      "languageChanged": "Afaan gara {{language}}tti jijjiirameera.",
+      "donationInitiated": "Waliigalteen gumaacha birrii {{amount}} milkaa'inaan jalqabameera.",
+      "invalidCategory": "Gosti dhimmaa dogoggora. Maaloo yaala, barnoota, balaa hatattamaa, yookaan hawaasa filadhaa.",
+      "invalidLanguage": "Afaan dogoggora. Maaloo am, en, yookaan om filadhaa.",
+      "micPermissionRequired": "Ajajawwan sagaleetiif eeyyamni maayikirofoonii barbaachisaadha. Maaloo biraawzarii keessan keessatti eeyyama maayikirofoonii kennaa.",
+      "grantMicPermission": "Maayikirofoonii Eeyyamaa",
+      "dismiss": "Cufaa"
+    }
+  }
+}

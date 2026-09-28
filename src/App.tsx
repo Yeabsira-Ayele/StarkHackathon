@@ -17,6 +17,7 @@ import { ContributionCertificateModal } from './components/campaign/Contribution
 
 import { VoxideExtraction } from './services/voice/voxideService.ts';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
+import { VoxideAssistant } from './features/voxide';
 
 export type AppView =
   | 'campaigns'
@@ -59,8 +60,14 @@ export default function App() {
   // Scholarxiv Ideation Trail Drawer
   const [isScholarxivOpen, setIsScholarxivOpen] = useState<boolean>(false);
 
-  // Multi-language state
-  const [language, setLanguage] = useState<'en' | 'am' | 'om'>('en');
+  // Multi-language state (Rule 7: Amharic is the default display language)
+  const [language, setLanguage] = useState<'en' | 'am' | 'om'>(() => {
+    try {
+      return (localStorage.getItem('lewegene_language') as any) || 'am';
+    } catch {
+      return 'am';
+    }
+  });
 
   // Daylight Ivory / Midnight Dark Slate Theme
   const [isDark, setIsDark] = useState<boolean>(() => {
@@ -285,8 +292,67 @@ export default function App() {
     showToast('Cause rejected and archived.');
   };
 
+  // Voxide Voice Assistant Capabilities Event Listeners
+  useEffect(() => {
+    const handleVoxideNav = (e: any) => {
+      const page = e.detail?.page?.toLowerCase();
+      if (!page) return;
+      if (page === 'campaigns' || page === 'explore' || page === 'causes' || page === 'discover') {
+        setSelectedCampaign(null);
+        setCurrentView('campaigns');
+      } else if (page === 'detail' || page === 'pledge') {
+        if (!selectedCampaign && campaigns.length > 0) {
+          setSelectedCampaign(campaigns[0]);
+        }
+        setCurrentView('detail');
+      } else if (page === 'create' || page === 'start_cause') {
+        setCurrentView('create');
+      } else if (page === 'admin' || page === 'compliance') {
+        setCurrentView('admin');
+      } else if (page === 'donor_dashboard' || page === 'vault' || page === 'my_contributions') {
+        setUserRole('donor');
+        setCurrentView('donor_dashboard');
+      } else if (page.startsWith('foundation')) {
+        setUserRole('foundation');
+        setCurrentView(page as AppView);
+      }
+    };
+
+    const handleVoxideLang = (e: any) => {
+      const newLang = e.detail?.language;
+      if (newLang === 'am' || newLang === 'en' || newLang === 'om') {
+        setLanguage(newLang);
+      }
+    };
+
+    const handleVoxideDonation = async (e: any) => {
+      const { amount, campaignId, donorName, paymentRail = 'telebirr' } = e.detail || {};
+      const target = campaignId
+        ? campaigns.find((c) => c.id === campaignId) || campaigns[0]
+        : (selectedCampaign || campaigns[0]);
+      if (target) {
+        setSelectedCampaign(target);
+        await handleDonate({
+          amount: Number(amount) || 100,
+          donorName: donorName || 'Anonymous Patron',
+          paymentRail,
+          message: 'Voice Pledge via Voxide',
+        });
+      }
+    };
+
+    window.addEventListener('voxide:navigate' as any, handleVoxideNav);
+    window.addEventListener('voxide:language' as any, handleVoxideLang);
+    window.addEventListener('voxide:start_donation' as any, handleVoxideDonation);
+    return () => {
+      window.removeEventListener('voxide:navigate' as any, handleVoxideNav);
+      window.removeEventListener('voxide:language' as any, handleVoxideLang);
+      window.removeEventListener('voxide:start_donation' as any, handleVoxideDonation);
+    };
+  }, [campaigns, selectedCampaign]);
+
   return (
-    <div className={`min-h-screen bg-[#F6F1E5] dark:bg-[#141210] text-[#201C18] dark:text-[#F4EFE6] font-sans selection:bg-[#9A7432]/30 selection:text-[#8B2626] transition-colors duration-200 ${isDark ? 'dark' : ''}`}>
+    <div className={`min-h-screen bg-[#F2ECE1] dark:bg-[#080706] text-[#201C18] dark:text-[#F4EFE6] font-sans selection:bg-[#9A7432]/30 selection:text-[#1E4D38] transition-colors duration-200 ${isDark ? 'dark' : ''}`}>
       {/* Living Ethiopian Banknote Master Sheet */}
       <BanknoteMasterCanvas
         campaigns={campaigns}
@@ -354,6 +420,9 @@ export default function App() {
         isOpen={isScholarxivOpen}
         onClose={() => setIsScholarxivOpen(false)}
       />
+
+      {/* Voxide Official Voice Assistant */}
+      <VoxideAssistant />
 
       {/* Toast Notification */}
       {toast && (

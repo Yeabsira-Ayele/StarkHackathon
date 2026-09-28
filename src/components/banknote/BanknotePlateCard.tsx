@@ -44,8 +44,8 @@ export const BanknotePlateCard: React.FC<BanknotePlateCardProps> = ({
       }}
       className={`group relative flex flex-col justify-between border-2 transition-all duration-300 cursor-pointer select-none ${
         isSpotlight
-          ? 'border-[#26211C] dark:border-[#9A7432] bg-[#FCF9F2] dark:bg-[#1E1A17] shadow-lg ring-1 ring-[#9A7432]/40'
-          : 'border-[#26211C]/80 dark:border-[#4A3E33] bg-[#FCF9F2] dark:bg-[#1E1A17] hover:border-[#26211C] hover:shadow-xl'
+          ? 'border-[#26211C] dark:border-[#9A7432] bg-[#F2EADA] dark:bg-[#0E0D0B] shadow-lg ring-1 ring-[#1E4D38]/40 dark:ring-[#52B788]/40'
+          : 'border-[#26211C]/80 dark:border-[#2F261E] bg-[#F2EADA] dark:bg-[#0E0D0B] hover:border-[#1E4D38] dark:hover:border-[#52B788] hover:shadow-xl'
       } p-4 sm:p-5 ${className}`}
     >
       {/* ─── INTAGLIO INNER PERIMETER LINE ─── */}
@@ -55,16 +55,16 @@ export const BanknotePlateCard: React.FC<BanknotePlateCardProps> = ({
       <div className="relative z-10 flex items-center justify-between border-b border-[#26211C]/25 dark:border-[#4A3E33] pb-2 mb-3">
         <div className="flex items-center gap-1.5 font-mono text-[10px] font-black tracking-widest text-[#26211C] dark:text-[#E8DEC8] uppercase">
           <span>PROJECT</span>
-          <span className="text-[#8B2626] dark:text-[#D8B066] font-bold">№ {serial}</span>
+          <span className="text-[#1E4D38] dark:text-[#52B788] font-bold">№ {serial}</span>
         </div>
 
         <div className="flex items-center gap-2">
           {campaign.verifiedOrganization && (
             <span
               title="Federal ACSO Verified Organization"
-              className="flex items-center gap-1 text-[9px] font-mono font-bold text-[#8B2626] dark:text-[#D8B066]"
+              className="flex items-center gap-1 text-[9px] font-mono font-bold text-[#1E4D38] dark:text-[#52B788]"
             >
-              <ShieldCheck className="w-3 h-3 text-[#8B2626]" />
+              <ShieldCheck className="w-3 h-3 text-[#1E4D38] dark:text-[#52B788]" />
               <span>ACSO VERIFIED</span>
             </span>
           )}
@@ -83,7 +83,7 @@ export const BanknotePlateCard: React.FC<BanknotePlateCardProps> = ({
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center text-zinc-600 dark:text-zinc-400 font-mono text-xs">
-            <span className="font-display font-black text-lg text-[#26211C] dark:text-[#D8B066]">LEWEGENE</span>
+            <span className="font-display font-black text-lg text-[#1E4D38] dark:text-[#52B788]">LEWEGENE</span>
             <span>ENGRAVED ARCHIVE</span>
           </div>
         )}
@@ -92,18 +92,18 @@ export const BanknotePlateCard: React.FC<BanknotePlateCardProps> = ({
         <div className="absolute inset-0 pointer-events-none intaglio-overlay opacity-60 mix-blend-multiply" />
 
         {/* Category Corner Stamp */}
-        <div className="absolute top-2 left-2 px-2 py-0.5 bg-[#FAF6EE]/95 dark:bg-[#1C1815]/95 border border-[#26211C] text-[9px] font-mono font-black tracking-widest text-[#26211C] dark:text-[#D8B066] uppercase">
+        <div className="absolute top-2 left-2 px-2 py-0.5 bg-[#FAF6EE]/95 dark:bg-[#1C1815]/95 border border-[#26211C] text-[9px] font-mono font-black tracking-widest text-[#1E4D38] dark:text-[#52B788] uppercase">
           {categoryLabel}
         </div>
       </div>
 
       {/* ─── TITLE & ORGANIZATION & LOCATION IDENTIFIERS ─── */}
       <div className="relative z-10 space-y-1 mb-3">
-        <h3 className="font-serif font-bold text-base sm:text-lg text-[#201C18] dark:text-[#F4EFE6] line-clamp-2 leading-snug group-hover:text-[#8B2626] dark:group-hover:text-[#D8B066] transition-colors">
+        <h3 className="font-serif font-bold text-base sm:text-lg text-[#201C18] dark:text-[#F4EFE6] line-clamp-2 leading-snug group-hover:text-[#1E4D38] dark:group-hover:text-[#52B788] transition-colors">
           {campaign.title}
         </h3>
 
-        <p className="font-mono text-[10px] text-[#8B2626] dark:text-[#D8B066] font-bold tracking-wide truncate">
+        <p className="font-mono text-[10px] text-[#1E4D38] dark:text-[#52B788] font-bold tracking-wide truncate">
           {orgName}
         </p>
 
@@ -122,7 +122,7 @@ export const BanknotePlateCard: React.FC<BanknotePlateCardProps> = ({
         />
       </div>
 
-      {/* ─── ACTION & PROMISSORY FOOTER (OBVIOUS BUTTON!) ─── */}
+      {/* ─── ACTION & PROMISSORY FOOTER (VINTAGE BANKNOTE GREEN BUTTON) ─── */}
       <div className="relative z-10 pt-2 border-t border-[#26211C]/25 dark:border-[#4A3E33] flex items-center justify-between gap-2">
         <button
           type="button"
@@ -134,7 +134,7 @@ export const BanknotePlateCard: React.FC<BanknotePlateCardProps> = ({
               onSelect(campaign);
             }
           }}
-          className="flex-1 py-2 px-3 border border-[#8B2626] bg-[#8B2626] text-white dark:bg-[#8B2626] dark:text-white font-mono text-xs font-black tracking-widest uppercase flex items-center justify-center gap-1.5 hover:bg-[#701E1E] transition-colors cursor-pointer shadow-xs active:translate-y-px"
+          className="flex-1 py-2 px-3 border border-[#1E4D38] bg-[#1E4D38] text-white dark:bg-[#1E4D38] dark:border-[#52B788] dark:text-white font-mono text-xs font-black tracking-widest uppercase flex items-center justify-center gap-1.5 hover:bg-[#163E2C] transition-colors cursor-pointer shadow-xs active:translate-y-px"
         >
           <span>SUPPORT THIS CAUSE</span>
           <ArrowRight className="w-3.5 h-3.5" />

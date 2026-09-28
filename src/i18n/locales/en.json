@@ -1,0 +1,143 @@
+{
+  "common": {
+    "appName": "LEWEGENE",
+    "appTagline": "National Citizen Solidarity Tender",
+    "motto": "Supporting Ethiopia's People & Purpose",
+    "donate": "Pledge Now",
+    "explore": "Explore Causes",
+    "create": "Start a Cause",
+    "share": "Share",
+    "viewDetails": "View Details",
+    "back": "Back",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Try Again",
+    "empty": "No items found",
+    "search": "Search causes...",
+    "all": "All",
+    "active": "Active",
+    "completed": "Completed",
+    "nearlyFunded": "Nearly Funded",
+    "currency": "ETB",
+    "patrons": "Patrons",
+    "raised": "Raised",
+    "goal": "Goal",
+    "acsoVerified": "ACSO Regulatory Verified",
+    "directEscrow": "100% Direct to Beneficiaries"
+  },
+  "nav": {
+    "overview": "Overview",
+    "explore": "Causes",
+    "foundations": "Foundations",
+    "myContributions": "My Contributions",
+    "impact": "Field Impact",
+    "voiceAssistant": "Voice (Voxide)",
+    "scholarxiv": "Scholarxiv Archive",
+    "language": "Language",
+    "theme": "Theme"
+  },
+  "campaigns": {
+    "title": "Verified Civic Causes",
+    "subtitle": "Accredited civil society projects ready for direct citizen underwriting",
+    "sector": "Sector",
+    "status": "Status",
+    "raisedOf": "{{raised}} ETB of {{goal}} ETB raised",
+    "underwrite": "Underwrite This Cause",
+    "noResults": "No causes matching your search or filters",
+    "resetFilters": "Reset Filters",
+    "impactMetric": "Impact Commitment",
+    "beneficiaries": "Citizens Reached",
+    "location": "Location"
+  },
+  "donations": {
+    "title": "Civic Promissory Underwrite",
+    "step1": "Amount",
+    "step2": "Details",
+    "step3": "Review",
+    "step4": "Certificate",
+    "selectAmount": "Select Contribution Amount",
+    "customAmount": "Or Enter Custom Amount (ETB)",
+    "patronName": "Patron Name (or Anonymous)",
+    "anonymous": "Keep my name anonymous",
+    "message": "Solidarity Message or Note",
+    "clearingRail": "Payment Clearing Rail",
+    "confirmPledge": "Confirm Contribution",
+    "settling": "Settling On-Chain...",
+    "certificateTitle": "Digital Solidarity Certificate",
+    "certificateDesc": "Official immutable record minted to the National Civic Repository"
+  },
+  "fundraiser": {
+    "title": "Publish Social Project",
+    "subtitle": "Publish an accredited project to Ethiopian citizens for transparent escrow funding",
+    "projectTitle": "Project Title",
+    "category": "Sector Category",
+    "targetGoal": "Target Funding Goal (ETB)",
+    "story": "Project Story & Field Directive",
+    "beneficiaries": "Target Beneficiaries Count",
+    "impactMetric": "Tangible Impact Metric",
+    "location": "Project Location",
+    "publish": "Publish Project to Citizens",
+    "publishing": "Engraving Cause..."
+  },
+  "auth": {
+    "login": "Sign In",
+    "register": "Register",
+    "logout": "Sign Out",
+    "emailOrPhone": "Phone or Email",
+    "passcode": "Passcode",
+    "fullName": "Full Name",
+    "role": "User Role"
+  },
+  "profile": {
+    "title": "Patron Profile",
+    "totalDonated": "Total Contributed",
+    "causesSupported": "Causes Supported",
+    "badges": "Patron Badges",
+    "settings": "Settings"
+  },
+  "admin": {
+    "title": "Compliance Desk",
+    "pending": "Pending Review",
+    "approve": "Approve",
+    "reject": "Reject",
+    "auditTrail": "Audit Trail"
+  },
+  "reports": {
+    "title": "Transparency Reports",
+    "totalDisbursed": "Total Disbursed",
+    "beneficiaries": "Beneficiaries",
+    "donors": "Patrons",
+    "escrowAudit": "Escrow Audit"
+  },
+  "voxide": {
+    "title": "Voice Assistant",
+    "listening": "Listening...",
+    "speak": "Tap mic to speak",
+    "execute": "Execute Order",
+    "capabilities": {
+      "goToPage": {
+        "description": "Navigate to a specific page or section in the app."
+      },
+      "filterCampaigns": {
+        "description": "Filter causes by sector category (medical, education, emergency, community)."
+      },
+      "changeLanguage": {
+        "description": "Switch application language to Amharic (am), English (en), or Afaan Oromoo (om)."
+      },
+      "startDonation": {
+        "description": "Initiate a verified donation pledge to a cause with required confirmation."
+      }
+    },
+    "messages": {
+      "navigated": "Navigated to {{page}}.",
+      "filtered": "Filtered causes by category: {{category}}.",
+      "languageChanged": "Language switched to {{language}}.",
+      "donationInitiated": "Donation pledge of {{amount}} ETB initiated successfully.",
+      "invalidCategory": "Invalid category. Please select medical, education, emergency, or community.",
+      "invalidLanguage": "Invalid language. Please select am, en, or om.",
+      "micPermissionRequired": "Microphone access is required for voice commands. Please allow microphone permission in your browser.",
+      "grantMicPermission": "Enable Microphone",
+      "dismiss": "Dismiss"
+    }
+  }
+}

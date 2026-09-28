@@ -274,7 +274,7 @@ export const AcsoCircularSeal: React.FC<{
     >
       <svg viewBox="0 0 120 120" className="w-20 h-20 sm:w-24 sm:h-24">
         {/* Outer Sawtooth Intaglio Edge */}
-        <circle cx="60" cy="60" r="56" fill="none" stroke="#8B2626" strokeWidth="1.5" strokeDasharray="3 1.5" />
+        <circle cx="60" cy="60" r="56" fill="none" stroke="#1E4D38" className="dark:stroke-[#52B788]" strokeWidth="1.5" strokeDasharray="3 1.5" />
         <circle cx="60" cy="60" r="52" fill="#FCF9F2" className="dark:fill-[#1E1A17]" stroke="#26211C" strokeWidth="1.8" />
         <circle cx="60" cy="60" r="48" fill="none" stroke="#9A7432" strokeWidth="0.8" strokeDasharray="1.5 1.5" />
 
@@ -295,7 +295,7 @@ export const AcsoCircularSeal: React.FC<{
           d="M 100 60 A 40 40 0 0 1 20 60"
           fill="none"
         />
-        <text fontSize="6.5" fontWeight="bold" fill="#8B2626" letterSpacing="0.16em">
+        <text fontSize="6.5" fontWeight="bold" fill="#1E4D38" className="dark:fill-[#52B788]" letterSpacing="0.16em">
           <textPath href="#seal-text-path-bottom" startOffset="50%" textAnchor="middle">
             ★ ACSO VERIFIED 2026 ★
           </textPath>
@@ -312,10 +312,10 @@ export const AcsoCircularSeal: React.FC<{
           {/* Right Pan */}
           <path d="M 12 -4 L 8 4 L 16 4 Z" fill="#9A7432" stroke="none" />
           {/* Center Pivot */}
-          <circle cx="0" cy="-4" r="2" fill="#8B2626" />
+          <circle cx="0" cy="-4" r="2" fill="#1E4D38" className="dark:fill-[#52B788]" />
         </g>
       </svg>
-      <span className="mt-1 text-[9px] font-mono font-bold tracking-widest text-[#8B2626] dark:text-[#D8B066] uppercase">
+      <span className="mt-1 text-[9px] font-mono font-bold tracking-widest text-[#1E4D38] dark:text-[#52B788] uppercase">
         № ACSO-ET-58291
       </span>
     </button>
@@ -334,12 +334,12 @@ export const VoxideVoiceSeal: React.FC<{
       title="Voxide Voice Agent — Tap to speak (e.g. 'Show education causes', 'Open project 024')"
       className={`group relative flex flex-col items-center justify-center p-1 rounded-full cursor-pointer transition-transform hover:scale-105 active:scale-95 focus:outline-none ${className}`}
     >
-      <div className={`relative w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center ${isListening ? 'ring-4 ring-red-500 animate-pulse' : ''}`}>
+      <div className={`relative w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center ${isListening ? 'ring-4 ring-[#1E4D38] animate-pulse' : ''}`}>
         <svg viewBox="0 0 120 120" className="w-full h-full">
           {/* Concentric Soundwave Guilloché */}
           <circle cx="60" cy="60" r="56" fill="none" stroke="#9A7432" strokeWidth="1.2" strokeDasharray="2 1" />
           <circle cx="60" cy="60" r="50" fill="#FCF9F2" className="dark:fill-[#1E1A17]" stroke="#26211C" strokeWidth="1.5" />
-          <circle cx="60" cy="60" r="45" fill="none" stroke="#8B2626" strokeWidth="0.8" strokeDasharray="1.5 2" />
+          <circle cx="60" cy="60" r="45" fill="none" stroke="#1E4D38" className="dark:stroke-[#52B788]" strokeWidth="0.8" strokeDasharray="1.5 2" />
 
           {/* Soundwave Bars radiating */}
           {Array.from({ length: 24 }).map((_, i) => {
@@ -402,9 +402,9 @@ export const BanknoteRulerGauge: React.FC<{
 
       {/* Engraved Ruler Bar with Ge'ez & Tick Marks */}
       <div className="relative h-6 rounded-none border border-[#26211C] dark:border-[#9A7432] bg-[#F7F2E7] dark:bg-[#1E1A17] overflow-hidden flex items-center">
-        {/* Filled Portion: Carmine Red Intaglio Bar */}
+        {/* Filled Portion: Vintage Banknote Green Intaglio Bar */}
         <div
-          className="absolute inset-y-0 left-0 bg-[#8B2626] dark:bg-[#B88B45] transition-all duration-500 opacity-90"
+          className="absolute inset-y-0 left-0 bg-[#1E4D38] dark:bg-[#52B788] transition-all duration-500 opacity-90"
           style={{ width: `${clamped}%` }}
         />
 

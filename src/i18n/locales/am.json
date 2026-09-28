@@ -1,0 +1,143 @@
+{
+  "common": {
+    "appName": "ለወገን",
+    "appTagline": "የኢትዮጵያ የሕዝብ ትብብርና ድጋፍ ሰነድ",
+    "motto": "ለወገን ደራሽ ወገን ነው።",
+    "donate": "አሁኑኑ ይለግሱ",
+    "explore": "ምክንያቶችን ያስሱ",
+    "create": "አዲስ ምክንያት ይጀምሩ",
+    "share": "ያጋሩ",
+    "viewDetails": "ዝርዝሩን ይመልከቱ",
+    "back": "ወደ ኋላ",
+    "loading": "በመጫን ላይ...",
+    "error": "ስህተት ተከስቷል",
+    "retry": "እንደገና ይሞክሩ",
+    "empty": "ምንም መረጃ አልተገኘም",
+    "search": "ፈልግ...",
+    "all": "ሁሉም",
+    "active": "በሂደት ላይ",
+    "completed": "የተጠናቀቀ",
+    "nearlyFunded": "ሊጠናቀቅ የቀረበ",
+    "currency": "ብር",
+    "patrons": "ለጋሾች",
+    "raised": "የተሰበሰበ",
+    "goal": "ግብ",
+    "acsoVerified": "በሲቪል ማኅበራት ኤጀንሲ የተረጋገጠ",
+    "directEscrow": "ቀጥታ 100% ለተጠቃሚዎች የሚደርስ"
+  },
+  "nav": {
+    "overview": "ዋና ገጽ",
+    "explore": "ምክንያቶች",
+    "foundations": "የድርጅቶች ዴስክ",
+    "myContributions": "የእኔ ልገሳዎች",
+    "impact": "የተከናወኑ ተግባራት",
+    "voiceAssistant": "ድምፅ ረዳት (Voxide)",
+    "scholarxiv": "የምርምር ማህደር",
+    "language": "ቋንቋ",
+    "theme": "ገጽታ"
+  },
+  "campaigns": {
+    "title": "የተረጋገጡ የሕዝብ ምክንያቶች",
+    "subtitle": "ለቀጥታ ዜጋ ድጋፍ የተዘጋጁ ህጋዊ የሲቪል ማኅበራት ፕሮጀክቶች",
+    "sector": "ዘርፍ",
+    "status": "ሁኔታ",
+    "raisedOf": "ከ {{goal}} ብር {{raised}} ብር ተሰብስቧል",
+    "underwrite": "ለዚህ ምክንያት ይለግሱ",
+    "noResults": "የተፈለገው ምክንያት አልተገኘም",
+    "resetFilters": "ማጣሪያዎችን ዳግም አስጀምር",
+    "impactMetric": "ተጨባጭ ተጽዕኖ",
+    "beneficiaries": "ተጠቃሚ ዜጎች",
+    "location": "ቦታ"
+  },
+  "donations": {
+    "title": "የዜግነት መተሳሰብ ልገሳ",
+    "step1": "የገንዘብ መጠን",
+    "step2": "የለጋሽ መረጃ",
+    "step3": "ማረጋገጫ",
+    "step4": "ዲጂታል ምስክር ወረቀት",
+    "selectAmount": "የልገሳ መጠን ይምረጡ",
+    "customAmount": "ወይም የተለየ መጠን ያስገቡ (ብር)",
+    "patronName": "የለጋሽ ስም (ወይም ስም-አልባ)",
+    "anonymous": "ስሜ በሚስጥር ይያዝልኝ",
+    "message": "የአጋርነት መልእክት ወይም ማስታወሻ",
+    "clearingRail": "የክፍያ መስመር ይምረጡ",
+    "confirmPledge": "ልገሳውን አረጋግጥ",
+    "settling": "በብሎክቼይን እየተረጋገጠ ነው...",
+    "certificateTitle": "የዜግነት ትብብር ምስክር ወረቀት",
+    "certificateDesc": "በብሔራዊ ዲጂታል ማህደር የተመዘገበ ኦፊሴላዊ የልገሳ ማስረጃ"
+  },
+  "fundraiser": {
+    "title": "አዲስ ማኅበራዊ ፕሮጀክት ይመዝግቡ",
+    "subtitle": "በሲቪል ማኅበረሰብ ድርጅት ፈቃድ መሰረት ፕሮጀክትን ለሕዝብ ይፋ ያድርጉ",
+    "projectTitle": "የፕሮጀክቱ ርዕስ",
+    "category": "የስራ መስክ",
+    "targetGoal": "የሚያስፈልገው የገንዘብ መጠን (ብር)",
+    "story": "የፕሮጀክቱ ሙሉ ዝርዝርና ዓላማ",
+    "beneficiaries": "ተጠቃሚ የሚሆኑ ዜጎች ቁጥር",
+    "impactMetric": "የሚጠበቅ ተጨባጭ ውጤት",
+    "location": "የሚተገበርበት ክልል / ከተማ",
+    "publish": "ፕሮጀክቱን ለሕዝብ ይፋ አድርግ",
+    "publishing": "በማስመዝገብ ላይ..."
+  },
+  "auth": {
+    "login": "ይግቡ",
+    "register": "ይመዝገቡ",
+    "logout": "ይውጡ",
+    "emailOrPhone": "ስልክ ቁጥር ወይም ኢሜይል",
+    "passcode": "የይለፍ ቃል",
+    "fullName": "ሙሉ ስም",
+    "role": "የተጠቃሚ ሚና"
+  },
+  "profile": {
+    "title": "የለጋሽ መለያ",
+    "totalDonated": "ጠቅላላ የተበረከተ",
+    "causesSupported": "የተደገፉ ምክንያቶች",
+    "badges": "የክብር ሜዳሊያዎች",
+    "settings": "ቅንብሮች"
+  },
+  "admin": {
+    "title": "የቁጥጥር ዴስክ",
+    "pending": "ውሳኔ የሚጠባበቁ",
+    "approve": "አጽድቅ",
+    "reject": "ውድቅ አድርግ",
+    "auditTrail": "የኦዲት መዝገብ"
+  },
+  "reports": {
+    "title": "የግልጽነት ሪፖርቶች",
+    "totalDisbursed": "የተላለፈ ድምር",
+    "beneficiaries": "ተጠቃሚ ዜጎች",
+    "donors": "ለጋሾች",
+    "escrowAudit": "የኤስክሮ ኦዲት"
+  },
+  "voxide": {
+    "title": "ድምፅ ረዳት",
+    "listening": "በማዳመጥ ላይ...",
+    "speak": "ለመናገር ማይክራፎኑን ይጫኑ",
+    "execute": "ትዕዛዙን አከናውን",
+    "capabilities": {
+      "goToPage": {
+        "description": "በመተግበሪያው ውስጥ ወዳለ የተወሰነ ገጽ ወይም ክፍል ሂድ።"
+      },
+      "filterCampaigns": {
+        "description": "የልገሳ ምክንያቶችን በዘርፍ መድብ (ሕክምና፣ ትምህርት፣ ድንገተኛ፣ ማኅበረሰብ)።"
+      },
+      "changeLanguage": {
+        "description": "የመተግበሪያውን ቋንቋ ወደ አማርኛ (am)፣ እንግሊዝኛ (en) ወይም አፋን ኦሮሞ (om) ቀይር።"
+      },
+      "startDonation": {
+        "description": "የተረጋገጠ የልገሳ ቃል ኪዳን በማረጋገጫ ጀምር።"
+      }
+    },
+    "messages": {
+      "navigated": "ወደ {{page}} ተጉዟል።",
+      "filtered": "ምክንያቶች በዘርፍ {{category}} ተለይተዋል።",
+      "languageChanged": "ቋንቋ ወደ {{language}} ተቀይሯል።",
+      "donationInitiated": "የ{{amount}} ብር ልገሳ ቃል ኪዳን በተሳካ ሁኔታ ተጀምሯል።",
+      "invalidCategory": "ልክ ያልሆነ ዘርፍ። እባክዎ ሕክምና፣ ትምህርት፣ ድንገተኛ ወይም ማኅበረሰብ ይምረጡ።",
+      "invalidLanguage": "ልክ ያልሆነ ቋንቋ። እባክዎ am, en, ወይም om ይምረጡ።",
+      "micPermissionRequired": "የድምጽ ትዕዛዞችን ለመጠቀም የማይክራፎን ፈቃድ ያስፈልጋል። እባክዎ በአሳሽዎ ውስጥ የማይክራፎን ፈቃድ ይስጡ።",
+      "grantMicPermission": "ማይክራፎን አንቃ",
+      "dismiss": "ዝጋ"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Campaign, ContributionCertificate, PaymentRail, Organization } from '../../types/index.ts';
 import {
   CentralMonumentEngraving,
@@ -8,6 +9,12 @@ import {
 } from './BanknoteArtwork.tsx';
 import { BanknotePlateCard } from './BanknotePlateCard.tsx';
 import { BanknoteLivingBackground } from './BanknoteLivingBackground.tsx';
+import { ExplorePage } from '../../features/campaigns/pages/ExplorePage';
+import { CampaignDetailsPage } from '../../features/campaigns/pages/CampaignDetailsPage';
+import { PledgeWizardPage } from '../../features/donations/pages/PledgeWizardPage';
+import { PatronVaultPage } from '../../features/donations/pages/PatronVaultPage';
+import { CreateCampaignPage } from '../../features/fundraiser/pages/CreateCampaignPage';
+import { FoundationDashboardPage } from '../../features/fundraiser/pages/FoundationDashboardPage';
 import {
   Search,
   ArrowLeft,
@@ -83,6 +90,8 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
   onToggleTheme,
   onDonationCompleted,
 }) => {
+  const { t, i18n } = useTranslation();
+
   // Navigation State
   const [zoomMode, setZoomMode] = useState<BanknoteZoomMode>('overview');
   const [activePlateIndex, setActivePlateIndex] = useState<number>(0);
@@ -242,7 +251,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
       {/* ─────────────────────────────────────────────────────────────────────────────
           CLEAN WIDESCREEN NAVIGATION HEADER (HIGH USABILITY + INTAGLIO TYPOGRAPHY)
       ───────────────────────────────────────────────────────────────────────────── */}
-      <header className="relative z-20 w-full px-6 sm:px-12 lg:px-20 py-5 border-b border-[#26211C]/15 dark:border-[#9A7432]/25 bg-[#F6F1E5]/80 dark:bg-[#141210]/80 backdrop-blur-xs transition-colors">
+      <header className="relative z-20 w-full px-6 sm:px-12 lg:px-20 py-5 border-b-2 border-[#1E4D38]/20 dark:border-[#9A7432]/30 bg-[#FFFDF9]/95 dark:bg-[#12100E]/95 backdrop-blur-xs transition-colors shadow-xs">
         
         {/* Top Micro-Ribbon: Edge Identification & Legal Clearing */}
         <div className="flex items-center justify-between text-[10px] font-mono pb-3 border-b border-[#26211C]/10 dark:border-[#9A7432]/15">
@@ -256,41 +265,9 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
           </div>
 
           <div className="flex items-center gap-4 text-zinc-600 dark:text-zinc-400">
-            <span className="hidden md:inline font-bold text-[#8B2626] dark:text-[#D8B066]">
+            <span className="font-bold text-[#1E4D38] dark:text-[#52B788]">
               ★ ACSO REGISTERED · 0% PLATFORM CUT · 100% DIRECT TO CAUSES
             </span>
-            
-            {/* Patron / Foundation Mode Switcher */}
-            <div className="flex items-center border border-[#26211C]/30 dark:border-[#9A7432]/40 bg-[#FCF9F2] dark:bg-[#1E1A17] p-0.5 text-[9px] font-mono font-bold">
-              <button
-                type="button"
-                onClick={() => {
-                  setUserRole('patron');
-                  setZoomMode('overview');
-                }}
-                className={`px-2.5 py-0.5 cursor-pointer uppercase transition-colors ${
-                  userRole === 'patron' && zoomMode !== 'treasury'
-                    ? 'bg-[#26211C] text-white dark:bg-[#9A7432] dark:text-[#141210]'
-                    : 'text-[#201C18] dark:text-[#E8DEC8] hover:text-[#8B2626]'
-                }`}
-              >
-                PATRON
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setUserRole('foundation');
-                  setZoomMode('treasury');
-                }}
-                className={`px-2.5 py-0.5 cursor-pointer uppercase transition-colors ${
-                  userRole === 'foundation' || zoomMode === 'treasury'
-                    ? 'bg-[#8B2626] text-white dark:bg-[#8B2626]'
-                    : 'text-[#201C18] dark:text-[#E8DEC8] hover:text-[#8B2626]'
-                }`}
-              >
-                FOUNDATION
-              </button>
-            </div>
           </div>
         </div>
 
@@ -302,7 +279,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
             onClick={() => setZoomMode('overview')}
             className="cursor-pointer group flex flex-col"
           >
-            <h1 className="font-display font-black text-2xl sm:text-3xl tracking-[0.2em] text-[#201C18] dark:text-[#F4EFE6] leading-none transition-colors group-hover:text-[#8B2626]">
+            <h1 className="font-display font-black text-2xl sm:text-3xl tracking-[0.2em] text-[#201C18] dark:text-[#F4EFE6] leading-none transition-colors group-hover:text-[#1E4D38] dark:group-hover:text-[#52B788]">
               LEWEGENE
             </h1>
             <span className="font-mono text-[9px] tracking-[0.25em] text-[#9A7432] uppercase font-bold mt-1">
@@ -317,8 +294,8 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               onClick={() => setZoomMode('overview')}
               className={`px-3 py-2 transition-colors cursor-pointer ${
                 zoomMode === 'overview'
-                  ? 'text-[#8B2626] dark:text-[#D8B066] border-b-2 border-[#8B2626] dark:border-[#D8B066]'
-                  : 'text-[#201C18] dark:text-[#E8DEC8] hover:text-[#8B2626]'
+                  ? 'text-[#1E4D38] dark:text-[#52B788] border-b-2 border-[#1E4D38] dark:border-[#52B788]'
+                  : 'text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]'
               }`}
             >
               HOME
@@ -329,12 +306,12 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               onClick={() => setZoomMode('discover')}
               className={`px-3 py-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
                 zoomMode === 'discover'
-                  ? 'text-[#8B2626] dark:text-[#D8B066] border-b-2 border-[#8B2626] dark:border-[#D8B066]'
-                  : 'text-[#201C18] dark:text-[#E8DEC8] hover:text-[#8B2626]'
+                  ? 'text-[#1E4D38] dark:text-[#52B788] border-b-2 border-[#1E4D38] dark:border-[#52B788]'
+                  : 'text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]'
               }`}
             >
               <span>DISCOVER CAUSES</span>
-              <span className="px-1.5 py-0.2 bg-[#8B2626] text-white text-[9px] font-bold rounded-xs">
+              <span className="px-1.5 py-0.2 bg-[#1E4D38] text-white text-[9px] font-bold rounded-xs">
                 {campaigns.length}
               </span>
             </button>
@@ -344,8 +321,8 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               onClick={() => setZoomMode('vault')}
               className={`px-3 py-2 transition-colors cursor-pointer ${
                 zoomMode === 'vault'
-                  ? 'text-[#8B2626] dark:text-[#D8B066] border-b-2 border-[#8B2626] dark:border-[#D8B066]'
-                  : 'text-[#201C18] dark:text-[#E8DEC8] hover:text-[#8B2626]'
+                  ? 'text-[#1E4D38] dark:text-[#52B788] border-b-2 border-[#1E4D38] dark:border-[#52B788]'
+                  : 'text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]'
               }`}
             >
               MY CONTRIBUTIONS
@@ -353,36 +330,64 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
 
             <button
               type="button"
-              onClick={() => setZoomMode('impact')}
-              className={`px-3 py-2 transition-colors cursor-pointer ${
-                zoomMode === 'impact'
-                  ? 'text-[#8B2626] dark:text-[#D8B066] border-b-2 border-[#8B2626] dark:border-[#D8B066]'
-                  : 'text-[#201C18] dark:text-[#E8DEC8] hover:text-[#8B2626]'
-              }`}
-            >
-              FIELD IMPACT
-            </button>
-
-            <button
-              type="button"
               onClick={() => setZoomMode('treasury')}
               className={`px-3 py-2 transition-colors cursor-pointer ${
                 zoomMode === 'treasury'
-                  ? 'text-[#8B2626] dark:text-[#D8B066] border-b-2 border-[#8B2626] dark:border-[#D8B066]'
-                  : 'text-[#201C18] dark:text-[#E8DEC8] hover:text-[#8B2626]'
+                  ? 'text-[#1E4D38] dark:text-[#52B788] border-b-2 border-[#1E4D38] dark:border-[#52B788]'
+                  : 'text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]'
               }`}
             >
               FOUNDATION DESK
             </button>
-          </nav>
 
-          {/* Right Action Tools */}
-          <div className="flex items-center gap-3">
+            {/* Subtle Divider */}
+            <span className="text-zinc-300 dark:text-zinc-700 px-1 select-none">|</span>
+
+            {/* Language Selector: Amharic (Default), English, Afaan Oromo */}
+            <div className="flex items-center border border-[#9A7432]/40 rounded-[1px] overflow-hidden text-[10px] font-mono font-bold">
+              <button
+                type="button"
+                onClick={() => i18n.changeLanguage('am')}
+                className={`px-2 py-1 transition-colors cursor-pointer ${
+                  i18n.language === 'am'
+                    ? 'bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706]'
+                    : 'bg-[#F2ECE1] text-[#201C18] dark:bg-[#1C1814] dark:text-[#E8DEC8]'
+                }`}
+                title="አማርኛ"
+              >
+                አማ
+              </button>
+              <button
+                type="button"
+                onClick={() => i18n.changeLanguage('en')}
+                className={`px-2 py-1 transition-colors cursor-pointer ${
+                  i18n.language === 'en'
+                    ? 'bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706]'
+                    : 'bg-[#F2ECE1] text-[#201C18] dark:bg-[#1C1814] dark:text-[#E8DEC8]'
+                }`}
+                title="English"
+              >
+                EN
+              </button>
+              <button
+                type="button"
+                onClick={() => i18n.changeLanguage('om')}
+                className={`px-2 py-1 transition-colors cursor-pointer ${
+                  i18n.language === 'om'
+                    ? 'bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706]'
+                    : 'bg-[#F2ECE1] text-[#201C18] dark:bg-[#1C1814] dark:text-[#E8DEC8]'
+                }`}
+                title="Afaan Oromoo"
+              >
+                OM
+              </button>
+            </div>
+
             {/* Voxide Voice Assistant */}
             <button
               type="button"
               onClick={onOpenVoice}
-              className="p-2 border border-[#8B2626]/60 bg-[#8B2626]/5 hover:bg-[#8B2626]/15 text-[#8B2626] dark:text-[#D8B066] transition-colors cursor-pointer flex items-center gap-1.5"
+              className="p-2 border border-[#1E4D38]/60 bg-[#1E4D38]/5 hover:bg-[#1E4D38]/15 text-[#1E4D38] dark:text-[#52B788] transition-colors cursor-pointer flex items-center gap-1.5"
               title="Speak with Voxide Voice Assistant"
             >
               <Volume2 className="w-3.5 h-3.5" />
@@ -398,17 +403,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
             >
               {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
             </button>
-
-            {/* Primary Action Button */}
-            <button
-              type="button"
-              onClick={() => setZoomMode('discover')}
-              className="py-2.5 px-5 border border-[#8B2626] bg-[#8B2626] text-white font-mono text-xs font-black tracking-widest uppercase hover:bg-[#701E1E] transition-all cursor-pointer shadow-xs flex items-center gap-2 active:translate-y-px"
-            >
-              <span>EXPLORE CAUSES</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          </nav>
 
         </div>
 
@@ -429,7 +424,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
             {/* ── Wide Hero Section: Pure Negative Space & Authority ── */}
             <div className="max-w-4xl mx-auto text-center space-y-6">
               
-              <div className="inline-flex items-center gap-2 px-3 py-1 border border-[#9A7432]/40 bg-[#FCF9F2]/90 dark:bg-[#1E1A17]/90 text-[10px] font-mono font-bold tracking-[0.25em] text-[#9A7432] uppercase">
+              <div className="inline-flex items-center gap-2 px-3 py-1 border border-[#9A7432]/40 bg-[#F2EADA]/90 dark:bg-[#0E0D0B]/90 text-[10px] font-mono font-bold tracking-[0.25em] text-[#9A7432] uppercase">
                 <span>የኢትዮጵያ የሕዝብ ትብብር ሰነድ</span>
                 <span>·</span>
                 <span>NATIONAL CITIZEN SOLIDARITY TENDER</span>
@@ -440,7 +435,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   LEWEGENE
                 </h1>
                 
-                <p className="font-serif font-bold text-2xl sm:text-4xl text-[#8B2626] dark:text-[#D8B066] tracking-wide">
+                <p className="font-serif font-bold text-2xl sm:text-4xl text-[#1E4D38] dark:text-[#52B788] tracking-wide">
                   SUPPORTING ETHIOPIA’S PEOPLE &amp; PURPOSE
                 </p>
 
@@ -449,17 +444,12 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 </p>
               </div>
 
-              <p className="font-sans text-sm sm:text-base text-zinc-700 dark:text-zinc-300 max-w-2xl mx-auto leading-relaxed">
-                An authentic digital banknote printing direct citizen Birr into verified clean water boreholes,
-                rural medical clinics, and school classrooms across Ethiopia. 100% verified by ACSO. Zero platform commissions.
-              </p>
-
               {/* The Two Primary Hero Actions */}
               <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
                 <button
                   type="button"
                   onClick={() => setZoomMode('discover')}
-                  className="py-3.5 px-8 border-2 border-[#8B2626] bg-[#8B2626] text-white font-mono text-sm font-black tracking-widest uppercase hover:bg-[#701E1E] transition-all cursor-pointer shadow-md flex items-center gap-3 active:translate-y-px"
+                  className="py-3.5 px-8 border-2 border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-sm font-black tracking-widest uppercase hover:bg-[#163E2C] transition-all cursor-pointer shadow-md flex items-center gap-3 active:translate-y-px"
                 >
                   <span>EXPLORE CAUSES</span>
                   <ArrowRight className="w-4 h-4" />
@@ -468,7 +458,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 <button
                   type="button"
                   onClick={() => setZoomMode('treasury')}
-                  className="py-3.5 px-6 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#FCF9F2]/90 dark:bg-[#1E1A17]/90 text-[#201C18] dark:text-[#F4EFE6] font-mono text-sm font-black tracking-wider uppercase hover:bg-[#EFE8D8] transition-all cursor-pointer"
+                  className="py-3.5 px-6 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#F2EADA]/90 dark:bg-[#0E0D0B]/90 text-[#201C18] dark:text-[#F4EFE6] font-mono text-sm font-black tracking-wider uppercase hover:bg-[#DFD3BC] transition-all cursor-pointer"
                 >
                   <span>FOR FOUNDATIONS</span>
                 </button>
@@ -477,7 +467,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
             </div>
 
             {/* ── Delicate Centerpiece Engraving (Widescreen Monument) ── */}
-            <div className="w-full max-w-4xl mx-auto relative border border-[#26211C]/25 dark:border-[#9A7432]/35 bg-[#FCF9F2]/70 dark:bg-[#1E1A17]/70 p-4 sm:p-6">
+            <div className="w-full max-w-4xl mx-auto relative border border-[#26211C]/25 dark:border-[#9A7432]/35 bg-[#F2EADA]/80 dark:bg-[#0E0D0B]/80 p-4 sm:p-6">
               <div className="absolute inset-1 border border-[#9A7432]/25 pointer-events-none" />
               <CentralMonumentEngraving />
               <div className="mt-3 flex items-center justify-between text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
@@ -509,7 +499,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               </div>
 
               <div className="space-y-1">
-                <p className="text-2xl sm:text-3xl font-black text-[#8B2626] dark:text-[#D8B066]">
+                <p className="text-2xl sm:text-3xl font-black text-[#1E4D38] dark:text-[#52B788]">
                   100%
                 </p>
                 <p className="text-[10px] text-zinc-600 dark:text-zinc-400 font-bold uppercase tracking-wider">
@@ -528,132 +518,134 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
 
             </div>
 
-            {/* ── Featured Cause Spotlight Vignette (Breathable, Clean, Unboxed) ── */}
-            {activeSpotlight && (
-              <div className="w-full max-w-5xl mx-auto p-6 sm:p-8 border border-[#26211C]/30 dark:border-[#9A7432]/40 bg-[#FCF9F2]/80 dark:bg-[#1E1A17]/80 space-y-6">
-                
-                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#26211C]/15 dark:border-[#9A7432]/25 pb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 border border-[#8B2626] bg-[#8B2626]/10 text-[#8B2626] dark:text-[#D8B066] font-mono text-[10px] font-bold uppercase">
-                      FEATURED CAUSE VIGNETTE
-                    </span>
-                    <span className="font-mono text-xs font-bold text-zinc-500">
-                      № {activeSpotlight.serialCode || 'LW-0421'}
-                    </span>
-                  </div>
+            {/* ── Explore Causes Gallery with Live Money Progress & Direct Underwriting ── */}
+            <div className="w-full max-w-6xl mx-auto p-6 sm:p-8 border-2 border-[#1E4D38]/40 dark:border-[#9A7432]/50 bg-[#FAF6EC] dark:bg-[#0C0A09] space-y-8 shadow-xl relative">
+              <div className="absolute inset-1.5 border border-[#9A7432]/35 pointer-events-none" />
 
-                  {/* Flipper Controls */}
+              {/* Panel Header */}
+              <div className="relative z-10 flex flex-wrap items-center justify-between gap-4 border-b-2 border-[#1E4D38]/20 dark:border-[#9A7432]/30 pb-4">
+                <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-zinc-500">
-                      PLATE {(activePlateIndex % campaigns.length) + 1} OF {campaigns.length}
+                    <span className="px-2.5 py-1 bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706] font-mono text-[9px] font-black uppercase tracking-widest shadow-xs">
+                      EXPLORE VERIFIED CAUSES
                     </span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setActivePlateIndex((prev) =>
-                          campaigns.length > 0 ? (prev === 0 ? campaigns.length - 1 : prev - 1) : 0
-                        )
-                      }
-                      className="p-1 border border-[#26211C]/30 dark:border-[#9A7432]/40 hover:bg-[#EFE8D8] cursor-pointer"
-                      title="Previous Cause Plate"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setActivePlateIndex((prev) =>
-                          campaigns.length > 0 ? (prev + 1) % campaigns.length : 0
-                        )
-                      }
-                      className="p-1 border border-[#26211C]/30 dark:border-[#9A7432]/40 hover:bg-[#EFE8D8] cursor-pointer"
-                      title="Next Cause Plate"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
+                    <span className="font-mono text-xs font-black text-[#8B5E14] dark:text-[#D8B066] tracking-wider uppercase">
+                      ★ DIRECT UNDERWRITING LEDGER
+                    </span>
                   </div>
+                  <h3 className="font-display font-black text-2xl sm:text-3xl text-[#14110E] dark:text-[#FFFFFF] mt-1.5 tracking-tight">
+                    COMMUNITY CAUSES &amp; LIVE BIRR PROGRESS
+                  </h3>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                  
-                  {/* Left Engraved Plate Artwork */}
-                  <div className="lg:col-span-6 aspect-16/10 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#EFE8D8] dark:bg-[#26201B] overflow-hidden relative">
-                    {activeSpotlight.imageUrl ? (
-                      <img
-                        src={activeSpotlight.imageUrl}
-                        alt={activeSpotlight.title}
-                        className="w-full h-full object-cover filter contrast-110 saturate-90"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center font-mono text-xs">
-                        ENGRAVED VIGNETTE
-                      </div>
-                    )}
-                    <div className="absolute inset-0 pointer-events-none intaglio-overlay opacity-50" />
-                    
-                    <div className="absolute top-3 left-3 px-2.5 py-0.5 bg-[#FAF6EE] dark:bg-[#141210] border border-[#26211C] text-[10px] font-mono font-bold uppercase text-[#8B2626] dark:text-[#D8B066]">
-                      {activeSpotlight.category.toUpperCase()}
-                    </div>
-                  </div>
-
-                  {/* Right Narrative & Direct Actions */}
-                  <div className="lg:col-span-6 space-y-4">
-                    <div className="space-y-1">
-                      <h3 className="font-serif font-bold text-2xl sm:text-3xl text-[#201C18] dark:text-[#F4EFE6] leading-snug">
-                        {activeSpotlight.title}
-                      </h3>
-                      <p className="font-mono text-xs text-[#8B2626] dark:text-[#D8B066] font-bold">
-                        {activeSpotlight.organizationName || 'Accredited Civil Society Partner'}
-                      </p>
-                      <p className="font-mono text-xs text-zinc-600 dark:text-zinc-400 flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-[#9A7432]" />
-                        <span>{activeSpotlight.location || 'Addis Ababa, Ethiopia'}</span>
-                      </p>
-                    </div>
-
-                    <p className="font-sans text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 line-clamp-3 leading-relaxed">
-                      {activeSpotlight.story}
-                    </p>
-
-                    {/* Ruler Gauge */}
-                    <div className="pt-2">
-                      <BanknoteRulerGauge
-                        percent={
-                          activeSpotlight.goalAmount
-                            ? Math.min(100, Math.round((activeSpotlight.raisedAmount / activeSpotlight.goalAmount) * 100))
-                            : 0
-                        }
-                        raised={activeSpotlight.raisedAmount}
-                        goal={activeSpotlight.goalAmount}
-                      />
-                    </div>
-
-                    {/* Actions */}
-                    <div className="pt-4 flex flex-wrap items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => handleOpenPledge(activeSpotlight)}
-                        className="py-3 px-6 border border-[#8B2626] bg-[#8B2626] text-white font-mono text-xs font-black tracking-widest uppercase hover:bg-[#701E1E] transition-colors cursor-pointer shadow-xs flex items-center gap-2 active:translate-y-px"
-                      >
-                        <span>SUPPORT THIS CAUSE</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleOpenDetail(activeSpotlight)}
-                        className="py-3 px-4 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#EFE8D8] dark:bg-[#26201B] text-[#201C18] dark:text-[#E8DEC8] font-mono text-xs font-bold uppercase hover:bg-[#E5DDCB] transition-colors cursor-pointer"
-                      >
-                        EXAMINE DETAILS
-                      </button>
-                    </div>
-
-                  </div>
-
+                <div className="text-right">
+                  <span className="font-mono text-xs font-black text-[#1E4D38] dark:text-[#52B788] block">
+                    {filteredCampaigns.length} ACTIVE CAUSE PLATES
+                  </span>
+                  <span className="font-mono text-[10px] text-zinc-600 dark:text-zinc-400">
+                    {totalRaised.toLocaleString()} ETB PLEDGED ACROSS ETHIOPIA
+                  </span>
                 </div>
-
               </div>
-            )}
+
+              {/* Modern Search & Filters: Clean, Spacious, Usable */}
+              <div className="relative z-10 p-4 sm:p-5 border border-[#1E4D38]/25 dark:border-[#9A7432]/35 bg-[#F2EADA]/90 dark:bg-[#141210] space-y-4">
+                {/* Search Field */}
+                <div className="relative w-full">
+                  <Search className="w-4 h-4 text-[#9A7432] absolute left-3.5 top-3 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search causes by title, organization, location, or serial number..."
+                    className="w-full pl-10 pr-4 py-2 border border-[#26211C]/30 dark:border-[#4A3E33] bg-[#EAE1CF] dark:bg-[#080706] font-mono text-xs text-[#201C18] dark:text-[#F4EFE6] placeholder:text-zinc-500 focus:outline-none focus:border-[#1E4D38]"
+                  />
+                </div>
+
+                {/* Filter Tabs */}
+                <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-[#26211C]/15 dark:border-[#4A3E33]">
+                  {/* Sector Categories */}
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase mr-1">
+                      SECTOR:
+                    </span>
+                    {categories.map((cat) => (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setSelectedCategory(cat.id)}
+                        className={`px-3 py-1 border text-xs font-mono font-bold uppercase transition-all cursor-pointer ${
+                          selectedCategory === cat.id
+                            ? 'border-[#1E4D38] bg-[#1E4D38] text-white shadow-xs'
+                            : 'border-[#26211C]/25 bg-[#FAF6EC] dark:bg-[#201B16] text-[#201C18] dark:text-[#E8DEC8] hover:border-[#1E4D38]'
+                        }`}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Funding Status Tabs */}
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase mr-1">
+                      STATUS:
+                    </span>
+                    {[
+                      { id: 'all', label: 'ALL' },
+                      { id: 'active', label: 'ACTIVE' },
+                      { id: 'nearly_funded', label: 'NEARLY FUNDED' },
+                      { id: 'completed', label: 'COMPLETED' },
+                    ].map((status) => (
+                      <button
+                        key={status.id}
+                        type="button"
+                        onClick={() => setFundingStatusFilter(status.id as any)}
+                        className={`px-2.5 py-1 border text-[10px] font-mono font-bold uppercase transition-all cursor-pointer ${
+                          fundingStatusFilter === status.id
+                            ? 'border-[#26211C] bg-[#26211C] text-white dark:border-[#9A7432] dark:bg-[#9A7432] dark:text-[#080706]'
+                            : 'border-[#26211C]/25 bg-[#EAE1CF] dark:bg-[#161411] text-zinc-700 dark:text-zinc-300 hover:border-[#26211C]'
+                        }`}
+                      >
+                        {status.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Causes Grid with Money Progress & Quick Pledge Actions */}
+              <div className="relative z-10">
+                {filteredCampaigns.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredCampaigns.map((camp) => (
+                      <BanknotePlateCard
+                        key={camp.id}
+                        campaign={camp}
+                        onSelect={handleOpenDetail}
+                        onQuickPledge={handleOpenPledge}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-8 text-center border border-dashed border-[#26211C]/30 dark:border-[#9A7432]/40 font-mono text-xs space-y-2">
+                    <p className="text-[#201C18] dark:text-[#F4EFE6] font-bold">
+                      No causes matching your search or filters.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedCategory('all');
+                        setFundingStatusFilter('all');
+                        setSearchQuery('');
+                      }}
+                      className="px-3 py-1 bg-[#1E4D38] text-white font-mono text-xs font-bold uppercase cursor-pointer"
+                    >
+                      RESET FILTERS
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
 
           </div>
         )}
@@ -669,7 +661,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               <button
                 type="button"
                 onClick={() => setZoomMode('overview')}
-                className="px-4 py-2 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#FCF9F2] dark:bg-[#1E1A17] font-mono text-xs font-bold uppercase flex items-center gap-2 hover:bg-[#EFE8D8] transition-colors cursor-pointer"
+                className="px-4 py-2 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#F2EADA] dark:bg-[#0E0D0B] font-mono text-xs font-bold uppercase flex items-center gap-2 hover:bg-[#DFD3BC] transition-colors cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>← BACK TO HOME</span>
@@ -684,13 +676,13 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 </p>
               </div>
 
-              <span className="font-mono text-xs font-black text-[#8B2626] dark:text-[#D8B066]">
+              <span className="font-mono text-xs font-black text-[#1E4D38] dark:text-[#52B788]">
                 {filteredCampaigns.length} CAUSES AVAILABLE
               </span>
             </div>
 
             {/* Modern Search & Filters: Clean, Spacious, Usable */}
-            <div className="p-6 border border-[#26211C]/25 dark:border-[#9A7432]/35 bg-[#FCF9F2]/80 dark:bg-[#1E1A17]/80 space-y-4">
+            <div className="p-6 border border-[#26211C]/25 dark:border-[#9A7432]/35 bg-[#F2EADA]/90 dark:bg-[#0E0D0B]/90 space-y-4">
               
               {/* Search Field */}
               <div className="relative w-full">
@@ -700,7 +692,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search causes by title, organization, location, or serial number..."
-                  className="w-full pl-10 pr-4 py-2.5 border border-[#26211C]/30 dark:border-[#4A3E33] bg-[#F7F2E7] dark:bg-[#26201B] font-mono text-xs text-[#201C18] dark:text-[#F4EFE6] placeholder:text-zinc-500 focus:outline-none focus:border-[#8B2626]"
+                  className="w-full pl-10 pr-4 py-2.5 border border-[#26211C]/30 dark:border-[#4A3E33] bg-[#EAE1CF] dark:bg-[#161411] font-mono text-xs text-[#201C18] dark:text-[#F4EFE6] placeholder:text-zinc-500 focus:outline-none focus:border-[#1E4D38]"
                 />
               </div>
 
@@ -718,8 +710,8 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                       onClick={() => setSelectedCategory(cat.id)}
                       className={`px-3 py-1.5 border text-xs font-mono font-bold uppercase transition-all cursor-pointer ${
                         selectedCategory === cat.id
-                          ? 'border-[#8B2626] bg-[#8B2626] text-white'
-                          : 'border-[#26211C]/25 bg-[#F7F2E7] dark:bg-[#26201B] text-[#201C18] dark:text-[#E8DEC8] hover:border-[#8B2626]'
+                          ? 'border-[#1E4D38] bg-[#1E4D38] text-white'
+                          : 'border-[#26211C]/25 bg-[#F7F2E7] dark:bg-[#26201B] text-[#201C18] dark:text-[#E8DEC8] hover:border-[#1E4D38]'
                       }`}
                     >
                       {cat.label}
@@ -744,8 +736,8 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                       onClick={() => setFundingStatusFilter(status.id as any)}
                       className={`px-2.5 py-1.5 border text-[10px] font-mono font-bold uppercase transition-all cursor-pointer ${
                         fundingStatusFilter === status.id
-                          ? 'border-[#26211C] bg-[#26211C] text-white dark:border-[#9A7432] dark:bg-[#9A7432] dark:text-[#141210]'
-                          : 'border-[#26211C]/25 bg-[#F7F2E7] dark:bg-[#26201B] text-zinc-700 dark:text-zinc-300 hover:border-[#26211C]'
+                          ? 'border-[#26211C] bg-[#26211C] text-white dark:border-[#9A7432] dark:bg-[#9A7432] dark:text-[#080706]'
+                          : 'border-[#26211C]/25 bg-[#EAE1CF] dark:bg-[#161411] text-zinc-700 dark:text-zinc-300 hover:border-[#26211C]'
                       }`}
                     >
                       {status.label}
@@ -769,8 +761,8 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
             </div>
 
             {filteredCampaigns.length === 0 && (
-              <div className="p-16 text-center border border-dashed border-[#26211C]/30 bg-[#FCF9F2]/70 dark:bg-[#1E1A17]/70 font-mono space-y-4">
-                <p className="text-base font-bold text-[#8B2626]">
+              <div className="p-16 text-center border border-dashed border-[#26211C]/30 bg-[#F2EADA]/80 dark:bg-[#0E0D0B]/80 font-mono space-y-4">
+                <p className="text-base font-bold text-[#1E4D38] dark:text-[#52B788]">
                   NO CAUSE PLATES MATCH YOUR CRITERIA
                 </p>
                 <p className="text-xs text-zinc-500 max-w-md mx-auto">
@@ -783,7 +775,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                     setSelectedCategory('all');
                     setFundingStatusFilter('all');
                   }}
-                  className="px-5 py-2.5 border border-[#8B2626] bg-[#8B2626] text-white font-mono text-xs font-black uppercase cursor-pointer"
+                  className="px-5 py-2.5 border border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-xs font-black uppercase cursor-pointer hover:bg-[#163E2C]"
                 >
                   RESET ALL FILTERS
                 </button>
@@ -804,20 +796,20 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               <button
                 type="button"
                 onClick={() => setZoomMode('discover')}
-                className="px-4 py-2 border border-[#8B2626] bg-[#8B2626] text-white font-mono text-xs font-black tracking-widest uppercase flex items-center gap-2 hover:bg-[#701E1E] transition-colors cursor-pointer shadow-xs"
+                className="px-4 py-2 border border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-xs font-black tracking-widest uppercase flex items-center gap-2 hover:bg-[#163E2C] transition-colors cursor-pointer shadow-xs"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>← BACK TO CAUSES</span>
               </button>
 
               <div className="flex items-center gap-3">
-                <span className="banknote-serial-red text-sm font-black">
+                <span className="font-mono text-sm font-black text-[#1E4D38] dark:text-[#52B788]">
                   № {selectedCampaign.serialCode || 'LW-0421'}
                 </span>
                 <span className="px-2.5 py-0.5 border border-[#26211C]/40 text-[10px] font-mono font-bold uppercase">
                   {selectedCampaign.category.toUpperCase()}
                 </span>
-                <span className="px-2 py-0.5 bg-[#8B2626] text-white text-[9px] font-mono font-bold uppercase">
+                <span className="px-2.5 py-0.5 bg-[#1E4D38] text-white text-[9px] font-mono font-bold uppercase">
                   ACSO VERIFIED
                 </span>
               </div>
@@ -830,7 +822,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               <div className="lg:col-span-7 space-y-6">
                 
                 {/* Grand Engraved Illustration Frame */}
-                <div className="relative aspect-16/10 w-full border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#EFE8D8] dark:bg-[#26201B] overflow-hidden">
+                <div className="relative aspect-16/10 w-full border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#DFD3BC] dark:bg-[#161411] overflow-hidden">
                   {selectedCampaign.imageUrl ? (
                     <img
                       src={selectedCampaign.imageUrl}
@@ -844,13 +836,13 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   )}
                   <div className="absolute inset-0 pointer-events-none intaglio-overlay opacity-40 mix-blend-multiply" />
                   
-                  <div className="absolute bottom-3 left-3 px-3 py-1 bg-[#FAF6EE]/95 dark:bg-[#141210]/95 border border-[#26211C] font-mono text-xs font-bold text-[#8B2626] dark:text-[#D8B066]">
+                  <div className="absolute bottom-3 left-3 px-3 py-1 bg-[#EAE1CF]/95 dark:bg-[#080706]/95 border border-[#26211C] font-mono text-xs font-bold text-[#1E4D38] dark:text-[#52B788]">
                     VERIFIED COMMUNITY BENEFICIARIES: {selectedCampaign.beneficiariesTarget || 500} CITIZENS
                   </div>
                 </div>
 
                 {/* Narrative & Field Reports */}
-                <div className="p-6 border border-[#26211C]/25 dark:border-[#9A7432]/35 bg-[#FCF9F2]/80 dark:bg-[#1E1A17]/80 space-y-4">
+                <div className="p-6 border border-[#26211C]/25 dark:border-[#9A7432]/35 bg-[#F2EADA]/90 dark:bg-[#0E0D0B]/90 space-y-4">
                   <h3 className="font-serif font-black text-xl text-[#201C18] dark:text-[#F4EFE6] border-b border-[#26211C]/15 pb-2">
                     FIELD DIRECTIVE &amp; PROJECT STORY
                   </h3>
@@ -860,7 +852,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   </p>
 
                   <div className="p-4 border border-[#9A7432]/40 bg-[#F7F2E7]/80 dark:bg-[#26201B]/80 font-mono text-xs space-y-1">
-                    <p className="font-bold text-[#8B2626] dark:text-[#D8B066] uppercase">
+                    <p className="font-bold text-[#1E4D38] dark:text-[#52B788] uppercase">
                       TANGIBLE IMPACT COMMITMENT:
                     </p>
                     <p className="text-zinc-700 dark:text-zinc-300">
@@ -872,7 +864,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 {/* Verification & ACSO Credentials */}
                 <div className="p-6 border border-[#26211C]/25 dark:border-[#9A7432]/35 bg-[#FCF9F2]/80 dark:bg-[#1E1A17]/80 space-y-3 font-mono text-xs">
                   <h4 className="font-bold text-[#201C18] dark:text-[#F4EFE6] uppercase flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-[#8B2626]" />
+                    <ShieldCheck className="w-4 h-4 text-[#1E4D38] dark:text-[#52B788]" />
                     <span>CIVIL SOCIETY ACCREDITATION (ACSO REGISTRY)</span>
                   </h4>
                   <div className="grid grid-cols-2 gap-4 text-[11px] text-zinc-600 dark:text-zinc-400">
@@ -892,10 +884,10 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               {/* Right 5 Columns: Sticky Funding Summary & Primary Action */}
               <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
                 
-                <div className="p-6 sm:p-8 border-2 border-[#26211C] dark:border-[#9A7432] bg-[#FCF9F2] dark:bg-[#1E1A17] space-y-6">
+                <div className="p-6 sm:p-8 border-2 border-[#26211C] dark:border-[#9A7432] bg-[#F2EADA] dark:bg-[#0E0D0B] space-y-6">
                   
                   <div className="space-y-2">
-                    <span className="font-mono text-xs font-bold text-[#8B2626] dark:text-[#D8B066] tracking-wide uppercase">
+                    <span className="font-mono text-xs font-bold text-[#1E4D38] dark:text-[#52B788] tracking-wide uppercase">
                       {selectedCampaign.organizationName || 'Accredited Civil Society Org'}
                     </span>
                     <h2 className="font-serif font-black text-2xl sm:text-3xl text-[#201C18] dark:text-[#F4EFE6] leading-snug">
@@ -922,11 +914,11 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
 
                   {/* Quick Metric Ledger */}
                   <div className="grid grid-cols-2 gap-3 font-mono text-xs pt-2">
-                    <div className="p-3 border border-[#26211C]/20 bg-[#F7F2E7] dark:bg-[#26201B]">
+                    <div className="p-3 border border-[#26211C]/20 bg-[#EAE1CF] dark:bg-[#161411]">
                       <span className="block text-[10px] text-zinc-500 font-bold uppercase">PATRONS</span>
                       <span className="text-lg font-black">{selectedCampaign.donationsCount || 0}</span>
                     </div>
-                    <div className="p-3 border border-[#26211C]/20 bg-[#F7F2E7] dark:bg-[#26201B]">
+                    <div className="p-3 border border-[#26211C]/20 bg-[#EAE1CF] dark:bg-[#161411]">
                       <span className="block text-[10px] text-zinc-500 font-bold uppercase">TARGET GOAL</span>
                       <span className="text-lg font-black">{selectedCampaign.goalAmount.toLocaleString()} ETB</span>
                     </div>
@@ -936,7 +928,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   <button
                     type="button"
                     onClick={() => handleOpenPledge(selectedCampaign)}
-                    className="w-full py-4 border-2 border-[#8B2626] bg-[#8B2626] text-white font-mono text-sm font-black tracking-widest uppercase hover:bg-[#701E1E] transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 active:translate-y-px"
+                    className="w-full py-4 border-2 border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-sm font-black tracking-widest uppercase hover:bg-[#163E2C] transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 active:translate-y-px"
                   >
                     <span>SUPPORT THIS CAUSE (PLEDGE BIRR)</span>
                     <ArrowRight className="w-4 h-4" />
@@ -966,14 +958,14 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               <button
                 type="button"
                 onClick={() => setZoomMode('detail')}
-                className="px-4 py-2 border border-[#26211C]/30 bg-[#FCF9F2] dark:bg-[#1E1A17] font-mono text-xs font-bold uppercase flex items-center gap-2 hover:bg-[#EFE8D8] transition-colors cursor-pointer"
+                className="px-4 py-2 border border-[#26211C]/30 bg-[#F2EADA] dark:bg-[#0E0D0B] font-mono text-xs font-bold uppercase flex items-center gap-2 hover:bg-[#DFD3BC] transition-colors cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>← BACK</span>
               </button>
 
               <div className="text-right font-mono">
-                <span className="text-xs font-black text-[#8B2626]">
+                <span className="text-xs font-black text-[#1E4D38] dark:text-[#52B788]">
                   UNDERWRITING CAUSE № {selectedCampaign.serialCode || 'LW-0421'}
                 </span>
               </div>
@@ -991,10 +983,10 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   key={s.step}
                   className={`py-2 border font-bold uppercase transition-colors ${
                     pledgeStep === s.step
-                      ? 'border-[#8B2626] bg-[#8B2626] text-white'
+                      ? 'border-[#1E4D38] bg-[#1E4D38] text-white'
                       : pledgeStep > s.step
-                      ? 'border-[#26211C]/40 bg-[#EFE8D8] text-[#201C18]'
-                      : 'border-[#26211C]/20 bg-[#FCF9F2]/50 text-zinc-400'
+                      ? 'border-[#26211C]/40 bg-[#DFD3BC] text-[#201C18]'
+                      : 'border-[#26211C]/20 bg-[#F2EADA]/50 text-zinc-400'
                   }`}
                 >
                   {s.label}
@@ -1004,7 +996,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
 
             {/* Step 1: Amount Selection */}
             {pledgeStep === 1 && (
-              <div className="p-8 border border-[#26211C]/30 dark:border-[#9A7432]/40 bg-[#FCF9F2] dark:bg-[#1E1A17] space-y-6">
+              <div className="p-8 border border-[#26211C]/30 dark:border-[#9A7432]/40 bg-[#F2EADA] dark:bg-[#0E0D0B] space-y-6">
                 <div className="space-y-1">
                   <h3 className="font-serif font-black text-2xl text-[#201C18] dark:text-[#F4EFE6]">
                     Select Underwriting Denomination
@@ -1014,33 +1006,44 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   </p>
                 </div>
 
-                {/* Preset Denominations */}
+                {/* Preset Denominations with High-Contrast Typography & Distinct Theme States */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono">
-                  {[100, 500, 1000, 5000].map((amt) => (
-                    <button
-                      key={amt}
-                      type="button"
-                      onClick={() => {
-                        setPledgeAmount(amt);
-                        setCustomAmountStr(String(amt));
-                      }}
-                      className={`p-4 border-2 font-black text-base cursor-pointer transition-all ${
-                        pledgeAmount === amt
-                          ? 'border-[#8B2626] bg-[#8B2626] text-white shadow-xs'
-                          : 'border-[#26211C]/30 bg-[#F7F2E7] hover:border-[#8B2626]'
-                      }`}
-                    >
-                      <span>{amt.toLocaleString()} ETB</span>
-                      <span className="block text-[10px] font-ethiopic font-normal opacity-80">
-                        {toGeezNumber(amt)} ብር
-                      </span>
-                    </button>
-                  ))}
+                  {[100, 500, 1000, 5000].map((amt) => {
+                    const isSelected = pledgeAmount === amt;
+                    return (
+                      <button
+                        key={amt}
+                        type="button"
+                        onClick={() => {
+                          setPledgeAmount(amt);
+                          setCustomAmountStr(String(amt));
+                        }}
+                        className={`p-4 border-2 font-black text-base sm:text-lg cursor-pointer transition-all rounded-[1px] ${
+                          isSelected
+                            ? 'border-[#1E4D38] dark:border-[#52B788] bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706] shadow-md ring-2 ring-[#9A7432]/60 scale-[1.02]'
+                            : 'border-[#26211C]/50 dark:border-[#9A7432]/50 bg-[#EFE7D5] dark:bg-[#181512] text-[#14110E] dark:text-[#FFFFFF] hover:border-[#1E4D38] dark:hover:border-[#52B788] hover:bg-[#E5DAC4] dark:hover:bg-[#221E19] shadow-xs'
+                        }`}
+                      >
+                        <span className="block font-black tracking-tight text-inherit">
+                          {amt.toLocaleString()} ETB
+                        </span>
+                        <span
+                          className={`block text-xs font-ethiopic font-bold mt-1 ${
+                            isSelected
+                              ? 'text-white/90 dark:text-[#080706]/90'
+                              : 'text-[#1E4D38] dark:text-[#52B788]'
+                          }`}
+                        >
+                          {toGeezNumber(amt)} ብር
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {/* Custom Amount */}
                 <div className="space-y-2">
-                  <label className="block font-mono text-xs font-bold uppercase text-zinc-600 dark:text-zinc-400">
+                  <label className="block font-mono text-xs font-black uppercase text-[#14110E] dark:text-[#F4EFE6]">
                     OR ENTER CUSTOM AMOUNT (ETB):
                   </label>
                   <input
@@ -1053,7 +1056,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                       const parsed = parseInt(e.target.value, 10);
                       if (!isNaN(parsed) && parsed > 0) setPledgeAmount(parsed);
                     }}
-                    className="w-full p-3 border border-[#26211C]/40 bg-[#F7F2E7] font-mono text-lg font-black focus:outline-none focus:border-[#8B2626]"
+                    className="w-full p-3 border-2 border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#EFE7D5] dark:bg-[#181512] font-mono text-lg font-black text-[#14110E] dark:text-[#FFFFFF] focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788]"
                   />
                 </div>
 
@@ -1063,7 +1066,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                     type="button"
                     onClick={() => setPledgeStep(2)}
                     disabled={pledgeAmount <= 0}
-                    className="py-3 px-8 border border-[#8B2626] bg-[#8B2626] text-white font-mono text-xs font-black tracking-widest uppercase hover:bg-[#701E1E] transition-all cursor-pointer flex items-center gap-2"
+                    className="py-3 px-8 border border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-xs font-black tracking-widest uppercase hover:bg-[#163E2C] transition-all cursor-pointer flex items-center gap-2"
                   >
                     <span>CONTINUE TO DETAILS</span>
                     <ArrowRight className="w-4 h-4" />
@@ -1074,7 +1077,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
 
             {/* Step 2: Patron Details & Payment Rail */}
             {pledgeStep === 2 && (
-              <div className="p-8 border border-[#26211C]/30 dark:border-[#9A7432]/40 bg-[#FCF9F2] dark:bg-[#1E1A17] space-y-6 font-mono text-xs">
+              <div className="p-8 border border-[#26211C]/30 dark:border-[#9A7432]/40 bg-[#F2EADA] dark:bg-[#0E0D0B] space-y-6 font-mono text-xs">
                 <div className="space-y-1">
                   <h3 className="font-serif font-black text-2xl text-[#201C18] dark:text-[#F4EFE6]">
                     Patron Registry &amp; Clearing Rail
@@ -1086,7 +1089,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block font-bold uppercase text-zinc-600 dark:text-zinc-400 mb-1">
+                    <label className="block font-bold uppercase text-[#14110E] dark:text-[#F4EFE6] mb-1">
                       PATRON NAME (OR ANONYMOUS):
                     </label>
                     <input
@@ -1095,9 +1098,9 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                       value={donorName}
                       onChange={(e) => setDonorName(e.target.value)}
                       placeholder="e.g. Almaz Bekele"
-                      className="w-full p-3 border border-[#26211C]/40 bg-[#F7F2E7] disabled:opacity-50 focus:outline-none focus:border-[#8B2626]"
+                      className="w-full p-3 border-2 border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#EFE7D5] dark:bg-[#181512] text-[#14110E] dark:text-[#FFFFFF] disabled:opacity-50 focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788]"
                     />
-                    <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                    <label className="flex items-center gap-2 mt-2 cursor-pointer text-[#14110E] dark:text-[#E8DEC8]">
                       <input
                         type="checkbox"
                         checked={isAnonymous}
@@ -1108,19 +1111,19 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   </div>
 
                   <div>
-                    <label className="block font-bold uppercase text-zinc-600 dark:text-zinc-400 mb-1">
+                    <label className="block font-bold uppercase text-[#14110E] dark:text-[#F4EFE6] mb-1">
                       SOLIDARITY MESSAGE / NOTE:
                     </label>
                     <textarea
                       rows={2}
                       value={donorMessage}
                       onChange={(e) => setDonorMessage(e.target.value)}
-                      className="w-full p-3 border border-[#26211C]/40 bg-[#F7F2E7] focus:outline-none focus:border-[#8B2626]"
+                      className="w-full p-3 border-2 border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#EFE7D5] dark:bg-[#181512] text-[#14110E] dark:text-[#FFFFFF] focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788]"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-bold uppercase text-zinc-600 dark:text-zinc-400 mb-2">
+                    <label className="block font-bold uppercase text-[#14110E] dark:text-[#F4EFE6] mb-2">
                       PAYMENT CLEARING RAIL:
                     </label>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -1134,10 +1137,10 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                           key={rail.id}
                           type="button"
                           onClick={() => setSelectedPaymentRail(rail.id as any)}
-                          className={`p-3 border font-bold text-center cursor-pointer uppercase ${
+                          className={`p-3 border-2 font-black text-center cursor-pointer uppercase transition-all ${
                             selectedPaymentRail === rail.id
-                              ? 'border-[#8B2626] bg-[#8B2626] text-white'
-                              : 'border-[#26211C]/30 bg-[#F7F2E7] hover:border-[#8B2626]'
+                              ? 'border-[#1E4D38] dark:border-[#52B788] bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706] shadow-xs'
+                              : 'border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#EFE7D5] dark:bg-[#181512] text-[#14110E] dark:text-[#FFFFFF] hover:border-[#1E4D38] dark:hover:border-[#52B788]'
                           }`}
                         >
                           {rail.name}
@@ -1147,11 +1150,11 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   </div>
                 </div>
 
-                <div className="pt-4 flex items-center justify-between border-t border-[#26211C]/15">
+                <div className="pt-4 flex items-center justify-between border-t border-[#26211C]/15 dark:border-[#9A7432]/30">
                   <button
                     type="button"
                     onClick={() => setPledgeStep(1)}
-                    className="px-4 py-2 border border-[#26211C]/30 bg-[#EFE8D8] cursor-pointer"
+                    className="px-4 py-2 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#DFD3BC] dark:bg-[#181512] text-[#14110E] dark:text-[#FFFFFF] font-bold cursor-pointer hover:bg-[#D5C6AC]"
                   >
                     ← BACK
                   </button>
@@ -1159,7 +1162,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   <button
                     type="button"
                     onClick={() => setPledgeStep(3)}
-                    className="py-3 px-8 border border-[#8B2626] bg-[#8B2626] text-white font-black tracking-widest uppercase hover:bg-[#701E1E] cursor-pointer flex items-center gap-2"
+                    className="py-3 px-8 border border-[#1E4D38] bg-[#1E4D38] text-white font-black tracking-widest uppercase hover:bg-[#163E2C] cursor-pointer flex items-center gap-2"
                   >
                     <span>REVIEW PLEDGE</span>
                     <ArrowRight className="w-4 h-4" />
@@ -1170,40 +1173,40 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
 
             {/* Step 3: Review & Confirm */}
             {pledgeStep === 3 && (
-              <div className="p-8 border-2 border-[#26211C] dark:border-[#9A7432] bg-[#FCF9F2] dark:bg-[#1E1A17] space-y-6 font-mono text-xs">
+              <div className="p-8 border-2 border-[#26211C] dark:border-[#9A7432] bg-[#F2EADA] dark:bg-[#0E0D0B] space-y-6 font-mono text-xs">
                 <div className="space-y-1">
                   <h3 className="font-serif font-black text-2xl text-[#201C18] dark:text-[#F4EFE6]">
                     Confirm Civic Promissory Underwrite
                   </h3>
-                  <p className="text-zinc-500">
+                  <p className="text-zinc-600 dark:text-zinc-400">
                     Review your details before issuing digital Birr into the community escrow.
                   </p>
                 </div>
 
-                <div className="p-4 border border-[#26211C]/20 bg-[#F7F2E7] space-y-3">
-                  <div className="flex justify-between border-b border-[#26211C]/10 pb-2">
-                    <span className="text-zinc-500">CAUSE:</span>
-                    <span className="font-bold text-right">{selectedCampaign.title}</span>
+                <div className="p-4 border-2 border-[#26211C]/30 dark:border-[#9A7432]/40 bg-[#EFE7D5] dark:bg-[#181512] text-[#14110E] dark:text-[#FFFFFF] space-y-3">
+                  <div className="flex justify-between border-b border-[#26211C]/15 dark:border-[#9A7432]/25 pb-2">
+                    <span className="text-zinc-600 dark:text-zinc-400 font-bold">CAUSE:</span>
+                    <span className="font-black text-right">{selectedCampaign.title}</span>
                   </div>
-                  <div className="flex justify-between border-b border-[#26211C]/10 pb-2">
-                    <span className="text-zinc-500">ORGANIZATION:</span>
+                  <div className="flex justify-between border-b border-[#26211C]/15 dark:border-[#9A7432]/25 pb-2">
+                    <span className="text-zinc-600 dark:text-zinc-400 font-bold">ORGANIZATION:</span>
                     <span className="font-bold">{selectedCampaign.organizationName}</span>
                   </div>
-                  <div className="flex justify-between border-b border-[#26211C]/10 pb-2">
-                    <span className="text-zinc-500">PATRON RECORD:</span>
+                  <div className="flex justify-between border-b border-[#26211C]/15 dark:border-[#9A7432]/25 pb-2">
+                    <span className="text-zinc-600 dark:text-zinc-400 font-bold">PATRON RECORD:</span>
                     <span className="font-bold">{isAnonymous ? 'Anonymous Patron' : donorName}</span>
                   </div>
-                  <div className="flex justify-between border-b border-[#26211C]/10 pb-2">
-                    <span className="text-zinc-500">PAYMENT RAIL:</span>
-                    <span className="font-bold uppercase text-emerald-700">{selectedPaymentRail} (DIRECT ESCROW)</span>
+                  <div className="flex justify-between border-b border-[#26211C]/15 dark:border-[#9A7432]/25 pb-2">
+                    <span className="text-zinc-600 dark:text-zinc-400 font-bold">PAYMENT RAIL:</span>
+                    <span className="font-black uppercase text-[#1E4D38] dark:text-[#52B788]">{selectedPaymentRail} (DIRECT ESCROW)</span>
                   </div>
                   <div className="flex justify-between pt-1 text-base">
-                    <span className="font-bold">TOTAL PLEDGE:</span>
-                    <span className="font-black text-[#8B2626]">{pledgeAmount.toLocaleString()} ETB</span>
+                    <span className="font-black">TOTAL PLEDGE:</span>
+                    <span className="font-black text-[#1E4D38] dark:text-[#52B788]">{pledgeAmount.toLocaleString()} ETB</span>
                   </div>
                 </div>
 
-                <div className="p-3 border border-[#9A7432]/40 bg-[#F7F2E7] text-[11px] text-zinc-600">
+                <div className="p-3 border border-[#9A7432]/40 bg-[#EFE7D5] dark:bg-[#181512] text-[11px] text-[#14110E] dark:text-[#E8DEC8] font-bold">
                   ★ 100% of your pledge will be transferred directly to verified community procurement. Zero platform fee is deducted.
                 </div>
 
@@ -1211,7 +1214,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   <button
                     type="button"
                     onClick={() => setPledgeStep(2)}
-                    className="px-4 py-2 border border-[#26211C]/30 bg-[#EFE8D8] cursor-pointer"
+                    className="px-4 py-2 border border-[#26211C]/30 bg-[#DFD3BC] cursor-pointer"
                   >
                     ← BACK
                   </button>
@@ -1220,7 +1223,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                     type="button"
                     onClick={handleExecutePledge}
                     disabled={isPledging}
-                    className="py-3.5 px-8 border-2 border-[#8B2626] bg-[#8B2626] text-white font-black tracking-widest uppercase hover:bg-[#701E1E] transition-all cursor-pointer shadow-md flex items-center gap-2 disabled:opacity-50"
+                    className="py-3.5 px-8 border-2 border-[#1E4D38] bg-[#1E4D38] text-white font-black tracking-widest uppercase hover:bg-[#163E2C] transition-all cursor-pointer shadow-md flex items-center gap-2 disabled:opacity-50"
                   >
                     {isPledging ? <span>SETTLING ON-CHAIN...</span> : <span>CONFIRM CONTRIBUTION</span>}
                   </button>
@@ -1230,8 +1233,8 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
 
             {/* Step 4: Minted Certificate Celebration */}
             {pledgeStep === 4 && (
-              <div className="p-8 border-2 border-[#8B2626] bg-[#FCF9F2] dark:bg-[#1E1A17] text-center space-y-6 font-mono">
-                <div className="w-16 h-16 mx-auto rounded-full border-2 border-[#8B2626] bg-[#8B2626]/10 flex items-center justify-center text-[#8B2626]">
+              <div className="p-8 border-2 border-[#1E4D38] bg-[#F2EADA] dark:bg-[#0E0D0B] text-center space-y-6 font-mono">
+                <div className="w-16 h-16 mx-auto rounded-full border-2 border-[#1E4D38] bg-[#1E4D38]/10 flex items-center justify-center text-[#1E4D38] dark:text-[#52B788]">
                   <Check className="w-8 h-8" />
                 </div>
 
@@ -1256,7 +1259,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   <button
                     type="button"
                     onClick={() => setZoomMode('vault')}
-                    className="py-3 px-6 border border-[#8B2626] bg-[#8B2626] text-white font-mono text-xs font-black tracking-widest uppercase hover:bg-[#701E1E] cursor-pointer"
+                    className="py-3 px-6 border border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-xs font-black tracking-widest uppercase hover:bg-[#163E2C] cursor-pointer"
                   >
                     VIEW MY CONTRIBUTIONS
                   </button>
@@ -1285,29 +1288,29 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               <button
                 type="button"
                 onClick={() => setZoomMode('discover')}
-                className="py-2.5 px-5 border border-[#8B2626] bg-[#8B2626] text-white font-mono text-xs font-black uppercase cursor-pointer"
+                className="py-2.5 px-5 border border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-xs font-black uppercase cursor-pointer hover:bg-[#163E2C]"
               >
                 + UNDERWRITE NEW CAUSE
               </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-center">
-              <div className="p-6 border border-[#26211C]/20 bg-[#FCF9F2] space-y-1">
-                <span className="text-3xl font-black text-[#8B2626]">3,500 ETB</span>
+              <div className="p-6 border border-[#26211C]/20 bg-[#F2EADA] dark:bg-[#0E0D0B] space-y-1">
+                <span className="text-3xl font-black text-[#1E4D38] dark:text-[#52B788]">3,500 ETB</span>
                 <span className="block text-[10px] text-zinc-500 uppercase font-bold">TOTAL UNDERWRITTEN</span>
               </div>
-              <div className="p-6 border border-[#26211C]/20 bg-[#FCF9F2] space-y-1">
-                <span className="text-3xl font-black">4</span>
+              <div className="p-6 border border-[#26211C]/20 bg-[#F2EADA] dark:bg-[#0E0D0B] space-y-1">
+                <span className="text-3xl font-black text-[#201C18] dark:text-[#F4EFE6]">4</span>
                 <span className="block text-[10px] text-zinc-500 uppercase font-bold">CAUSES BACKED</span>
               </div>
-              <div className="p-6 border border-[#26211C]/20 bg-[#FCF9F2] space-y-1">
-                <span className="text-3xl font-black text-emerald-700">100%</span>
+              <div className="p-6 border border-[#26211C]/20 bg-[#F2EADA] dark:bg-[#0E0D0B] space-y-1">
+                <span className="text-3xl font-black text-[#1E4D38] dark:text-[#52B788]">100%</span>
                 <span className="block text-[10px] text-zinc-500 uppercase font-bold">AUDIT VERIFIED</span>
               </div>
             </div>
 
-            <div className="p-8 border border-dashed border-[#26211C]/30 bg-[#FCF9F2]/70 text-center font-mono space-y-3">
-              <p className="font-bold text-sm">ARCHIVE OF MINTED CERTIFICATES</p>
+            <div className="p-8 border border-dashed border-[#26211C]/30 bg-[#F2EADA]/80 dark:bg-[#0E0D0B]/80 text-center font-mono space-y-3">
+              <p className="font-bold text-sm text-[#201C18] dark:text-[#F4EFE6]">ARCHIVE OF MINTED CERTIFICATES</p>
               <p className="text-xs text-zinc-500">
                 You can view, print, or download any of your minted contribution certificates at any time.
               </p>
@@ -1331,13 +1334,13 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {campaigns.slice(0, 4).map((c) => (
-                <div key={c.id} className="p-6 border border-[#26211C]/25 bg-[#FCF9F2] space-y-4 font-mono">
+                <div key={c.id} className="p-6 border border-[#26211C]/25 bg-[#F2EADA] dark:bg-[#0E0D0B] space-y-4 font-mono">
                   <div className="flex justify-between text-xs font-bold border-b border-[#26211C]/10 pb-2">
-                    <span className="text-[#8B2626]">№ {c.serialCode || 'LW-0421'}</span>
-                    <span className="text-emerald-700">ACSO CLEARED</span>
+                    <span className="text-[#1E4D38] dark:text-[#52B788]">№ {c.serialCode || 'LW-0421'}</span>
+                    <span className="text-[#1E4D38] dark:text-[#52B788]">ACSO CLEARED</span>
                   </div>
-                  <h3 className="font-serif font-bold text-xl">{c.title}</h3>
-                  <p className="text-xs text-zinc-600 line-clamp-2">{c.impactMetric}</p>
+                  <h3 className="font-serif font-bold text-xl text-[#201C18] dark:text-[#F4EFE6]">{c.title}</h3>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-300 line-clamp-2">{c.impactMetric}</p>
                   <div className="text-[10px] text-zinc-500 flex justify-between pt-2 border-t border-[#26211C]/10">
                     <span>LOCATION: {c.location}</span>
                     <span>BENEFICIARIES: {c.beneficiariesTarget} CITIZENS</span>
@@ -1366,28 +1369,28 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               <button
                 type="button"
                 onClick={() => setZoomMode('engrave')}
-                className="py-2.5 px-6 border border-[#8B2626] bg-[#8B2626] text-white font-mono text-xs font-black uppercase cursor-pointer"
+                className="py-2.5 px-6 border border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-xs font-black uppercase cursor-pointer hover:bg-[#163E2C]"
               >
                 + CREATE NEW PROJECT
               </button>
             </div>
 
             {/* Foundation Project Creation Form */}
-            <div className="p-8 border border-[#26211C]/30 bg-[#FCF9F2] space-y-6">
-              <h3 className="font-serif font-bold text-2xl text-[#201C18]">
+            <div className="p-8 border border-[#26211C]/30 bg-[#F2EADA] dark:bg-[#0E0D0B] space-y-6">
+              <h3 className="font-serif font-bold text-2xl text-[#201C18] dark:text-[#F4EFE6]">
                 REGISTER &amp; ENGRAVE NEW CAUSE PLATE
               </h3>
               
               <form onSubmit={handleCreateCauseSubmit} className="space-y-4 font-mono text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block font-bold text-zinc-600 mb-1">PROJECT TITLE:</label>
+                    <label className="block font-bold text-zinc-600 dark:text-zinc-400 mb-1">PROJECT TITLE:</label>
                     <input
                       type="text"
                       required
                       value={newTitle}
                       onChange={(e) => setNewTitle(e.target.value)}
-                      className="w-full p-2.5 border border-[#26211C]/30 bg-[#F7F2E7] focus:outline-none focus:border-[#8B2626]"
+                      className="w-full p-2.5 border border-[#26211C]/30 bg-[#EAE1CF] dark:bg-[#161411] text-[#201C18] dark:text-[#F4EFE6] focus:outline-none focus:border-[#1E4D38]"
                     />
                   </div>
 
@@ -1396,7 +1399,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                     <select
                       value={newCategory}
                       onChange={(e) => setNewCategory(e.target.value as any)}
-                      className="w-full p-2.5 border border-[#26211C]/30 bg-[#F7F2E7] focus:outline-none focus:border-[#8B2626]"
+                      className="w-full p-2.5 border border-[#26211C]/30 bg-[#F7F2E7] focus:outline-none focus:border-[#1E4D38]"
                     >
                       <option value="water">CLEAN WATER</option>
                       <option value="education">EDUCATION</option>
@@ -1416,7 +1419,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                       min="1000"
                       value={newGoal}
                       onChange={(e) => setNewGoal(parseInt(e.target.value, 10))}
-                      className="w-full p-2.5 border border-[#26211C]/30 bg-[#F7F2E7] focus:outline-none focus:border-[#8B2626]"
+                      className="w-full p-2.5 border border-[#26211C]/30 bg-[#F7F2E7] focus:outline-none focus:border-[#1E4D38]"
                     />
                   </div>
 
@@ -1427,7 +1430,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                       required
                       value={newLocation}
                       onChange={(e) => setNewLocation(e.target.value)}
-                      className="w-full p-2.5 border border-[#26211C]/30 bg-[#F7F2E7] focus:outline-none focus:border-[#8B2626]"
+                      className="w-full p-2.5 border border-[#26211C]/30 bg-[#F7F2E7] focus:outline-none focus:border-[#1E4D38]"
                     />
                   </div>
 
@@ -1438,7 +1441,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                       required
                       value={newBeneficiaries}
                       onChange={(e) => setNewBeneficiaries(parseInt(e.target.value, 10))}
-                      className="w-full p-2.5 border border-[#26211C]/30 bg-[#F7F2E7] focus:outline-none focus:border-[#8B2626]"
+                      className="w-full p-2.5 border border-[#26211C]/30 bg-[#F7F2E7] focus:outline-none focus:border-[#1E4D38]"
                     />
                   </div>
                 </div>
@@ -1450,7 +1453,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                     required
                     value={newStory}
                     onChange={(e) => setNewStory(e.target.value)}
-                    className="w-full p-2.5 border border-[#26211C]/30 bg-[#F7F2E7] focus:outline-none focus:border-[#8B2626]"
+                    className="w-full p-2.5 border border-[#26211C]/30 bg-[#F7F2E7] focus:outline-none focus:border-[#1E4D38]"
                   />
                 </div>
 
@@ -1458,7 +1461,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   <button
                     type="submit"
                     disabled={isSubmittingCause}
-                    className="py-3 px-8 border border-[#8B2626] bg-[#8B2626] text-white font-black tracking-widest uppercase hover:bg-[#701E1E] cursor-pointer"
+                    className="py-3 px-8 border border-[#1E4D38] bg-[#1E4D38] text-white font-black tracking-widest uppercase hover:bg-[#163E2C] cursor-pointer"
                   >
                     {isSubmittingCause ? 'ENGRAVING CAUSE...' : 'PUBLISH PROJECT TO CITIZENS'}
                   </button>
@@ -1473,7 +1476,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
       {/* ─────────────────────────────────────────────────────────────────────────────
           MINIMALIST ENDORSEMENT FOOTER (FLOWS SEAMLESSLY OFF SCREEN)
       ───────────────────────────────────────────────────────────────────────────── */}
-      <footer className="relative z-20 w-full px-6 sm:px-12 lg:px-20 py-8 border-t border-[#26211C]/15 dark:border-[#9A7432]/20 bg-[#F6F1E5]/90 dark:bg-[#141210]/90 font-mono text-[10px] text-zinc-600 dark:text-zinc-400">
+      <footer className="relative z-20 w-full px-6 sm:px-12 lg:px-20 py-8 border-t border-[#26211C]/15 dark:border-[#9A7432]/20 bg-[#EAE1CF]/95 dark:bg-[#080706]/95 font-mono text-[10px] text-zinc-600 dark:text-zinc-400">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-0.5">
             <span className="font-bold text-[#201C18] dark:text-[#F4EFE6] block">
@@ -1486,18 +1489,18 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
             <button
               type="button"
               onClick={() => setShowAcsoModal(true)}
-              className="hover:text-[#8B2626] cursor-pointer"
+              className="hover:text-[#1E4D38] dark:hover:text-[#52B788] cursor-pointer"
             >
               ACSO REGULATION
             </button>
             <button
               type="button"
               onClick={onOpenScholarxiv}
-              className="hover:text-[#8B2626] cursor-pointer"
+              className="hover:text-[#1E4D38] dark:hover:text-[#52B788] cursor-pointer"
             >
               ACADEMIC ARCHIVE
             </button>
-            <span className="text-[#8B2626] font-bold">100% COMMUNITY OWNED</span>
+            <span className="text-[#1E4D38] dark:text-[#52B788] font-bold">100% COMMUNITY OWNED</span>
           </div>
         </div>
       </footer>

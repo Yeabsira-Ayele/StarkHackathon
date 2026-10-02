@@ -32,7 +32,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-[#FAF6EE]/85 dark:bg-[#12100E]/85 border-b border-[#D5C8B2]/50 dark:border-[#2E2822]/60 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-        {/* Logo / Brand */}
         <div
           onClick={() => onNavigate?.('overview')}
           className="flex items-center gap-3 cursor-pointer group"
@@ -55,7 +54,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Navigation links */}
         <nav className="hidden md:flex items-center gap-1 text-xs font-medium">
           <button
             onClick={() => onNavigate?.('overview')}
@@ -89,9 +87,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
         </nav>
 
-        {/* Action Controls */}
         <div className="flex items-center gap-2">
-          {/* Voice Assistant Button */}
           {onOpenVoice && (
             <button
               onClick={onOpenVoice}
@@ -103,24 +99,26 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          {/* Language Switcher */}
           <div className="flex items-center rounded-xl bg-[#EBE3D3]/70 dark:bg-[#1E1A16] p-0.5 border border-[#D5C8B2]/50 dark:border-[#2E2822]">
-            {(['am', 'en', 'om'] as const).map((lng) => (
-              <button
-                key={lng}
-                onClick={() => handleLanguageSelect(lng)}
-                className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer uppercase ${
-                  i18n.language === lng || language === lng
-                    ? 'bg-[#FAF6EE] dark:bg-[#2D2620] text-[#14110E] dark:text-[#FAF6EE] shadow-xs'
-                    : 'text-[#73685B] dark:text-[#A89E90] hover:text-[#14110E]'
-                }`}
-              >
-                {lng}
-              </button>
-            ))}
+            {(['am', 'en', 'om'] as const).map((lng) => {
+              const isActive = i18n.language?.startsWith(lng);
+
+              return (
+                <button
+                  key={lng}
+                  onClick={() => handleLanguageSelect(lng)}
+                  className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer uppercase ${
+                    isActive
+                      ? 'bg-[#FAF6EE] dark:bg-[#2D2620] text-[#14110E] dark:text-[#FAF6EE] shadow-xs'
+                      : 'text-[#73685B] dark:text-[#A89E90] hover:text-[#14110E]'
+                  }`}
+                >
+                  {lng}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Theme Switcher */}
           {onToggleTheme && (
             <button
               onClick={onToggleTheme}

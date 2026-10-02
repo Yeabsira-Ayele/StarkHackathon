@@ -21,7 +21,7 @@ export const CampaignFilter: React.FC = () => {
   const statusOptions: { id: CampaignFilterStatus; labelKey: string }[] = [
     { id: 'all', labelKey: 'common.all' },
     { id: 'active', labelKey: 'common.active' },
-    { id: 'nearly_funded', labelKey: 'common.nearlyFunded' },
+    { id: 'nearly_funded', labelKey: 'common.nearly_funded' },
     { id: 'completed', labelKey: 'common.completed' },
   ];
 

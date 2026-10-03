@@ -1,3 +1,4 @@
+
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
@@ -8,6 +9,11 @@ const connectDB = require("./src/config/db");
 const campaignRoutes = require("./src/routes/CampaignRoutes");
 const donationRoutes = require("./src/routes/donationRoutes");
 const adminRoutes = require("./src/routes/adminRoutes");
+// Person 1: authentication and users
+const authRoutes = require("./src/routes/authRoutes");
+const userRoutes = require("./src/routes/userRoutes");
+const organizationRoutes = require("./src/routes/organizationRoutes");
+const { notFound, errorHandler } = require("./src/middleware/errorHandler");
 
 const app = express();
 if (process.env.TRUST_PROXY) app.set('trust proxy', Number(process.env.TRUST_PROXY));
@@ -23,23 +29,16 @@ app.get("/", (req, res) => {
 });
 
 // API routes
+app.use("/api", authRoutes);
+app.use("/api", userRoutes);
+app.use("/api", organizationRoutes);
 app.use("/api", campaignRoutes);
 app.use("/api", donationRoutes);
 app.use("/api", adminRoutes);
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ message: "Route not found" });
-});
-
-// Error handler
-app.use((err, req, res, next) => {
-  console.error(err);
-  const status = err.status || 500;
-  res.status(status).json({
-    message: status === 500 ? "Server error" : err.message,
-  });
-});
+// 404 handler and error handler (standard { success, message, error } format)
+app.use(notFound);
+app.use(errorHandler);
 
 // Connect to MongoDB, then start listening
 connectDB().then(() => {

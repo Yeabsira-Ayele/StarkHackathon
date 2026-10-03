@@ -1,0 +1,13 @@
+LEWEGENE - PERSON 1 (Authentication and Users)
+
+1. Unzip this folder.
+2. Copy everything inside it into your backend folder (the one that has server.js).
+   Say YES when your computer asks to replace server.js and src/models/User.js.
+3. In the terminal (in your backend folder) run:
+      npm install bcryptjs jsonwebtoken google-auth-library
+4. Open your real .env file and add the lines from .env.example
+   (change JWT_SECRET to your own long random text).
+   For testing also add:  OTP_DEV_ECHO=true  and  DISABLE_RATE_LIMIT=true
+5. Start the server:   npm run dev
+6. In a SECOND terminal run the automatic check:   node scripts/smoke-test.js
+   Every line should say PASS.

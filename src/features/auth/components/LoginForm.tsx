@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import { Shield, Lock, Phone, ArrowRight, Loader2 } from 'lucide-react';
-import { loginSchema, LoginFormData } from '../schemas/auth.schema';
+import { createLoginSchema, LoginFormData } from '../schemas/auth.schema';
 import { useAuth } from '../hooks/useAuth';
 
 interface LoginFormProps {
@@ -15,16 +15,18 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   onSuccess,
   onSwitchToRegister,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { login, isLoading } = useAuth();
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
+
+  const schema = React.useMemo(() => createLoginSchema(), [i18n.language]);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(schema),
   });
 
   const onSubmit = async (data: LoginFormData) => {
@@ -33,7 +35,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       await login(data);
       onSuccess?.();
     } catch (err: any) {
-      setErrorMsg(err.message || 'መግባት አልተቻለም');
+      setErrorMsg(err.message || t('auth.errors.loginFailed', 'Could not sign in'));
     }
   };
 
@@ -47,7 +49,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
       <div>
         <label className="block text-xs font-semibold text-[#26211C] dark:text-[#F4EFE6] mb-1.5">
-          ስልክ ቁጥር ወይም ኢሜይል (Phone / Email)
+          {t('auth.phoneOrEmailLabel', 'Phone number or email')}
         </label>
         <div className="relative">
           <input
@@ -64,7 +66,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
       <div>
         <label className="block text-xs font-semibold text-[#26211C] dark:text-[#F4EFE6] mb-1.5">
-          የይለፍ ቃል ወይም ሚስጥር ቁጥር (Passcode)
+          {t('auth.passcodeLabel', 'Passcode')}
         </label>
         <div className="relative">
           <input
@@ -90,29 +92,29 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         {isLoading ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />
-            በመግባት ላይ...
+            {t('auth.signingIn', 'Signing in...')}
           </>
         ) : (
           <>
-            ይግቡ (Sign In)
+            {t('auth.signIn', 'Sign in')}
             <ArrowRight className="w-4 h-4" />
           </>
         )}
       </button>
 
       <p className="border border-[#9A7432]/30 bg-[#EFE7D5]/60 p-2.5 text-[10px] font-mono text-[#73685B] dark:bg-[#1E1A16] dark:text-[#A89E90]">
-        Local admin demo: admin@local.lewegene / demo-admin-123
+        {t('auth.adminDemo', 'Local admin demo: admin@local.lewegene / demo-admin-123')}
       </p>
 
       {onSwitchToRegister && (
         <p className="text-center text-xs text-[#73685B] dark:text-[#A89E90] pt-2">
-          መለያ የለዎትም?{' '}
+          {t('auth.noAccount', "Don't have an account?")}{' '}
           <button
             type="button"
             onClick={onSwitchToRegister}
             className="text-[#9A7432] dark:text-[#C9A24D] font-bold hover:underline cursor-pointer"
           >
-            አዲስ መለያ ይክፈቱ
+            {t('auth.openAccount', 'Open a new account')}
           </button>
         </p>
       )}

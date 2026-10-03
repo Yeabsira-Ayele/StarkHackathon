@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from './Button.tsx';
 
 export interface ErrorMessageProps {
@@ -9,11 +10,14 @@ export interface ErrorMessageProps {
 }
 
 export const ErrorMessage: React.FC<ErrorMessageProps> = ({
-  title = 'Something went wrong',
+  title,
   message,
   onRetry,
   className = '',
 }) => {
+  const { t } = useTranslation();
+  const heading = title || t('errors.generic', 'Something went wrong');
+
   return (
     <div
       className={`rounded-xl border border-rose-200 bg-rose-50/50 p-5 text-left text-slate-800 ${className}`}
@@ -27,12 +31,12 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
           </svg>
         </div>
         <div className="flex-1">
-          <h4 className="text-sm font-semibold text-rose-900">{title}</h4>
+          <h4 className="text-sm font-semibold text-rose-900">{heading}</h4>
           <p className="mt-1 text-xs text-rose-700 leading-relaxed">{message}</p>
           {onRetry && (
             <div className="mt-3">
               <Button size="sm" variant="outline" onClick={onRetry}>
-                Try again
+                {t('common.retry', 'Try Again')}
               </Button>
             </div>
           )}

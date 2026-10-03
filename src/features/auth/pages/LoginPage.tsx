@@ -32,15 +32,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({
         <div className="flex items-center gap-2 text-[#1E4D38] dark:text-[#52B788] mb-2">
           <ShieldCheck className="w-5 h-5" />
           <span className="text-[11px] font-bold uppercase tracking-wider">
-            ለወገን የዜግነት መተሳሰብ ፖርታል
+            {t('auth.portalLabel', 'Lewegene Citizen Solidarity Portal')}
           </span>
         </div>
 
         <h1 className="text-2xl font-serif font-bold text-[#14110E] dark:text-[#FAF6EE] mb-2">
-          ወደ መለያዎ ይግቡ
+          {t('auth.loginPageTitle', 'Sign in to your account')}
         </h1>
         <p className="text-xs text-[#73685B] dark:text-[#A89E90] mb-6">
-          የተከናወኑ የልገሳ ዲጂታል ምስክር ወረቀቶችዎንና አስተዋጽኦዎችን ለመመልከት
+          {t('auth.loginPageDesc', 'View your completed digital donation certificates and contributions')}
         </p>
 
         <LoginForm

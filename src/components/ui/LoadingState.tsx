@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export interface LoadingStateProps {
   text?: string;
@@ -7,10 +8,12 @@ export interface LoadingStateProps {
 }
 
 export const LoadingState: React.FC<LoadingStateProps> = ({
-  text = 'Loading campaigns...',
+  text,
   size = 'md',
   className = '',
 }) => {
+  const { t } = useTranslation();
+  const message = text ?? t('common.loading', 'Loading...');
   const sizeMap = {
     sm: 'h-4 w-4 border-2',
     md: 'h-6 w-6 border-2',
@@ -22,7 +25,7 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
       <div
         className={`animate-spin rounded-full border-slate-200 border-t-emerald-600 ${sizeMap[size]}`}
       />
-      {text && <p className="mt-3 text-xs font-medium text-slate-500">{text}</p>}
+      {message && <p className="mt-3 text-xs font-medium text-slate-500">{message}</p>}
     </div>
   );
 };

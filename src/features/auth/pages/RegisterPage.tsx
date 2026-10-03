@@ -32,15 +32,15 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
         <div className="flex items-center gap-2 text-[#1E4D38] dark:text-[#52B788] mb-2">
           <ShieldCheck className="w-5 h-5" />
           <span className="text-[11px] font-bold uppercase tracking-wider">
-            ለወገን የዜግነት መተሳሰብ ፖርታል
+            {t('auth.portalLabel', 'Lewegene Citizen Solidarity Portal')}
           </span>
         </div>
 
         <h1 className="text-2xl font-serif font-bold text-[#14110E] dark:text-[#FAF6EE] mb-2">
-          አዲስ የለጋሽ መለያ ይክፈቱ
+          {t('auth.registerPageTitle', 'Open a new patron account')}
         </h1>
         <p className="text-xs text-[#73685B] dark:text-[#A89E90] mb-6">
-          የተረጋገጡ የሲቪል ማኅበራት ምክንያቶችን በታማኝነትና በግልጽነት ይደግፉ
+          {t('auth.registerPageDesc', 'Support verified civil society causes with trust and transparency')}
         </p>
 
         <RegisterForm

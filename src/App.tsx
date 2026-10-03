@@ -28,6 +28,7 @@ import MyReportsPage from './features/profile/MyReportsPage.tsx';
 import { DemoRoleSwitcher } from './features/auth/components/DemoRoleSwitcher.tsx';
 import { DEMO_ACCOUNTS, DEMO_SESSION_TOKEN, type DemoRole } from './features/auth/data/demoAccounts.ts';
 import { useAuthStore } from './features/auth/store/auth.store.ts';
+import { LANGUAGE_CHANGED_EVENT } from './i18n/config.ts';
 
 export type AppView =
   | 'campaigns'
@@ -92,6 +93,16 @@ function PlatformApp({
       return 'am';
     }
   });
+
+  // Keep local state in sync whenever any navbar (or Voxide) switches language.
+  useEffect(() => {
+    const handleLanguageChanged = (event: Event) => {
+      const detail = (event as CustomEvent<'am' | 'en' | 'om'>).detail;
+      if (detail === 'am' || detail === 'en' || detail === 'om') setLanguage(detail);
+    };
+    window.addEventListener(LANGUAGE_CHANGED_EVENT, handleLanguageChanged);
+    return () => window.removeEventListener(LANGUAGE_CHANGED_EVENT, handleLanguageChanged);
+  }, []);
 
   // Daylight Ivory / Midnight Dark Slate Theme
   const [isDark, setIsDark] = useState<boolean>(() => {

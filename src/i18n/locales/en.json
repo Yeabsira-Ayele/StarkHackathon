@@ -25,6 +25,27 @@
     "acsoVerified": "ACSO Regulatory Verified",
     "directEscrow": "100% Direct to Beneficiaries"
   },
+  "footer": {
+    "brandTagline": "Ethiopian community support platform",
+    "description": "Ethiopian heritage × old-money digital philanthropy. Connecting compassionate local donors and global diaspora with verified foundations through audited Birr settlements.",
+    "certified": "ACSO Certified · Direct Telebirr & CBE Birr Escrow Rails",
+    "supporterPortal": "Supporter Portal",
+    "exploreCauses": "Explore Causes",
+    "myImpact": "My Impact & Certificates",
+    "archivalReceipts": "Archival Contribution Receipts",
+    "zeroFee": "Zero-Fee Giving Guarantee",
+    "foundationsNgos": "Foundations & NGOs",
+    "foundationConsole": "Foundation Console",
+    "publishCause": "Publish New Cause",
+    "acsoVerification": "ACSO Institutional Verification",
+    "auditedReporting": "Audited Milestone Reporting",
+    "rights": "Lewegene Philanthropy. All rights reserved.",
+    "tagline": "Preserving Heritage · Inspiring Compassion"
+  },
+  "errors": {
+    "generic": "Something went wrong",
+    "clearingNode": "Unable to connect to the national civic clearing node."
+  },
   "nav": {
     "overview": "Overview",
     "explore": "Causes",
@@ -34,7 +55,30 @@
     "voiceAssistant": "Voice (Voxide)",
     "scholarxiv": "Scholarxiv Archive",
     "language": "Language",
-    "theme": "Theme"
+    "theme": "Theme",
+    "home": "Home",
+    "discoverCauses": "Discover Causes",
+    "myReports": "My Reports",
+    "myFundraisers": "My Fundraisers",
+    "fundraise": "Fundraise",
+    "signUpLogIn": "Sign Up / Log In",
+    "tagline": "Ethiopia · Civic Tender",
+    "trustLine": "ACSO REGISTERED · 0% PLATFORM CUT · 100% DIRECT TO CAUSES",
+    "sections": {
+      "hero": "Hero",
+      "causes": "Causes",
+      "howItWorks": "How It Works",
+      "impact": "Impact",
+      "communities": "Communities",
+      "voxide": "Voxide"
+    },
+    "toggleTheme": "Toggle Parchment / Midnight Ink",
+    "openProfileMenu": "Open profile menu",
+    "profileOptions": "Profile options",
+    "speakVoxide": "Speak with Voxide Voice Assistant",
+    "profileMenuTitle": "Profile: {{name}}",
+    "editMyProfile": "Edit My Profile",
+    "logout": "Logout"
   },
   "campaigns": {
     "title": "Verified Civic Causes",
@@ -47,7 +91,11 @@
     "resetFilters": "Reset Filters",
     "impactMetric": "Impact Commitment",
     "beneficiaries": "Citizens Reached",
-    "location": "Location"
+    "location": "Location",
+    "intaglioPlate": "LEWEGENE INTAGLIO PLATE",
+    "fundedPercent": "{{percent}}% FUNDED",
+    "accreditedOrg": "Accredited Civil Society Org",
+    "defaultLocation": "Addis Ababa, Ethiopia"
   },
   "donations": {
     "title": "Civic Promissory Underwrite",
@@ -64,7 +112,19 @@
     "confirmPledge": "Confirm Contribution",
     "settling": "Settling On-Chain...",
     "certificateTitle": "Digital Solidarity Certificate",
-    "certificateDesc": "Official immutable record minted to the National Civic Repository"
+    "certificateDesc": "Official immutable record minted to the National Civic Repository",
+    "donorInfoDesc": "Add a name for the local prototype record or choose to remain anonymous.",
+    "donorNamePlaceholder": "e.g. Almaz Bekele",
+    "anonymousHint": "Your name will not appear on the public donor roll or cause ledger.",
+    "emailLabel": "Email Address (optional; not sent)",
+    "emailPlaceholder": "e.g. donor@gmail.com",
+    "emailHint": "Optional. This frontend prototype does not send email or verification updates.",
+    "messagePlaceholder": "Write words of encouragement or a prayer for the beneficiary...",
+    "anonymousPatron": "Anonymous Patron",
+    "currencyLabel": "Currency: ETB (Ethiopian Birr)",
+    "selected": "✓ SELECTED",
+    "customAmountPlaceholder": "e.g. 2500",
+    "minimumDemo": "Minimum demo contribution is {{min}} ETB. No funds are transferred or deposited."
   },
   "fundraiser": {
     "title": "Publish Social Project",
@@ -77,7 +137,12 @@
     "impactMetric": "Tangible Impact Metric",
     "location": "Project Location",
     "publish": "Publish Project to Citizens",
-    "publishing": "Engraving Cause..."
+    "publishing": "Engraving Cause...",
+    "tabs": {
+      "start": "Start",
+      "mine": "My fundraisers",
+      "drafts": "Drafts"
+    }
   },
   "auth": {
     "login": "Sign In",
@@ -86,21 +151,98 @@
     "emailOrPhone": "Phone or Email",
     "passcode": "Passcode",
     "fullName": "Full Name",
-    "role": "User Role"
+    "role": "User Role",
+    "portalLabel": "Lewegene Citizen Solidarity Portal",
+    "modalLoginTitle": "Sign in to your account",
+    "modalRegisterTitle": "Open a new patron account",
+    "modalLoginDesc": "Manage your donation certificates and contributions",
+    "modalRegisterDesc": "Support accredited civil society donation projects directly",
+    "prototypeNote": "Prototype account stored in this browser only.",
+    "phoneOrEmailLabel": "Phone number or email",
+    "passcodeLabel": "Passcode",
+    "phonePlaceholder": "+251 9XX XXX XXX",
+    "signingIn": "Signing in...",
+    "signIn": "Sign in",
+    "adminDemo": "Local admin demo: admin@local.lewegene / demo-admin-123",
+    "noAccount": "Don't have an account?",
+    "openAccount": "Open a new account",
+    "donorRole": "Donor citizen",
+    "ngoRole": "Civil society org (NGO)",
+    "fullNameLabel": "Full name",
+    "fullNamePlaceholder": "e.g. Solomon Tesfaye",
+    "orgNameLabel": "Organization name",
+    "orgNamePlaceholder": "Registered organization name",
+    "createPasscodeLabel": "Create passcode",
+    "registering": "Registering...",
+    "createAccount": "Create account",
+    "haveAccount": "Already have an account?",
+    "goToSignIn": "Sign in to your account",
+    "loginPageTitle": "Sign in to your account",
+    "loginPageDesc": "View your completed digital donation certificates and contributions",
+    "registerPageTitle": "Open a new patron account",
+    "registerPageDesc": "Support verified civil society causes with trust and transparency",
+    "errors": {
+      "loginFailed": "Could not sign in",
+      "registerFailed": "Could not register"
+    },
+    "validation": {
+      "emailOrPhone": "Enter a valid email address or phone number",
+      "passcodeMin": "Passcode must be at least 8 characters",
+      "passcodeMax": "Passcode must be 72 characters or fewer",
+      "nameMin": "Please enter your full name",
+      "orgRequired": "Enter your organization name"
+    }
+  },
+  "demo": {
+    "chooseAccount": "Choose a local demo account",
+    "active": "ACTIVE",
+    "note": "Demo state stays in this browser. No real sign-in, payments, or backend.",
+    "trigger": "Demo:",
+    "chooseRole": "Choose role",
+    "donor": "Donor",
+    "fundraiser": "Fundraiser",
+    "admin": "Admin"
   },
   "profile": {
     "title": "Patron Profile",
     "totalDonated": "Total Contributed",
     "causesSupported": "Causes Supported",
     "badges": "Patron Badges",
-    "settings": "Settings"
+    "settings": "Settings",
+    "localDemoProfile": "Local demo profile",
+    "editTitle": "Edit My Profile",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "changesNote": "Changes are saved only in this browser.",
+    "cancel": "Cancel",
+    "saveProfile": "Save Profile",
+    "closeEditorAria": "Close profile editor"
   },
   "admin": {
     "title": "Compliance Desk",
     "pending": "Pending Review",
     "approve": "Approve",
     "reject": "Reject",
-    "auditTrail": "Audit Trail"
+    "auditTrail": "Audit Trail",
+    "console": "Admin console",
+    "nav": {
+      "groupOverview": "Overview",
+      "groupReview": "Review",
+      "groupMoney": "Money",
+      "groupPlatform": "Platform",
+      "groupAccount": "Account",
+      "dashboard": "Dashboard",
+      "fundraisers": "Fundraisers",
+      "reports": "Reports",
+      "donations": "Donations",
+      "users": "Users",
+      "organizations": "Organizations",
+      "activity": "Activity",
+      "admins": "Admins",
+      "profile": "Admin profile",
+      "viewPublicSite": "View public site"
+    }
   },
   "reports": {
     "title": "Transparency Reports",
@@ -139,5 +281,188 @@
       "grantMicPermission": "Enable Microphone",
       "dismiss": "Dismiss"
     }
+  },
+  "home": {
+    "tenderBadgeLine1": "የኢትዮጵያ ሕዝባዊ አንድነት ትብብር",
+    "tenderBadgeLine2": "NATIONAL CITIZEN SOLIDARITY TENDER",
+    "tagline": "SUPPORTING ETHIOPIA'S PEOPLE & PURPOSE",
+    "motto": "« ለወገን ደራሽ ወገን ነው። »",
+    "exploreCauses": "EXPLORE CAUSES",
+    "forFoundations": "FOR FOUNDATIONS",
+    "plateSerial": "INTAGLIO STEEL PLATE № 001",
+    "plateCaption": "MONUMENT OF SOLIDARITY & MUTUAL AID",
+    "plateLocation": "ADDIS ABABA · አዲስ አበባ",
+    "hero": {
+      "badge": "Verified local giving · rooted in Ethiopia",
+      "titleLead": "Good grows when",
+      "titleHighlight": "we give together.",
+      "description": "Lewegene brings people and trusted community causes closer. Find a story that moves you, and help make its next chapter possible.",
+      "discover": "Discover causes",
+      "startFundraising": "Start fundraising",
+      "voxide": "Voxide",
+      "verifiedOrganizations": "Verified organizations",
+      "communityFirst": "Community-first giving",
+      "closeToHome": "A cause close to home",
+      "findFirstCause": "Find your first cause",
+      "giveLabel": "GIVE",
+      "togetherLabel": "TOGETHER",
+      "brandMark": "ለወገን"
+    },
+    "featured": {
+      "badge": "Featured & urgent causes",
+      "ledger": "★ Direct underwriting ledger",
+      "title": "Community causes & live birr progress",
+      "description": "Real needs, led by local communities. Every cause is reviewed before it reaches this page.",
+      "browseAll": "Browse all causes",
+      "empty": "New causes are being prepared. Check back soon or explore our community."
+    },
+    "howItWorks": {
+      "eyebrow": "How it works",
+      "titleLine1": "Good things happen",
+      "titleLine2": "one step at a time.",
+      "description": "Find a community cause, lend your support, and follow the difference you helped make.",
+      "step1Title": "Find a cause",
+      "step1Detail": "Explore community-led projects and choose a cause that matters to you.",
+      "step2Title": "Give what you can",
+      "step2Detail": "Every contribution matters. Support the people and purpose you believe in.",
+      "step3Title": "See the impact",
+      "step3Detail": "Follow cause updates and see how your community moves forward."
+    },
+    "impact": {
+      "totalUnderwritten": "TOTAL UNDERWRITTEN BIRR",
+      "communityPatrons": "COMMUNITY PATRONS",
+      "directToBeneficiaries": "DIRECT TO BENEFICIARIES",
+      "verifiedPlates": "VERIFIED CAUSE PLATES"
+    },
+    "communities": {
+      "eyebrow": "Stronger, side by side",
+      "title": "Communities making good happen",
+      "description": "Trusted organizations working alongside their neighbors across Ethiopia.",
+      "empty": "Community partners will be featured here."
+    },
+    "voxide": {
+      "badge": "Lewegene voice assistant",
+      "title": "Voxide",
+      "tagline": "Speak. Find. Give.",
+      "description": "Tell Voxide what you need. It understands your voice and helps you find causes, donate, or start a fundraiser.",
+      "speak": "🎙️ Speak",
+      "understands": "🤖 Voxide understands",
+      "takeAction": "❤️ Take action",
+      "try": "Try Voxide"
+    },
+    "cta": {
+      "eyebrow": "There's room for you here",
+      "title": "What good will you help grow?",
+      "description": "Bring your community together around a cause, or find a good thing already growing.",
+      "startFundraising": "Start fundraising",
+      "discover": "Discover causes"
+    }
+  },
+  "explore": {
+    "backHome": "Back to home",
+    "title": "Discover causes",
+    "subtitle": "Accredited Ethiopian civil society projects ready for direct citizen underwriting",
+    "count": "{{count}} causes available",
+    "searchPlaceholder": "Search causes by title, organization, location, or serial number...",
+    "sectorLabel": "SECTOR:",
+    "statusLabel": "STATUS & LOCATION:",
+    "statusAll": "ALL",
+    "statusEndingSoon": "ENDING SOON",
+    "statusStartedNow": "STARTED NOW",
+    "statusOngoing": "ONGOING",
+    "allLocations": "ALL LOCATIONS",
+    "filterByLocation": "Filter by location",
+    "panelBadge": "Explore verified causes",
+    "panelLedger": "★ Direct underwriting ledger",
+    "panelTitle": "Community causes & live birr progress",
+    "activePlates": "{{count}} active cause plates",
+    "pledgedAcross": "{{amount}} ETB pledged across Ethiopia",
+    "emptyTitle": "No cause plates match your criteria",
+    "emptyHint": "Try adjusting your search terms, changing the sector filter, or clearing all active filters.",
+    "resetFilters": "Reset all filters",
+    "noMatches": "No causes matching your search or filters.",
+    "resetShort": "Reset filters"
+  },
+  "detail": {
+    "back": "Back to causes",
+    "acsoVerified": "ACSO VERIFIED",
+    "engravedPlate": "Engraved cause plate",
+    "beneficiaries": "VERIFIED COMMUNITY BENEFICIARIES: {{count}} CITIZENS",
+    "storyHeading": "FIELD DIRECTIVE & PROJECT STORY",
+    "impactHeading": "TANGIBLE IMPACT COMMITMENT:",
+    "impactFallback": "Direct verified community outcome for local families.",
+    "acsoHeading": "CIVIL SOCIETY ACCREDITATION (ACSO REGISTRY)",
+    "registrationLicense": "REGISTRATION LICENSE:",
+    "disbursementEscrow": "DISBURSEMENT ESCROW:",
+    "escrowValue": "TELEBIRR & CBE CLEARING",
+    "patrons": "PATRONS",
+    "targetGoal": "TARGET GOAL",
+    "support": "SUPPORT THIS CAUSE (PLEDGE BIRR)",
+    "prototypeNote": "PROTOTYPE CONTRIBUTION RECORD · NO PAYMENT IS PROCESSED",
+    "keepCloseTitle": "Keep this cause close",
+    "keepCloseBody": "Saved causes stay in this browser and appear in your demo Donor Profile.",
+    "savedCause": "Saved cause",
+    "saveCause": "Save cause",
+    "reportTitle": "Report a cause",
+    "reportBody": "Think something is wrong with this cause? Let us know.",
+    "reportButton": "Report this cause",
+    "safetyBadge": "Cause safety",
+    "defaultOrg": "Accredited Civil Society Org",
+    "defaultLocation": "Addis Ababa, Ethiopia",
+    "saveError": "Could not update saved causes in this browser."
+  },
+  "report": {
+    "reasonLabel": "Reason for reporting",
+    "chooseReason": "Choose a reason",
+    "reasonMisleading": "Misleading information",
+    "reasonFraud": "Suspected fraud",
+    "reasonDuplicate": "Duplicate cause",
+    "reasonInappropriate": "Inappropriate content",
+    "reasonOther": "Other concern",
+    "detailsLabel": "Additional details",
+    "optional": "(optional)",
+    "detailsPlaceholder": "Share any details that may help explain your concern.",
+    "demoNote": "Frontend demo only: the report is saved in this browser and is not sent to Lewegene.",
+    "save": "Save report",
+    "closeAria": "Close report dialog",
+    "feedback": "Report saved to the local demo Admin Reports queue. It was not sent to a moderation team.",
+    "error": "Could not save this report in the browser. Please try again."
+  },
+  "createCause": {
+    "title": "REGISTER & ENGRAVE NEW CAUSE PLATE",
+    "projectTitleLabel": "PROJECT TITLE:",
+    "sectorLabel": "SECTOR CATEGORY:",
+    "categoryWater": "CLEAN WATER",
+    "categoryEducation": "EDUCATION",
+    "categoryMedical": "MEDICAL",
+    "categoryEmergency": "EMERGENCY",
+    "categoryEnvironment": "ENVIRONMENT",
+    "categoryCommunity": "COMMUNITY",
+    "categoryOther": "OTHER",
+    "fundingGoalLabel": "FUNDING GOAL (ETB):",
+    "locationLabel": "GEOGRAPHIC LOCATION:",
+    "beneficiariesLabel": "TARGET BENEFICIARIES:",
+    "storyLabel": "PROJECT STORY & MILESTONE PLAN:",
+    "submitting": "ENGRAVING CAUSE...",
+    "publish": "PUBLISH PROJECT TO CITIZENS"
+  },
+  "treasury": {
+    "title": "FOUNDATION TREASURY DESK",
+    "subtitle": "Accredited civil society organizations management portal and project engraving form.",
+    "createNew": "+ Create new project"
+  },
+  "impactView": {
+    "title": "COMMUNITY FIELD IMPACT",
+    "subtitle": "Real-time milestone verifications and photographic audit reports directly from local sites.",
+    "acsoCleared": "ACSO CLEARED",
+    "locationLabel": "LOCATION: {{location}}",
+    "beneficiariesLabel": "BENEFICIARIES: {{count}} CITIZENS"
+  },
+  "canvasFooter": {
+    "brandLine": "LEWEGENE CIVIC BANKNOTE · NATIONAL SOLIDARITY REPOSITORY",
+    "legalLine": "ACSO ACCREDITATION NO. ET-58291 · ALL RIGHTS RESERVED 2026 / አዲስ አበባ",
+    "acsoRegulation": "ACSO REGULATION",
+    "academicArchive": "ACADEMIC ARCHIVE",
+    "communityOwned": "100% COMMUNITY OWNED"
   }
 }

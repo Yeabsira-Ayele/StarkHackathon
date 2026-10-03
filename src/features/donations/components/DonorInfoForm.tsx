@@ -32,7 +32,7 @@ export const DonorInfoForm: React.FC<DonorInfoFormProps> = ({
           {t('donations.step2', 'Donor Information')}
         </h3>
         <p className="text-zinc-600 dark:text-zinc-400 mt-1">
-          Add a name for the local prototype record or choose to remain anonymous.
+          {t('donations.donorInfoDesc', 'Add a name for the local prototype record or choose to remain anonymous.')}
         </p>
       </div>
 
@@ -46,9 +46,9 @@ export const DonorInfoForm: React.FC<DonorInfoFormProps> = ({
           <input
             type="text"
             disabled={isAnonymous}
-            value={isAnonymous ? 'Anonymous Patron' : donorName}
+            value={isAnonymous ? t('donations.anonymousPatron', 'Anonymous Patron') : donorName}
             onChange={(e) => onChangeName(e.target.value)}
-            placeholder="e.g. Almaz Bekele"
+            placeholder={t('donations.donorNamePlaceholder', 'e.g. Almaz Bekele')}
             className="w-full p-3 border-2 border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#FFFDF9] dark:bg-[#181512] text-[#14110E] dark:text-[#FFFFFF] disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788] transition-colors"
           />
 
@@ -66,7 +66,7 @@ export const DonorInfoForm: React.FC<DonorInfoFormProps> = ({
                 {t('donations.anonymous', 'Keep my contribution anonymous')}
               </span>
               <span className="text-[11px] text-zinc-500 block mt-0.5">
-                Your name will not appear on the public donor roll or cause ledger.
+                {t('donations.anonymousHint', 'Your name will not appear on the public donor roll or cause ledger.')}
               </span>
             </label>
           </div>
@@ -76,17 +76,17 @@ export const DonorInfoForm: React.FC<DonorInfoFormProps> = ({
         <div>
           <label className="block font-bold uppercase text-[#14110E] dark:text-[#F4EFE6] mb-1.5 flex items-center gap-1.5">
             <Mail className="w-3.5 h-3.5 text-[#1E4D38] dark:text-[#52B788]" />
-            <span>Email Address (optional; not sent):</span>
+            <span>{t('donations.emailLabel', 'Email Address (optional; not sent)')}:</span>
           </label>
           <input
             type="email"
             value={donorEmail}
             onChange={(e) => onChangeEmail(e.target.value)}
-            placeholder="e.g. donor@gmail.com"
+            placeholder={t('donations.emailPlaceholder', 'e.g. donor@gmail.com')}
             className="w-full p-3 border-2 border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#FFFDF9] dark:bg-[#181512] text-[#14110E] dark:text-[#FFFFFF] focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788] transition-colors"
           />
           <span className="text-[10px] text-zinc-500 mt-1 block">
-            Optional. This frontend prototype does not send email or verification updates.
+            {t('donations.emailHint', 'Optional. This frontend prototype does not send email or verification updates.')}
           </span>
         </div>
 
@@ -100,7 +100,7 @@ export const DonorInfoForm: React.FC<DonorInfoFormProps> = ({
             rows={3}
             value={donorMessage}
             onChange={(e) => onChangeMessage(e.target.value)}
-            placeholder="Write words of encouragement or a prayer for the beneficiary..."
+            placeholder={t('donations.messagePlaceholder', 'Write words of encouragement or a prayer for the beneficiary...')}
             className="w-full p-3 border-2 border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#FFFDF9] dark:bg-[#181512] text-[#14110E] dark:text-[#FFFFFF] focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788] transition-colors"
           />
         </div>

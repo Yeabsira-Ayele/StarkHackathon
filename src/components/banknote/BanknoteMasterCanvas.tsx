@@ -11,6 +11,7 @@ import {
 } from './BanknoteArtwork.tsx';
 import { BanknotePlateCard } from './BanknotePlateCard.tsx';
 import { BanknoteLivingBackground } from './BanknoteLivingBackground.tsx';
+import { LanguageSwitcher } from '../common/LanguageSwitcher.tsx';
 import { ExplorePage } from '../../features/campaigns/pages/ExplorePage';
 import { CampaignDetailsPage } from '../../features/campaigns/pages/CampaignDetailsPage';
 import { PledgeWizardPage } from '../../features/donations/pages/PledgeWizardPage';
@@ -156,6 +157,7 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
   onVoxide,
   onSelectCampaign,
 }) => {
+  const { t } = useTranslation();
   const activeCampaigns = campaigns.filter((campaign) => campaign.status === 'approved');
   const featuredCampaigns = [...activeCampaigns]
     .sort((a, b) => {
@@ -179,32 +181,32 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
           <div className="space-y-6">
             <div className="inline-flex items-center gap-2 border border-[#9A7432]/50 bg-[#F7F2E7]/80 px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#805F29] dark:bg-[#161b16] dark:text-[#D8B066]">
               <ShieldCheck className="h-3.5 w-3.5" />
-              <span>Verified local giving · rooted in Ethiopia</span>
+              <span>{t('home.hero.badge', 'Verified local giving · rooted in Ethiopia')}</span>
             </div>
             <div>
               <h1 className="font-display text-4xl font-black leading-[1.08] tracking-tight text-[#201C18] dark:text-[#F4EFE6] sm:text-6xl">
-                Good grows when<br />
-                <span className="text-[#1E4D38] dark:text-[#52B788]">we give together.</span>
+                {t('home.hero.titleLead', 'Good grows when')}<br />
+                <span className="text-[#1E4D38] dark:text-[#52B788]">{t('home.hero.titleHighlight', 'we give together.')}</span>
               </h1>
               <p className="mt-5 max-w-xl font-serif text-lg leading-relaxed text-[#5A4E3E] dark:text-[#C9BEAC] sm:text-xl">
-                Lewegene brings people and trusted community causes closer. Find a story that moves you, and help make its next chapter possible.
+                {t('home.hero.description', 'Lewegene brings people and trusted community causes closer. Find a story that moves you, and help make its next chapter possible.')}
               </p>
-              <p className="mt-3 font-ethiopic text-sm text-[#8B6A34]">« ለወገን ደራሽ ወገን ነው። »</p>
+              <p className="mt-3 font-ethiopic text-sm text-[#8B6A34]">{t('home.motto', '« ለወገን ደራሽ ወገን ነው። »')}</p>
             </div>
             <div className="flex flex-wrap gap-3">
               <button type="button" onClick={onDiscover} className="inline-flex items-center gap-2 border-2 border-[#1E4D38] bg-[#1E4D38] px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-white shadow-md transition hover:bg-[#163E2C]">
-                Discover causes <ArrowRight className="h-4 w-4" />
+                {t('home.hero.discover', 'Discover causes')} <ArrowRight className="h-4 w-4" />
               </button>
               <button type="button" onClick={onFundraise} className="inline-flex items-center gap-2 border border-[#26211C]/50 bg-[#F7F2E7] px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-[#201C18] transition hover:border-[#1E4D38] hover:text-[#1E4D38] dark:bg-[#1A201B] dark:text-[#F4EFE6]">
-                Start fundraising <ArrowRight className="h-4 w-4" />
+                {t('home.hero.startFundraising', 'Start fundraising')} <ArrowRight className="h-4 w-4" />
               </button>
               <button type="button" onClick={onVoxide} className="inline-flex items-center gap-2 border border-[#9A7432]/60 bg-[#F2EADA]/70 px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-[#805F29] transition hover:bg-[#E1D4BA] dark:bg-[#181612] dark:text-[#D8B066]">
-                <Volume2 className="h-4 w-4" /> Voxide
+                <Volume2 className="h-4 w-4" /> {t('home.hero.voxide', 'Voxide')}
               </button>
             </div>
             <div className="flex flex-wrap gap-x-6 gap-y-2 border-t border-[#26211C]/15 pt-4 font-mono text-[9px] font-bold uppercase tracking-wider text-[#5A4E3E] dark:text-[#B6AA98]">
-              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-[#1E4D38]" /> Verified organizations</span>
-              <span className="inline-flex items-center gap-1.5"><HandHeart className="h-3.5 w-3.5 text-[#9A7432]" /> Community-first giving</span>
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-[#1E4D38]" /> {t('home.hero.verifiedOrganizations', 'Verified organizations')}</span>
+              <span className="inline-flex items-center gap-1.5"><HandHeart className="h-3.5 w-3.5 text-[#9A7432]" /> {t('home.hero.communityFirst', 'Community-first giving')}</span>
             </div>
           </div>
 
@@ -214,18 +216,18 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
             {heroCampaign?.imageUrl ? (
               <img src={heroCampaign.imageUrl} alt={heroCampaign.title} className="relative block aspect-[4/3] w-full object-cover filter contrast-110 saturate-90" />
             ) : (
-              <div className="relative grid aspect-[4/3] place-items-center bg-[#1E4D38] text-6xl text-[#D8B066]">ለወገን</div>
+              <div className="relative grid aspect-[4/3] place-items-center bg-[#1E4D38] text-6xl text-[#D8B066]">{t('home.hero.brandMark', 'ለወገን')}</div>
             )}
             <div className="absolute inset-0 pointer-events-none intaglio-overlay opacity-50" />
             <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-4 border border-[#B88B45]/60 bg-[#F2ECE1]/95 p-4 shadow-xl dark:bg-[#141210]/95">
               <div className="min-w-0">
-                <span className="font-mono text-[9px] font-black uppercase tracking-widest text-[#1E4D38] dark:text-[#52B788]">A cause close to home</span>
-                <p className="mt-1 truncate font-serif text-base font-bold text-[#201C18] dark:text-[#F4EFE6]">{heroCampaign?.title || 'Find your first cause'}</p>
+                <span className="font-mono text-[9px] font-black uppercase tracking-widest text-[#1E4D38] dark:text-[#52B788]">{t('home.hero.closeToHome', 'A cause close to home')}</span>
+                <p className="mt-1 truncate font-serif text-base font-bold text-[#201C18] dark:text-[#F4EFE6]">{heroCampaign?.title || t('home.hero.findFirstCause', 'Find your first cause')}</p>
               </div>
-              <button type="button" onClick={onDiscover} aria-label="Discover causes" className="grid h-9 w-9 shrink-0 place-items-center border border-[#1E4D38] bg-[#1E4D38] text-white hover:bg-[#163E2C]"><ArrowRight className="h-4 w-4" /></button>
+              <button type="button" onClick={onDiscover} aria-label={t('home.hero.discover', 'Discover causes')} className="grid h-9 w-9 shrink-0 place-items-center border border-[#1E4D38] bg-[#1E4D38] text-white hover:bg-[#163E2C]"><ArrowRight className="h-4 w-4" /></button>
             </div>
             <div className="absolute -right-5 -top-5 hidden h-16 w-16 rotate-6 flex-col items-center justify-center rounded-full border border-[#B88B45] bg-[#F2ECE1] font-mono text-[8px] font-black leading-tight text-[#1E4D38] dark:bg-[#141210] dark:text-[#D8B066] sm:flex">
-              <HeartHandshake className="mb-0.5 h-5 w-5" /> GIVE<br />TOGETHER
+              <HeartHandshake className="mb-0.5 h-5 w-5" /> {t('home.hero.giveLabel', 'GIVE')}<br />{t('home.hero.togetherLabel', 'TOGETHER')}
             </div>
           </div>
         </div>
@@ -237,13 +239,13 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
         <div className="relative z-10 mb-7 flex flex-wrap items-end justify-between gap-4 border-b-2 border-[#1E4D38]/20 pb-4 dark:border-[#9A7432]/30">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="bg-[#1E4D38] px-2.5 py-1 font-mono text-[9px] font-black uppercase tracking-widest text-white dark:bg-[#52B788] dark:text-[#080706]">Featured &amp; urgent causes</span>
-              <span className="font-mono text-xs font-black uppercase tracking-wider text-[#8B5E14] dark:text-[#D8B066]">★ Direct underwriting ledger</span>
+              <span className="bg-[#1E4D38] px-2.5 py-1 font-mono text-[9px] font-black uppercase tracking-widest text-white dark:bg-[#52B788] dark:text-[#080706]">{t('home.featured.badge', 'Featured & urgent causes')}</span>
+              <span className="font-mono text-xs font-black uppercase tracking-wider text-[#8B5E14] dark:text-[#D8B066]">{t('home.featured.ledger', '★ Direct underwriting ledger')}</span>
             </div>
-            <h2 className="mt-1.5 font-display text-2xl font-black tracking-tight text-[#14110E] dark:text-white sm:text-3xl">Community causes &amp; live birr progress</h2>
-            <p className="mt-2 max-w-xl font-serif text-base text-zinc-600 dark:text-zinc-400">Real needs, led by local communities. Every cause is reviewed before it reaches this page.</p>
+            <h2 className="mt-1.5 font-display text-2xl font-black tracking-tight text-[#14110E] dark:text-white sm:text-3xl">{t('home.featured.title', 'Community causes & live birr progress')}</h2>
+            <p className="mt-2 max-w-xl font-serif text-base text-zinc-600 dark:text-zinc-400">{t('home.featured.description', 'Real needs, led by local communities. Every cause is reviewed before it reaches this page.')}</p>
           </div>
-          <button type="button" onClick={onDiscover} className="inline-flex items-center gap-2 border-b border-[#1E4D38] pb-1 font-mono text-[10px] font-black uppercase tracking-wider text-[#1E4D38] dark:text-[#52B788]">Browse all causes <ArrowRight className="h-3.5 w-3.5" /></button>
+          <button type="button" onClick={onDiscover} className="inline-flex items-center gap-2 border-b border-[#1E4D38] pb-1 font-mono text-[10px] font-black uppercase tracking-wider text-[#1E4D38] dark:text-[#52B788]">{t('home.featured.browseAll', 'Browse all causes')} <ArrowRight className="h-3.5 w-3.5" /></button>
         </div>
         {featuredCampaigns.length > 0 ? (
           <div className="relative z-10 grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -253,7 +255,7 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
           </div>
         ) : (
           <div className="relative z-10 border border-dashed border-[#9A7432]/50 bg-[#F7F2E7]/70 p-10 text-center font-mono text-xs text-zinc-600 dark:bg-[#141210] dark:text-zinc-400">
-            New causes are being prepared. Check back soon or explore our community.
+            {t('home.featured.empty', 'New causes are being prepared. Check back soon or explore our community.')}
           </div>
         )}
       </section>
@@ -262,15 +264,15 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
         <div className="pointer-events-none absolute inset-2 border border-[#1E4D38]/25 dark:border-[#9A7432]/25" />
         <div className="relative mx-auto grid max-w-[1300px] gap-9 px-6 py-8 sm:px-12 lg:grid-cols-[.72fr_1.28fr] lg:items-center lg:px-20 lg:py-10">
           <div>
-            <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[#9A7432]">How it works</p>
-            <h2 className="mt-2 font-display text-2xl font-black leading-tight text-[#201C18] dark:text-[#F4EFE6] sm:text-3xl">Good things happen<br />one step at a time.</h2>
-            <p className="mt-3 max-w-sm font-serif text-base leading-relaxed text-zinc-600 dark:text-zinc-400">Find a community cause, lend your support, and follow the difference you helped make.</p>
+            <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[#9A7432]">{t('home.howItWorks.eyebrow', 'How it works')}</p>
+            <h2 className="mt-2 font-display text-2xl font-black leading-tight text-[#201C18] dark:text-[#F4EFE6] sm:text-3xl">{t('home.howItWorks.titleLine1', 'Good things happen')}<br />{t('home.howItWorks.titleLine2', 'one step at a time.')}</h2>
+            <p className="mt-3 max-w-sm font-serif text-base leading-relaxed text-zinc-600 dark:text-zinc-400">{t('home.howItWorks.description', 'Find a community cause, lend your support, and follow the difference you helped make.')}</p>
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             {[
-              { number: '01', title: 'Find a cause', detail: 'Explore community-led projects and choose a cause that matters to you.', icon: <Search className="h-5 w-5" /> },
-              { number: '02', title: 'Give what you can', detail: 'Every contribution matters. Support the people and purpose you believe in.', icon: <HandHeart className="h-5 w-5" /> },
-              { number: '03', title: 'See the impact', detail: 'Follow cause updates and see how your community moves forward.', icon: <TrendingUp className="h-5 w-5" /> },
+              { number: '01', title: t('home.howItWorks.step1Title', 'Find a cause'), detail: t('home.howItWorks.step1Detail', 'Explore community-led projects and choose a cause that matters to you.'), icon: <Search className="h-5 w-5" /> },
+              { number: '02', title: t('home.howItWorks.step2Title', 'Give what you can'), detail: t('home.howItWorks.step2Detail', 'Every contribution matters. Support the people and purpose you believe in.'), icon: <HandHeart className="h-5 w-5" /> },
+              { number: '03', title: t('home.howItWorks.step3Title', 'See the impact'), detail: t('home.howItWorks.step3Detail', 'Follow cause updates and see how your community moves forward.'), icon: <TrendingUp className="h-5 w-5" /> },
             ].map((step) => (
               <article key={step.number} className="border border-[#26211C]/20 bg-[#F7F2E7]/75 p-5 dark:border-[#9A7432]/30 dark:bg-[#171a16]">
                 <div className="flex items-center justify-between font-mono text-[10px] font-black text-[#9A7432]"><span>{step.number}</span><span className="text-[#1E4D38] dark:text-[#52B788]">{step.icon}</span></div>
@@ -291,7 +293,7 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
               {totalRaised.toLocaleString()} ETB
             </p>
             <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
-              TOTAL UNDERWRITTEN BIRR
+              {t('home.impact.totalUnderwritten', 'TOTAL UNDERWRITTEN BIRR')}
             </p>
           </div>
           <div className="space-y-1">
@@ -299,13 +301,13 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
               {totalDonations.toLocaleString()}
             </p>
             <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
-              COMMUNITY PATRONS
+              {t('home.impact.communityPatrons', 'COMMUNITY PATRONS')}
             </p>
           </div>
           <div className="space-y-1">
             <p className="text-2xl font-black text-[#1E4D38] dark:text-[#52B788] sm:text-3xl">100%</p>
             <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
-              DIRECT TO BENEFICIARIES
+              {t('home.impact.directToBeneficiaries', 'DIRECT TO BENEFICIARIES')}
             </p>
           </div>
           <div className="space-y-1">
@@ -313,7 +315,7 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
               {campaigns.length}
             </p>
             <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
-              VERIFIED CAUSE PLATES
+              {t('home.impact.verifiedPlates', 'VERIFIED CAUSE PLATES')}
             </p>
           </div>
         </div>
@@ -323,9 +325,9 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
       <section id="home-communities" className="scroll-mt-20 mx-auto w-full max-w-[1300px] px-6 py-8 sm:px-12 lg:px-20">
         <div className="relative">
         <div className="mb-7 text-center">
-          <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[#9A7432]">Stronger, side by side</p>
-          <h2 className="mt-2 font-display text-2xl font-black text-[#201C18] dark:text-[#F4EFE6] sm:text-3xl">Communities making good happen</h2>
-          <p className="mx-auto mt-2 max-w-xl font-serif text-base text-zinc-600 dark:text-zinc-400">Trusted organizations working alongside their neighbors across Ethiopia.</p>
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[#9A7432]">{t('home.communities.eyebrow', 'Stronger, side by side')}</p>
+          <h2 className="mt-2 font-display text-2xl font-black text-[#201C18] dark:text-[#F4EFE6] sm:text-3xl">{t('home.communities.title', 'Communities making good happen')}</h2>
+          <p className="mx-auto mt-2 max-w-xl font-serif text-base text-zinc-600 dark:text-zinc-400">{t('home.communities.description', 'Trusted organizations working alongside their neighbors across Ethiopia.')}</p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {trustedOrganizations.map((organization) => (
@@ -340,7 +342,7 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
               </div>
             </article>
           ))}
-          {trustedOrganizations.length === 0 && <p className="col-span-full text-center font-mono text-xs text-zinc-500">Community partners will be featured here.</p>}
+          {trustedOrganizations.length === 0 && <p className="col-span-full text-center font-mono text-xs text-zinc-500">{t('home.communities.empty', 'Community partners will be featured here.')}</p>}
         </div>
         </div>
       </section>
@@ -351,19 +353,19 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
           <div>
             <div className="inline-flex items-center gap-2 border border-[#9A7432]/50 bg-[#FAF6EC] px-3 py-1 font-mono text-[9px] font-black uppercase tracking-[.18em] text-[#805F29] dark:bg-[#181612] dark:text-[#D8B066]">
               <Volume2 className="h-3.5 w-3.5" />
-              Lewegene voice assistant
+              {t('home.voxide.badge', 'Lewegene voice assistant')}
             </div>
-            <h2 className="mt-3 font-display text-3xl font-black text-[#201C18] dark:text-[#F4EFE6] sm:text-4xl">Voxide</h2>
-            <p className="mt-1 font-serif text-xl font-bold text-[#1E4D38] dark:text-[#52B788]">Speak. Find. Give.</p>
+            <h2 className="mt-3 font-display text-3xl font-black text-[#201C18] dark:text-[#F4EFE6] sm:text-4xl">{t('home.voxide.title', 'Voxide')}</h2>
+            <p className="mt-1 font-serif text-xl font-bold text-[#1E4D38] dark:text-[#52B788]">{t('home.voxide.tagline', 'Speak. Find. Give.')}</p>
             <p className="mt-3 max-w-2xl font-serif text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
-              Tell Voxide what you need. It understands your voice and helps you find causes, donate, or start a fundraiser.
+              {t('home.voxide.description', 'Tell Voxide what you need. It understands your voice and helps you find causes, donate, or start a fundraiser.')}
             </p>
             <div className="mt-5 flex flex-wrap items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-wider text-[#201C18] dark:text-[#E8DEC8] sm:text-xs">
-              <span className="border border-[#26211C]/20 bg-[#FAF6EC] px-3 py-2 dark:border-[#9A7432]/30 dark:bg-[#171a16]">🎙️ Speak</span>
+              <span className="border border-[#26211C]/20 bg-[#FAF6EC] px-3 py-2 dark:border-[#9A7432]/30 dark:bg-[#171a16]">{t('home.voxide.speak', '🎙️ Speak')}</span>
               <ArrowRight className="h-4 w-4 text-[#9A7432]" />
-              <span className="border border-[#26211C]/20 bg-[#FAF6EC] px-3 py-2 dark:border-[#9A7432]/30 dark:bg-[#171a16]">🤖 Voxide understands</span>
+              <span className="border border-[#26211C]/20 bg-[#FAF6EC] px-3 py-2 dark:border-[#9A7432]/30 dark:bg-[#171a16]">{t('home.voxide.understands', '🤖 Voxide understands')}</span>
               <ArrowRight className="h-4 w-4 text-[#9A7432]" />
-              <span className="border border-[#26211C]/20 bg-[#FAF6EC] px-3 py-2 dark:border-[#9A7432]/30 dark:bg-[#171a16]">❤️ Take action</span>
+              <span className="border border-[#26211C]/20 bg-[#FAF6EC] px-3 py-2 dark:border-[#9A7432]/30 dark:bg-[#171a16]">{t('home.voxide.takeAction', '❤️ Take action')}</span>
             </div>
           </div>
           <button
@@ -372,7 +374,7 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
             className="inline-flex items-center justify-center gap-2 justify-self-start border-2 border-[#1E4D38] bg-[#1E4D38] px-6 py-3 font-mono text-xs font-black uppercase tracking-wider text-white shadow-md transition hover:bg-[#163E2C] lg:justify-self-end"
           >
             <Volume2 className="h-4 w-4" />
-            Try Voxide
+            {t('home.voxide.try', 'Try Voxide')}
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>
@@ -381,12 +383,12 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
       <section className="relative overflow-hidden border-2 border-[#9A7432]/60 bg-[#EAE1CF] px-6 py-8 text-center dark:bg-[#111410] sm:px-12">
         <div className="absolute inset-2 border border-[#9A7432]/25 pointer-events-none" />
         <div className="relative mx-auto max-w-2xl">
-          <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[#9A7432]">There’s room for you here</p>
-          <h2 className="mt-3 font-display text-3xl font-black leading-tight text-[#201C18] dark:text-[#F4EFE6] sm:text-4xl">What good will you help grow?</h2>
-          <p className="mx-auto mt-3 max-w-lg font-serif text-base text-zinc-600 dark:text-zinc-400">Bring your community together around a cause, or find a good thing already growing.</p>
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[#9A7432]">{t('home.cta.eyebrow', 'There’s room for you here')}</p>
+          <h2 className="mt-3 font-display text-3xl font-black leading-tight text-[#201C18] dark:text-[#F4EFE6] sm:text-4xl">{t('home.cta.title', 'What good will you help grow?')}</h2>
+          <p className="mx-auto mt-3 max-w-lg font-serif text-base text-zinc-600 dark:text-zinc-400">{t('home.cta.description', 'Bring your community together around a cause, or find a good thing already growing.')}</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <button type="button" onClick={onFundraise} className="inline-flex items-center gap-2 border-2 border-[#1E4D38] bg-[#1E4D38] px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-white hover:bg-[#163E2C]">Start fundraising <ArrowRight className="h-4 w-4" /></button>
-            <button type="button" onClick={onDiscover} className="inline-flex items-center gap-2 border border-[#26211C]/40 bg-[#F7F2E7] px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-[#201C18] hover:border-[#1E4D38] dark:bg-[#171a16] dark:text-[#F4EFE6]">Discover causes <ArrowRight className="h-4 w-4" /></button>
+            <button type="button" onClick={onFundraise} className="inline-flex items-center gap-2 border-2 border-[#1E4D38] bg-[#1E4D38] px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-white hover:bg-[#163E2C]">{t('home.cta.startFundraising', 'Start fundraising')} <ArrowRight className="h-4 w-4" /></button>
+            <button type="button" onClick={onDiscover} className="inline-flex items-center gap-2 border border-[#26211C]/40 bg-[#F7F2E7] px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-[#201C18] hover:border-[#1E4D38] dark:bg-[#171a16] dark:text-[#F4EFE6]">{t('home.cta.discover', 'Discover causes')} <ArrowRight className="h-4 w-4" /></button>
           </div>
         </div>
       </section>
@@ -803,7 +805,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
 
           <div className="flex items-center gap-4 text-zinc-600 dark:text-zinc-400">
             <span className="font-bold text-[#1E4D38] dark:text-[#52B788]">
-              ★ ACSO REGISTERED · 0% PLATFORM CUT · 100% DIRECT TO CAUSES
+              ★ {t('nav.trustLine', 'ACSO REGISTERED · 0% PLATFORM CUT · 100% DIRECT TO CAUSES')}
             </span>
           </div>
         </div>
@@ -820,7 +822,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               LEWEGENE
             </h1>
             <span className="font-mono text-[9px] tracking-[0.25em] text-[#9A7432] uppercase font-bold mt-1">
-              ETHIOPIA · CIVIC TENDER
+              {t('nav.tagline', 'Ethiopia · Civic Tender')}
             </span>
           </div>
 
@@ -835,7 +837,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   : 'text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]'
               }`}
             >
-              HOME
+              {t('nav.home', 'Home')}
             </button>
 
             <button
@@ -847,7 +849,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   : 'text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]'
               }`}
             >
-              <span>DISCOVER CAUSES</span>
+              <span>{t('nav.discoverCauses', 'Discover Causes')}</span>
               <span className="px-1.5 py-0.2 bg-[#1E4D38] text-white text-[9px] font-bold rounded-xs">
                 {campaigns.length}
               </span>
@@ -860,7 +862,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   onClick={() => navigate('/contributions')}
                   className="px-3 py-2 transition-colors cursor-pointer text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
                 >
-                  MY CONTRIBUTIONS
+                  {t('nav.myContributions', 'My Contributions')}
                 </button>
                 {hasReports && (
                   <button
@@ -868,7 +870,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                     onClick={() => navigate('/reports')}
                     className="px-3 py-2 transition-colors cursor-pointer text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
                   >
-                    MY REPORTS
+                    {t('nav.myReports', 'My Reports')}
                   </button>
                 )}
                 {hasFundraisers && (
@@ -877,7 +879,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                     onClick={() => navigate('/fundraising')}
                     className="px-3 py-2 transition-colors cursor-pointer text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
                   >
-                    MY FUNDRAISERS
+                    {t('nav.myFundraisers', 'My Fundraisers')}
                   </button>
                 )}
               </>
@@ -888,14 +890,14 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   onClick={() => navigate('/fundraising')}
                   className="px-3 py-2 transition-colors cursor-pointer text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
                 >
-                  FUNDRAISE
+                  {t('nav.fundraise', 'Fundraise')}
                 </button>
                 <button
                   type="button"
                   onClick={() => navigate('/signup')}
                   className="px-3 py-2 transition-colors cursor-pointer text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
                 >
-                  SIGN UP / LOG IN
+                  {t('nav.signUpLogIn', 'Sign Up / Log In')}
                 </button>
               </>
             )}
@@ -904,61 +906,24 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
             <span className="text-zinc-300 dark:text-zinc-700 px-1 select-none">|</span>
 
             {/* Language Selector: Amharic (Default), English, Afaan Oromo */}
-            <div className="flex items-center border border-[#9A7432]/40 rounded-[1px] overflow-hidden text-[10px] font-mono font-bold">
-              <button
-                type="button"
-                onClick={() => i18n.changeLanguage('am')}
-                className={`px-2 py-1 transition-colors cursor-pointer ${
-                  i18n.language === 'am'
-                    ? 'bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706]'
-                    : 'bg-[#F2ECE1] text-[#201C18] dark:bg-[#1C1814] dark:text-[#E8DEC8]'
-                }`}
-                title="አማርኛ"
-              >
-                አማ
-              </button>
-              <button
-                type="button"
-                onClick={() => i18n.changeLanguage('en')}
-                className={`px-2 py-1 transition-colors cursor-pointer ${
-                  i18n.language === 'en'
-                    ? 'bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706]'
-                    : 'bg-[#F2ECE1] text-[#201C18] dark:bg-[#1C1814] dark:text-[#E8DEC8]'
-                }`}
-                title="English"
-              >
-                EN
-              </button>
-              <button
-                type="button"
-                onClick={() => i18n.changeLanguage('om')}
-                className={`px-2 py-1 transition-colors cursor-pointer ${
-                  i18n.language === 'om'
-                    ? 'bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706]'
-                    : 'bg-[#F2ECE1] text-[#201C18] dark:bg-[#1C1814] dark:text-[#E8DEC8]'
-                }`}
-                title="Afaan Oromoo"
-              >
-                OM
-              </button>
-            </div>
+            <LanguageSwitcher />
 
             {/* Voxide Voice Assistant */}
             <button
               type="button"
               onClick={() => (showPersonalNavigation ? navigate('/voxide') : onOpenVoice())}
               className="p-2 border border-[#1E4D38]/60 bg-[#1E4D38]/5 hover:bg-[#1E4D38]/15 text-[#1E4D38] dark:text-[#52B788] transition-colors cursor-pointer flex items-center gap-1.5"
-              title="Speak with Voxide Voice Assistant"
+              title={t('nav.speakVoxide', 'Speak with Voxide Voice Assistant')}
             >
               <Volume2 className="w-3.5 h-3.5" />
-              <span className={`${showPersonalNavigation ? 'font-mono text-[10px] font-bold uppercase' : 'hidden xl:inline font-mono text-[10px] font-bold uppercase'}`}>VOXIDE</span>
+              <span className={`${showPersonalNavigation ? 'font-mono text-[10px] font-bold uppercase' : 'hidden xl:inline font-mono text-[10px] font-bold uppercase'}`}>{t('home.voxide.title', 'Voxide')}</span>
             </button>
 
             {/* Theme Toggle */}
             <button
               type="button"
               onClick={onToggleTheme}
-              title="Toggle Parchment / Midnight Ink"
+              title={t('nav.toggleTheme', 'Toggle Parchment / Midnight Ink')}
               className="p-2 border border-[#9A7432]/50 hover:bg-[#9A7432]/15 text-[#201C18] dark:text-[#D8B066] transition-colors cursor-pointer"
             >
               {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
@@ -969,10 +934,10 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsProfileMenuOpen((open) => !open)}
-                  aria-label="Open profile menu"
+                  aria-label={t('nav.openProfileMenu', 'Open profile menu')}
                   aria-haspopup="menu"
                   aria-expanded={isProfileMenuOpen}
-                  title={`Profile: ${authUser.name}`}
+                  title={t('nav.profileMenuTitle', 'Profile: {{name}}', { name: authUser.name })}
                   className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-full border border-[#9A7432]/60 bg-[#F2ECE1] text-[#1E4D38] transition-colors hover:border-[#1E4D38] dark:bg-[#1C1814] dark:text-[#52B788]"
                 >
                   {authUser.avatarUrl
@@ -982,7 +947,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 {isProfileMenuOpen && (
                   <div
                     role="menu"
-                    aria-label="Profile options"
+                    aria-label={t('nav.profileOptions', 'Profile options')}
                     className="absolute right-0 top-full z-50 mt-2 w-48 border border-[#9A7432]/40 bg-[#FFFDF9] p-1.5 text-left shadow-lg dark:bg-[#171410]"
                   >
                     <button
@@ -995,7 +960,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                       className="flex w-full items-center gap-2 px-3 py-2.5 text-left font-mono text-[10px] font-bold uppercase tracking-wider text-[#201C18] transition-colors hover:bg-[#1E4D38]/10 hover:text-[#1E4D38] dark:text-[#E8DEC8] dark:hover:bg-[#52B788]/10 dark:hover:text-[#52B788]"
                     >
                       <UserRound className="h-4 w-4" />
-                      Edit My Profile
+                      {t('nav.editMyProfile', 'Edit My Profile')}
                     </button>
                     <button
                       type="button"
@@ -1008,7 +973,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                       className="flex w-full items-center gap-2 px-3 py-2.5 text-left font-mono text-[10px] font-bold uppercase tracking-wider text-[#201C18] transition-colors hover:bg-red-700/10 hover:text-red-800 dark:text-[#E8DEC8] dark:hover:text-red-300"
                     >
                       <LogOut className="h-4 w-4" />
-                      Logout
+                      {t('nav.logout', 'Logout')}
                     </button>
                   </div>
                 )}
@@ -1035,13 +1000,13 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
           >
             <div className="mb-5 flex items-start justify-between gap-4 border-b border-[#9A7432]/30 pb-4">
               <div>
-                <p className="font-mono text-[10px] font-black uppercase tracking-[.2em] text-[#9A7432]">Local demo profile</p>
-                <h2 id="profile-editor-title" className="mt-1 font-serif text-2xl font-black">Edit My Profile</h2>
+                <p className="font-mono text-[10px] font-black uppercase tracking-[.2em] text-[#9A7432]">{t('profile.localDemoProfile', 'Local demo profile')}</p>
+                <h2 id="profile-editor-title" className="mt-1 font-serif text-2xl font-black">{t('profile.editTitle', 'Edit My Profile')}</h2>
               </div>
               <button
                 type="button"
                 onClick={() => setIsProfileEditorOpen(false)}
-                aria-label="Close profile editor"
+                aria-label={t('profile.closeEditorAria', 'Close profile editor')}
                 className="grid h-8 w-8 place-items-center border border-[#9A7432]/40 text-xl leading-none hover:bg-[#9A7432]/10"
               >
                 ×
@@ -1061,7 +1026,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               }}
             >
               <label className="grid gap-1.5 font-mono text-xs font-bold">
-                Name
+                {t('profile.name', 'Name')}
                 <input
                   required
                   value={profileName}
@@ -1070,7 +1035,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 />
               </label>
               <label className="grid gap-1.5 font-mono text-xs font-bold">
-                Email
+                {t('profile.email', 'Email')}
                 <input
                   required
                   type="email"
@@ -1080,27 +1045,27 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 />
               </label>
               <label className="grid gap-1.5 font-mono text-xs font-bold">
-                Phone
+                {t('profile.phone', 'Phone')}
                 <input
                   value={profilePhone}
                   onChange={(event) => setProfilePhone(event.target.value)}
                   className="border border-[#26211C]/20 bg-white px-3 py-2.5 font-sans text-sm dark:border-[#9A7432]/30 dark:bg-[#0E0D0B]"
                 />
               </label>
-              <p className="text-xs text-zinc-500">Changes are saved only in this browser.</p>
+              <p className="text-xs text-zinc-500">{t('profile.changesNote', 'Changes are saved only in this browser.')}</p>
               <div className="flex justify-end gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => setIsProfileEditorOpen(false)}
                   className="border border-[#9A7432]/50 px-4 py-2.5 font-mono text-xs font-bold uppercase hover:bg-[#9A7432]/10"
                 >
-                  Cancel
+                  {t('profile.cancel', 'Cancel')}
                 </button>
                 <button
                   type="submit"
                   className="bg-[#1E4D38] px-4 py-2.5 font-mono text-xs font-black uppercase text-white hover:bg-[#163E2C]"
                 >
-                  Save Profile
+                  {t('profile.saveProfile', 'Save Profile')}
                 </button>
               </div>
             </form>
@@ -1116,12 +1081,12 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
         >
           <div className="mx-auto flex max-w-[1500px] items-center gap-1 overflow-x-auto">
             {[
-              { id: 'home-hero', label: 'Hero' },
-              { id: 'home-featured-causes', label: 'Causes' },
-              { id: 'home-how-it-works', label: 'How It Works' },
-              { id: 'home-impact', label: 'Impact' },
-              { id: 'home-communities', label: 'Communities' },
-              { id: 'home-voxide', label: 'Voxide' },
+              { id: 'home-hero', label: t('nav.sections.hero', 'Hero') },
+              { id: 'home-featured-causes', label: t('nav.sections.causes', 'Causes') },
+              { id: 'home-how-it-works', label: t('nav.sections.howItWorks', 'How It Works') },
+              { id: 'home-impact', label: t('nav.sections.impact', 'Impact') },
+              { id: 'home-communities', label: t('nav.sections.communities', 'Communities') },
+              { id: 'home-voxide', label: t('nav.sections.voxide', 'Voxide') },
             ].map((section) => (
               <button
                 key={section.id}

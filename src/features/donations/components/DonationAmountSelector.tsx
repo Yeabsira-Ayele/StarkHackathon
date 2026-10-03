@@ -30,7 +30,7 @@ export const DonationAmountSelector: React.FC<DonationAmountSelectorProps> = ({
             {t('donations.selectAmount', 'Select Contribution Amount')}
           </label>
           <span className="font-mono text-[10px] text-zinc-500 uppercase">
-            Currency: ETB (Ethiopian Birr)
+            {t('donations.currencyLabel', 'Currency: ETB (Ethiopian Birr)')}
           </span>
         </div>
 
@@ -54,7 +54,7 @@ export const DonationAmountSelector: React.FC<DonationAmountSelectorProps> = ({
                   </span>
                   {isSelected && (
                     <span className="text-[10px] font-bold uppercase tracking-wider opacity-90">
-                      ✓ SELECTED
+                      {t('donations.selected', '✓ SELECTED')}
                     </span>
                   )}
                 </div>
@@ -86,7 +86,7 @@ export const DonationAmountSelector: React.FC<DonationAmountSelectorProps> = ({
             step="50"
             value={customAmount ?? ''}
             onChange={(e) => onChangeCustom(e.target.value)}
-            placeholder="e.g. 2500"
+            placeholder={t('donations.customAmountPlaceholder', 'e.g. 2500')}
             className="w-full p-3.5 pr-16 border-2 border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#FFFDF9] dark:bg-[#181512] font-mono text-lg font-black text-[#14110E] dark:text-[#FFFFFF] focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788] transition-colors"
           />
           <span className="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-xs font-black text-[#1E4D38] dark:text-[#52B788]">
@@ -94,7 +94,7 @@ export const DonationAmountSelector: React.FC<DonationAmountSelectorProps> = ({
           </span>
         </div>
         <p className="font-mono text-[11px] text-zinc-500">
-          Minimum demo contribution is {minAmount} ETB. No funds are transferred or deposited.
+          {t('donations.minimumDemo', 'Minimum demo contribution is {{min}} ETB. No funds are transferred or deposited.', { min: minAmount })}
         </p>
       </div>
     </div>

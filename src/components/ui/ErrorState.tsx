@@ -21,7 +21,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({ message, onRetry }) => {
           {t('common.error')}
         </h4>
         <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-md mx-auto">
-          {message || 'Unable to connect to the national civic clearing node.'}
+          {message || t('errors.clearingNode', 'Unable to connect to the national civic clearing node.')}
         </p>
       </div>
 

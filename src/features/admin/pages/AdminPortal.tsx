@@ -20,6 +20,7 @@ import { AdminActivity } from './AdminActivity.tsx';
 import { AdminAdmins } from './AdminAdmins.tsx';
 import { AdminProfile } from './AdminProfile.tsx';
 import { useAuthStore } from '../../auth/store/auth.store.ts';
+import { LanguageSwitcher } from '../../../components/common/LanguageSwitcher.tsx';
 
 export interface AdminPortalProps {
   isDark: boolean;
@@ -29,24 +30,28 @@ export interface AdminPortalProps {
   onRejectCampaign?: (id: string) => void | Promise<void>;
 }
 
-const NAV_GROUPS: { label: string; items: { id: AdminSection; label: string; icon: React.ReactNode }[] }[] = [
-  { label: 'Overview', items: [{ id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" /> }] },
-  { label: 'Review', items: [
-    { id: 'fundraisers', label: 'Fundraisers', icon: <FileCheck2 className="h-4 w-4" /> },
-    { id: 'reports', label: 'Reports', icon: <Flag className="h-4 w-4" /> },
+const NAV_GROUPS: {
+  label: string;
+  labelKey: string;
+  items: { id: AdminSection; label: string; labelKey: string; icon: React.ReactNode }[];
+}[] = [
+  { label: 'Overview', labelKey: 'admin.nav.groupOverview', items: [{ id: 'dashboard', label: 'Dashboard', labelKey: 'admin.nav.dashboard', icon: <LayoutDashboard className="h-4 w-4" /> }] },
+  { label: 'Review', labelKey: 'admin.nav.groupReview', items: [
+    { id: 'fundraisers', label: 'Fundraisers', labelKey: 'admin.nav.fundraisers', icon: <FileCheck2 className="h-4 w-4" /> },
+    { id: 'reports', label: 'Reports', labelKey: 'admin.nav.reports', icon: <Flag className="h-4 w-4" /> },
   ] },
-  { label: 'Money', items: [{ id: 'donations', label: 'Donations', icon: <HandCoins className="h-4 w-4" /> }] },
-  { label: 'Platform', items: [
-    { id: 'users', label: 'Users', icon: <Users className="h-4 w-4" /> },
-    { id: 'organizations', label: 'Organizations', icon: <Building2 className="h-4 w-4" /> },
-    { id: 'activity', label: 'Activity', icon: <Activity className="h-4 w-4" /> },
-    { id: 'admins', label: 'Admins', icon: <ShieldCheck className="h-4 w-4" /> },
+  { label: 'Money', labelKey: 'admin.nav.groupMoney', items: [{ id: 'donations', label: 'Donations', labelKey: 'admin.nav.donations', icon: <HandCoins className="h-4 w-4" /> }] },
+  { label: 'Platform', labelKey: 'admin.nav.groupPlatform', items: [
+    { id: 'users', label: 'Users', labelKey: 'admin.nav.users', icon: <Users className="h-4 w-4" /> },
+    { id: 'organizations', label: 'Organizations', labelKey: 'admin.nav.organizations', icon: <Building2 className="h-4 w-4" /> },
+    { id: 'activity', label: 'Activity', labelKey: 'admin.nav.activity', icon: <Activity className="h-4 w-4" /> },
+    { id: 'admins', label: 'Admins', labelKey: 'admin.nav.admins', icon: <ShieldCheck className="h-4 w-4" /> },
   ] },
-  { label: 'Account', items: [{ id: 'profile', label: 'Admin profile', icon: <UserCircle className="h-4 w-4" /> }] },
+  { label: 'Account', labelKey: 'admin.nav.groupAccount', items: [{ id: 'profile', label: 'Admin profile', labelKey: 'admin.nav.profile', icon: <UserCircle className="h-4 w-4" /> }] },
 ];
 
 export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme, onExit, onApproveCampaign, onRejectCampaign }) => {
-  const { i18n } = useTranslation();
+  const { t } = useTranslation();
   const store = useAdminStore({ onApproveCampaign, onRejectCampaign });
   const authUser = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
@@ -122,14 +127,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme,
       <div className="flex h-16 shrink-0 items-center border-b border-[var(--admin-border)] px-4 xl:px-5">
         <div className="hidden xl:block">
           <h1 className="font-display text-lg font-black leading-none tracking-[0.16em] text-[var(--admin-ink)]">LEWEGENE</h1>
-          <span className="mt-1 block font-mono text-[9px] font-semibold text-[var(--admin-muted)]">Admin console</span>
+          <span className="mt-1 block font-mono text-[9px] font-semibold text-[var(--admin-muted)]">{t('admin.console', 'Admin console')}</span>
         </div>
         <span className="grid h-9 w-9 place-items-center border border-[var(--admin-gold)] font-display text-xl font-black text-[var(--admin-green)] xl:hidden">L</span>
       </div>
       <div className="admin-sidebar-scroll flex-1 overflow-y-auto py-3">
         {NAV_GROUPS.map((group) => (
           <section key={group.label} className="mb-2">
-            <h2 className="hidden px-5 pb-1 pt-2 font-mono text-[10px] font-semibold text-[var(--admin-muted)] xl:block">{group.label}</h2>
+            <h2 className="hidden px-5 pb-1 pt-2 font-mono text-[10px] font-semibold text-[var(--admin-muted)] xl:block">{t(group.labelKey, group.label)}</h2>
             <ul>
               {group.items.map((item) => {
                 const active = section === item.id;
@@ -138,7 +143,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme,
                   <li key={item.id}>
                     <button
                       type="button"
-                      title={item.label}
+                      title={t(item.labelKey, item.label)}
                       aria-current={active ? 'page' : undefined}
                       onClick={() => go(item.id)}
                       className={`group relative mx-2 flex min-h-10 w-[calc(100%-16px)] items-center gap-3 rounded-md border-l-[3px] px-3 text-left text-sm transition-colors xl:mx-2 xl:w-[calc(100%-16px)] xl:px-3 ${
@@ -148,7 +153,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme,
                       }`}
                     >
                       <span className="shrink-0">{item.icon}</span>
-                      <span className="hidden flex-1 xl:block">{item.label}</span>
+                      <span className="hidden flex-1 xl:block">{t(item.labelKey, item.label)}</span>
                       {typeof count === 'number' && count > 0 && (
                         <span className="hidden min-w-5 rounded-full bg-[var(--admin-red)] px-1.5 py-0.5 text-center font-mono text-[10px] font-bold leading-4 text-white xl:inline-block">{count}</span>
                       )}
@@ -163,7 +168,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme,
       </div>
       <div className="hidden shrink-0 border-t border-[var(--admin-border)] p-3 xl:block">
         <button type="button" onClick={onExit} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[var(--admin-muted)] transition-colors hover:bg-[var(--admin-green)]/5 hover:text-[var(--admin-green)]">
-          <ExternalLink className="h-4 w-4" /> View public site
+          <ExternalLink className="h-4 w-4" /> {t('admin.nav.viewPublicSite', 'View public site')}
         </button>
       </div>
     </nav>
@@ -219,13 +224,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme,
             </div>
 
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-              <div className="flex items-center gap-0.5 rounded-md border border-[var(--admin-border)] p-0.5" aria-label="Language">
-                {(['am', 'en', 'om'] as const).map((language) => (
-                  <button key={language} type="button" onClick={() => i18n.changeLanguage(language)} aria-pressed={i18n.language === language} className={`rounded px-2 py-1 font-mono text-[10px] font-semibold ${i18n.language === language ? 'bg-[var(--admin-green)] text-white' : 'text-[var(--admin-muted)] hover:bg-[var(--admin-green)]/10'}`}>
-                    {language.toUpperCase()}
-                  </button>
-                ))}
-              </div>
+              <LanguageSwitcher variant="admin" />
               <div className="relative">
                 <button type="button" onClick={() => { setBellOpen((open) => !open); setProfileOpen(false); }} title="Notifications" aria-label="Notifications" aria-expanded={bellOpen} className="relative grid h-9 w-9 place-items-center rounded-md border border-[var(--admin-border)] hover:bg-[var(--admin-green)]/10">
                   <Bell className="h-4 w-4" />
@@ -263,7 +262,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme,
                   <div className="absolute right-0 top-full z-50 mt-2 w-52 rounded-md border border-[var(--admin-border)] bg-[var(--admin-card)] p-1.5 shadow-[var(--admin-shadow)]">
                     <p className="truncate px-3 py-2 text-sm font-semibold">{authUser?.name || me?.name || 'Admin'}</p>
                     <button type="button" onClick={() => { go('profile'); setProfileOpen(false); }} className="w-full rounded px-3 py-2 text-left text-sm hover:bg-[var(--admin-green)]/10">Admin profile</button>
-                    <button type="button" onClick={() => { setProfileOpen(false); onExit(); }} className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm hover:bg-[var(--admin-green)]/10"><ExternalLink className="h-4 w-4" /> View public site</button>
+                    <button type="button" onClick={() => { setProfileOpen(false); onExit(); }} className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm hover:bg-[var(--admin-green)]/10"><ExternalLink className="h-4 w-4" /> {t('admin.nav.viewPublicSite', 'View public site')}</button>
                     <button type="button" onClick={() => { setProfileOpen(false); logout(); onExit(); }} className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm text-[var(--admin-red)] hover:bg-[var(--admin-red)]/10"><LogOut className="h-4 w-4" /> Log out</button>
                   </div>
                 )}

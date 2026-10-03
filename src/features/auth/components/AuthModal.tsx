@@ -43,20 +43,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <div className="flex items-center gap-2 text-[#1E4D38] dark:text-[#52B788] mb-1">
           <ShieldCheck className="w-5 h-5" />
           <span className="text-[11px] font-bold uppercase tracking-wider">
-            ለወገን የዜግነት መተሳሰብ ፖርታል
+            {t('auth.portalLabel', 'Lewegene Citizen Solidarity Portal')}
           </span>
         </div>
 
         <h2 className="text-xl font-serif font-bold text-[#14110E] dark:text-[#FAF6EE] mb-1">
-          {mode === 'login' ? 'ወደ መለያዎ ይግቡ' : 'አዲስ የለጋሽ መለያ ይክፈቱ'}
+          {mode === 'login'
+            ? t('auth.modalLoginTitle', 'Sign in to your account')
+            : t('auth.modalRegisterTitle', 'Open a new patron account')}
         </h2>
         <p className="text-xs text-[#73685B] dark:text-[#A89E90] mb-6">
           {mode === 'login'
-            ? 'የልገሳ ዲጂታል ምስክር ወረቀቶችዎንና አስተዋጽኦዎችን ያስተዳድሩ'
-            : 'በቀጥታ የሲቪል ማኅበራት ፈቃድ ያገኙ የልገሳ ፕሮጀክቶችን ይደግፉ'}
+            ? t('auth.modalLoginDesc', 'Manage your donation certificates and contributions')
+            : t('auth.modalRegisterDesc', 'Support accredited civil society donation projects directly')}
         </p>
         <p className="-mt-4 mb-5 text-[10px] font-mono text-[#73685B] dark:text-[#A89E90]">
-          Prototype account stored in this browser only.
+          {t('auth.prototypeNote', 'Prototype account stored in this browser only.')}
         </p>
 
         {mode === 'login' ? (

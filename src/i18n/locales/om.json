@@ -25,6 +25,27 @@
     "acsoVerified": "ACSO dhaan kan mirkanaa'e",
     "directEscrow": "Dhibbeentaa 100 Kallattiin Lammiileef"
   },
+  "footer": {
+    "brandTagline": "Waltajjii deeggarsa hawaasa Itoophiyaa",
+    "description": "Seenaa Itoophiyaa fi argannoo bu'a-qabeessa dijitaalaa. Gumaachitoota naannoo fi diaspoooraa Itoophiyaa dhaabbilee mirkanaa'an waliin waliitti fida.",
+    "certified": "ACSO'n kan mirkanaa'e · Karaa Kaffaltii Telebirr fi CBE Birr kallattii",
+    "supporterPortal": "Pootaalaa Deeggaraa",
+    "exploreCauses": "Dhimmoota Daawwadhaa",
+    "myImpact": "Bu'aa fi Waraqaa Ragaa Kiyya",
+    "archivalReceipts": "Nagahee Gumaacha Kuusaa",
+    "zeroFee": "Wabii Gumaacha Kaffaltii-malee",
+    "foundationsNgos": "Dhaabbilee fi NGO",
+    "foundationConsole": "Konsoolii Dhaabbataa",
+    "publishCause": "Dhimma Haaraa Ifa Godhi",
+    "acsoVerification": "Mirkaneessa Dhaabbataa ACSO",
+    "auditedReporting": "Gabaasa Sadarkaa Kan To'atame",
+    "rights": "Gumaacha Lewegene. Mirgi isaa seeraan eegame.",
+    "tagline": "Seenaa Eegaa · Araara Kakaasi"
+  },
+  "errors": {
+    "generic": "Wanti tokko dogoggoreera",
+    "clearingNode": "Noodii qulqulleessaa lammiilee biyyaalessaa waliin walqunnamuu hin danda'amne."
+  },
   "nav": {
     "overview": "Fuula Duraa",
     "explore": "Dhimmoota",
@@ -34,7 +55,23 @@
     "voiceAssistant": "Gargaaraa Sagalee",
     "scholarxiv": "Kuusaa Qorannoo",
     "language": "Afaan",
-    "theme": "Bifa"
+    "theme": "Bifa",
+    "home": "Fuula Duraa",
+    "discoverCauses": "Dhimmoota Daawwadhaa",
+    "myReports": "Gabaasawwan Kiyya",
+    "myFundraisers": "Pirojektii Kiyya",
+    "fundraise": "Maallaqa Sassaabuu",
+    "signUpLogIn": "Galmaa'aa / Seenaa",
+    "tagline": "Itoophiyaa · Gumaacha Lammiilee",
+    "trustLine": "ACSO'n galmaa'e · 0% Kutaa Marsariitii · 100% Kallattiin Dhimmootaaf",
+    "sections": {
+      "hero": "Fuula Duraa",
+      "causes": "Dhimmoota",
+      "howItWorks": "Akkamitti Hojjeta",
+      "impact": "Bu'aa",
+      "communities": "Hawaasa",
+      "voxide": "Voxide"
+    }
   },
   "campaigns": {
     "title": "Dhimmoota Mirkanaa'an",
@@ -47,7 +84,11 @@
     "resetFilters": "Filtara Haara'omsi",
     "impactMetric": "Bu'aa Qabatamaa",
     "beneficiaries": "Lammiilee Fayyadaman",
-    "location": "Bakka"
+    "location": "Bakka",
+    "intaglioPlate": "PIRINTII LEWEGENE",
+    "fundedPercent": "{{percent}}% WALITTI QABAME",
+    "accreditedOrg": "Dhaabbata Hawaasaa Mirkanaa'e",
+    "defaultLocation": "Finfinnee, Itoophiyaa"
   },
   "donations": {
     "title": "Gumaacha Tokkummaa Lammiilee",
@@ -64,7 +105,19 @@
     "confirmPledge": "Gumaacha Mirkaneessi",
     "settling": "Mirkanaa'aa jira...",
     "certificateTitle": "Waraqaa Ragaa Gumaacha Dijitaalaa",
-    "certificateDesc": "Galmee seera qabeessa kuusaa biyyaalessaa irratti galmaa'e"
+    "certificateDesc": "Galmee seera qabeessa kuusaa biyyaalessaa irratti galmaa'e",
+    "donorInfoDesc": "Maqaa galmee mul'ataa naannootiif dabalaa yookaan iccitii ta'uu filadhaa.",
+    "donorNamePlaceholder": "Fkn: Almaaz Baqqalaa",
+    "anonymousHint": "Maqaan keessan galmee gumaachitoota ummataa yookaan galmee dhimmaatti hin mul'atu.",
+    "emailLabel": "Teessoo Iimeelii (filannoo; hin ergamu)",
+    "emailPlaceholder": "Fkn: donor@gmail.com",
+    "emailHint": "Filannoo. Pirototaayipni fuula duraa iimeelii yookaan haaromsa mirkaneessaa hin ergu.",
+    "messagePlaceholder": "Jecha jajjabinaa yookaan kadhannaa fayyadamaaf barreessaa...",
+    "anonymousPatron": "Gumaachaa Iccitii",
+    "currencyLabel": "Maallaqa: ETB (Birrii Itoophiyaa)",
+    "selected": "✓ FILATAME",
+    "customAmountPlaceholder": "Fkn: 2500",
+    "minimumDemo": "Gumaachi mul'ataa xiqqaan {{min}} ETB dha. Maallaqni hin dabarfamu, hin kuufamu."
   },
   "fundraiser": {
     "title": "Pirojektii Hawaasaa Haaraa Galmeessaa",
@@ -77,7 +130,12 @@
     "impactMetric": "Bu'aa Eegamu",
     "location": "Bakka Hojicha",
     "publish": "Ummataaf Ifa Godhi",
-    "publishing": "Galmeessaa jira..."
+    "publishing": "Galmeessaa jira...",
+    "tabs": {
+      "start": "Jalqabi",
+      "mine": "Pirojektii Kiyya",
+      "drafts": "Wixineewwan"
+    }
   },
   "auth": {
     "login": "Seenaa",
@@ -86,7 +144,57 @@
     "emailOrPhone": "Lakkoofsa Bilbilaa ykn Iimeelii",
     "passcode": "Jecha Iccitii",
     "fullName": "Maqaa Guutuu",
-    "role": "Gahee Fayyadamaa"
+    "role": "Gahee Fayyadamaa",
+    "portalLabel": "Pootaalaa Tokkummaa Lammiilee Lewegene",
+    "modalLoginTitle": "Gara herrega keessaniitti seenaa",
+    "modalRegisterTitle": "Herrega gumaachaa haaraa banaa",
+    "modalLoginDesc": "Waraqaa ragaa gumaacha dijitaalaa fi gumaacha keessan bulchaa",
+    "modalRegisterDesc": "Pirojektoota gumaacha hawaasaa heeyyama qaban kallattiin deeggaraa",
+    "prototypeNote": "Herregni asxaa biraawzarii kana keessatti qofa kuufama.",
+    "phoneOrEmailLabel": "Lakkoofsa bilbilaa ykn iimeelii",
+    "passcodeLabel": "Jecha iccitii",
+    "phonePlaceholder": "+251 9XX XXX XXX",
+    "signingIn": "Seenaa jira...",
+    "signIn": "Seenaa",
+    "adminDemo": "Bulchaa naannoo: admin@local.lewegene / demo-admin-123",
+    "noAccount": "Herrega hin qabduu?",
+    "openAccount": "Herrega haaraa banaa",
+    "donorRole": "Lammii gumaachaa",
+    "ngoRole": "Dhaabbata hawaasaa",
+    "fullNameLabel": "Maqaa guutuu",
+    "fullNamePlaceholder": "Fkn: Solomoon Tasfaayee",
+    "orgNameLabel": "Maqaa dhaabbataa",
+    "orgNamePlaceholder": "Maqaa dhaabbataa galmaa'e",
+    "createPasscodeLabel": "Jecha iccitii haaraa uumi",
+    "registering": "Galmaa'aa jira...",
+    "createAccount": "Herrega uumi",
+    "haveAccount": "Herrega duraan qabduu?",
+    "goToSignIn": "Gara herrega keessaniitti seenaa",
+    "loginPageTitle": "Gara herrega keessaniitti seenaa",
+    "loginPageDesc": "Waraqaa ragaa gumaacha dijitaalaa fi gumaacha keessan ilaalaa",
+    "registerPageTitle": "Herrega gumaachaa haaraa banaa",
+    "registerPageDesc": "Dhimmoota hawaasa mirkanaa'an amanamummaa fi iftoominaan deeggaraa",
+    "errors": {
+      "loginFailed": "Seenuu hin danda'amne",
+      "registerFailed": "Galmaa'uu hin danda'amne"
+    },
+    "validation": {
+      "emailOrPhone": "Iimeelii ykn lakkoofsa bilbilaa sirrii galchaa",
+      "passcodeMin": "Jechi iccitii yoo xiqqaate qubee 8 qabaachuu qaba",
+      "passcodeMax": "Jechi iccitii qubee 72 hin caalu",
+      "nameMin": "Maaloo maqaa guutuu keessan galchaa",
+      "orgRequired": "Maqaa dhaabbata keessan galchaa"
+    }
+  },
+  "demo": {
+    "chooseAccount": "Herrega mul'ataa naannoo filadhaa",
+    "active": "HOJIRRA",
+    "note": "Haalli mul'ataa biraawzarii kana keessatti hafa. Seensa, kaffaltii ykn baakendii dhugaa hin jiru.",
+    "trigger": "Mul'ata:",
+    "chooseRole": "Gahee filadhaa",
+    "donor": "Gumaachaa",
+    "fundraiser": "Maallaqa Sassaabaa",
+    "admin": "Bulchaa"
   },
   "profile": {
     "title": "Eenyummaa Gumaachaa",
@@ -100,7 +208,25 @@
     "pending": "Eegumsa Irra Kan Jiru",
     "approve": "Mirkaneessi",
     "reject": "Kufaa Godhi",
-    "auditTrail": "Galmee To'annoo"
+    "auditTrail": "Galmee To'annoo",
+    "console": "Konsoolii Bulchaa",
+    "nav": {
+      "groupOverview": "Ilaalcha Waliigalaa",
+      "groupReview": "Gamaaggama",
+      "groupMoney": "Maallaqa",
+      "groupPlatform": "Marsariitii",
+      "groupAccount": "Herrega",
+      "dashboard": "Daashboordii",
+      "fundraisers": "Maallaqa Sassaabu",
+      "reports": "Gabaasawwan",
+      "donations": "Gumaachawwan",
+      "users": "Fayyadamtoota",
+      "organizations": "Dhaabbilee",
+      "activity": "Sochii",
+      "admins": "Bulchitoota",
+      "profile": "Profaayilii Bulchaa",
+      "viewPublicSite": "Marsariitii Ummataa Ilaali"
+    }
   },
   "reports": {
     "title": "Gabaasa Iftoominaa",

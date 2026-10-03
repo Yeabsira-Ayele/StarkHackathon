@@ -1,6 +1,8 @@
 import React, { FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { ArrowRight, Bookmark, FlaskConical, Heart, ShieldCheck, UserRound } from 'lucide-react';
+import { LanguageSwitcher } from '../../components/common/LanguageSwitcher.tsx';
 import { campaignApi } from '../../services/api/campaignApi.ts';
 import type { Campaign } from '../../types/index.ts';
 import { useAuthStore } from '../auth/store/auth.store.ts';
@@ -20,6 +22,7 @@ function readSavedCauseIds(): string[] {
 }
 
 const ProfilePage: React.FC = () => {
+  const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
   const navigate = useNavigate();
@@ -82,9 +85,12 @@ const ProfilePage: React.FC = () => {
   return (
     <main className="min-h-screen bg-[#F7F2E7] px-4 py-10 text-[#201C18] dark:bg-[#12100E] dark:text-[#F4EFE6] sm:px-6">
       <div className="mx-auto max-w-5xl">
-        <Link to="/" className="font-mono text-xs font-bold uppercase tracking-widest text-[#1E4D38] dark:text-[#52B788]">
-          ← Back to Lewegene
-        </Link>
+        <div className="flex items-center justify-between gap-3">
+          <Link to="/" className="font-mono text-xs font-bold uppercase tracking-widest text-[#1E4D38] dark:text-[#52B788]">
+            ← {t('nav.home', 'Back to Lewegene')}
+          </Link>
+          <LanguageSwitcher />
+        </div>
         <div className="mt-6 flex flex-wrap items-end justify-between gap-4 border-b border-[#9A7432]/30 pb-5">
           <div>
             <p className="font-mono text-[10px] font-black uppercase tracking-[.2em] text-[#9A7432]">Your Lewegene space</p>

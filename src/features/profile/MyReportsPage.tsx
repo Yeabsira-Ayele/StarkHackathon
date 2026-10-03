@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ExternalLink, Flag, FlaskConical } from 'lucide-react';
+import { LanguageSwitcher } from '../../components/common/LanguageSwitcher.tsx';
 import { adminApi } from '../admin/api/admin.api.ts';
 import type { AdminReport } from '../admin/types/admin.types.ts';
 import { useAuthStore } from '../auth/store/auth.store.ts';
 
 const MyReportsPage = () => {
+  const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
   const [reports, setReports] = useState<AdminReport[]>([]);
   const [error, setError] = useState('');
@@ -39,9 +42,12 @@ const MyReportsPage = () => {
   return (
     <main className="min-h-screen bg-[#F7F2E7] px-4 py-10 text-[#201C18] dark:bg-[#12100E] dark:text-[#F4EFE6] sm:px-6">
       <div className="mx-auto max-w-4xl">
-        <Link to="/" className="inline-flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-widest text-[#1E4D38] dark:text-[#52B788]">
-          <ArrowLeft className="h-4 w-4" /> Home
-        </Link>
+        <div className="flex items-center justify-between gap-3">
+          <Link to="/" className="inline-flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-widest text-[#1E4D38] dark:text-[#52B788]">
+            <ArrowLeft className="h-4 w-4" /> {t('nav.home', 'Home')}
+          </Link>
+          <LanguageSwitcher />
+        </div>
         <header className="mt-6 flex flex-wrap items-end justify-between gap-4 border-b border-[#9A7432]/30 pb-5">
           <div>
             <p className="font-mono text-[10px] font-black uppercase tracking-[.2em] text-[#9A7432]">Your Lewegene space</p>

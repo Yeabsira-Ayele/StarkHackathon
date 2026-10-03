@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import { User as UserIcon, Lock, Phone, ArrowRight, Loader2, Building2 } from 'lucide-react';
-import { registerSchema, RegisterFormData } from '../schemas/auth.schema';
+import { createRegisterSchema, RegisterFormData } from '../schemas/auth.schema';
 import { useAuth } from '../hooks/useAuth';
 
 interface RegisterFormProps {
@@ -15,9 +15,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   onSuccess,
   onSwitchToLogin,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { register: registerAuth, isLoading } = useAuth();
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
+
+  const schema = React.useMemo(() => createRegisterSchema(), [i18n.language]);
 
   const {
     register,
@@ -25,7 +27,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     watch,
     formState: { errors },
   } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       name: '',
       emailOrPhone: '',
@@ -42,7 +44,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       await registerAuth(data);
       onSuccess?.();
     } catch (err: any) {
-      setErrorMsg(err.message || 'መመዝገብ አልተቻለም');
+      setErrorMsg(err.message || t('auth.errors.registerFailed', 'Could not register'));
     }
   };
 
@@ -68,7 +70,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             className="sr-only"
           />
           <UserIcon className="w-3.5 h-3.5" />
-          ለጋሽ ዜጋ (Donor)
+          {t('auth.donorRole', 'Donor citizen')}
         </label>
         <label className={`flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
           selectedRole === 'foundation'
@@ -82,18 +84,18 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             className="sr-only"
           />
           <Building2 className="w-3.5 h-3.5" />
-          ሲቪል ድርጅት (NGO)
+          {t('auth.ngoRole', 'Civil society org (NGO)')}
         </label>
       </div>
 
       <div>
         <label className="block text-xs font-semibold text-[#26211C] dark:text-[#F4EFE6] mb-1.5">
-          ሙሉ ስም (Full Name)
+          {t('auth.fullNameLabel', 'Full name')}
         </label>
         <div className="relative">
           <input
             {...register('name')}
-            placeholder="ለምሳሌ፡ ሰለሞን ተስፋዬ"
+            placeholder={t('auth.fullNamePlaceholder', 'e.g. Solomon Tesfaye')}
             className="w-full px-3.5 py-2.5 pl-10 rounded-xl bg-[#EFE7D5] dark:bg-[#1E1A16] border border-[#D5C8B2]/70 dark:border-[#2E2822] text-xs text-[#14110E] dark:text-[#FAF6EE] focus:ring-1 focus:ring-[#9A7432] focus:outline-none"
           />
           <UserIcon className="w-4 h-4 text-[#73685B] absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -106,12 +108,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       {selectedRole === 'foundation' && (
         <div>
           <label className="mb-1.5 block text-xs font-semibold text-[#26211C] dark:text-[#F4EFE6]">
-            Organization name
+            {t('auth.orgNameLabel', 'Organization name')}
           </label>
           <div className="relative">
             <input
               {...register('organizationName')}
-              placeholder="Registered organization name"
+              placeholder={t('auth.orgNamePlaceholder', 'Registered organization name')}
               className="w-full rounded-xl border border-[#D5C8B2]/70 bg-[#EFE7D5] px-3.5 py-2.5 pl-10 text-xs text-[#14110E] focus:outline-none focus:ring-1 focus:ring-[#9A7432] dark:border-[#2E2822] dark:bg-[#1E1A16] dark:text-[#FAF6EE]"
             />
             <Building2 className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#73685B]" />
@@ -124,7 +126,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
       <div>
         <label className="block text-xs font-semibold text-[#26211C] dark:text-[#F4EFE6] mb-1.5">
-          ስልክ ቁጥር ወይም ኢሜይል (Phone / Email)
+          {t('auth.phoneOrEmailLabel', 'Phone number or email')}
         </label>
         <div className="relative">
           <input
@@ -141,7 +143,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
       <div>
         <label className="block text-xs font-semibold text-[#26211C] dark:text-[#F4EFE6] mb-1.5">
-          አዲስ የይለፍ ቃል (Create Passcode)
+          {t('auth.createPasscodeLabel', 'Create passcode')}
         </label>
         <div className="relative">
           <input
@@ -167,11 +169,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         {isLoading ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />
-            በመመዝገብ ላይ...
+            {t('auth.registering', 'Registering...')}
           </>
         ) : (
           <>
-            መለያ ይክፈቱ (Create Account)
+            {t('auth.createAccount', 'Create account')}
             <ArrowRight className="w-4 h-4" />
           </>
         )}
@@ -179,13 +181,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
       {onSwitchToLogin && (
         <p className="text-center text-xs text-[#73685B] dark:text-[#A89E90] pt-2">
-          ቀደም ሲል መለያ አለዎት?{' '}
+          {t('auth.haveAccount', 'Already have an account?')}{' '}
           <button
             type="button"
             onClick={onSwitchToLogin}
             className="text-[#9A7432] dark:text-[#C9A24D] font-bold hover:underline cursor-pointer"
           >
-            ወደ መለያዎ ይግቡ
+            {t('auth.goToSignIn', 'Sign in to your account')}
           </button>
         </p>
       )}

@@ -47,10 +47,10 @@ export const PaymentReferenceForm: React.FC<PaymentReferenceFormProps> = ({
     <div className="space-y-6 font-mono text-xs">
       <div>
         <h3 className="font-serif font-black text-2xl text-[#14110E] dark:text-[#FFFFFF]">
-          Submit Payment Reference &amp; Verification Proof
+          Demo Contribution Confirmation
         </h3>
         <p className="text-zinc-600 dark:text-zinc-400 mt-1">
-          Provide the transaction code from your bank SMS or transfer receipt to record your donation.
+          Enter any reference text to complete the local simulation. Do not enter real banking or receipt details.
         </p>
       </div>
 
@@ -61,12 +61,12 @@ export const PaymentReferenceForm: React.FC<PaymentReferenceFormProps> = ({
             SELECTED BANK &amp; ACCOUNT
           </span>
           <span className="font-black text-[#14110E] dark:text-[#FFFFFF] text-sm">
-            {bank.shortName} • Acc: {bank.accountNumber}
+            {bank.shortName} • DEMO ONLY
           </span>
         </div>
         <div className="text-right">
           <span className="text-[10px] text-zinc-500 font-bold uppercase block">
-            TRANSFERRED AMOUNT
+            SIMULATED AMOUNT
           </span>
           <span className="font-black text-[#1E4D38] dark:text-[#52B788] text-base">
             {amount.toLocaleString()} ETB
@@ -149,13 +149,10 @@ export const PaymentReferenceForm: React.FC<PaymentReferenceFormProps> = ({
       <div className="p-4 border border-[#1E4D38]/30 dark:border-[#52B788]/30 bg-[#1E4D38]/5 dark:bg-[#52B788]/5 space-y-1 text-zinc-700 dark:text-zinc-300">
         <div className="flex items-center gap-2 text-[#1E4D38] dark:text-[#52B788] font-black uppercase text-[11px]">
           <ShieldCheck className="w-4 h-4" />
-          <span>Automatic Payment Verification</span>
+            <span>No Payment Verification</span>
         </div>
         <p className="text-[11px] leading-relaxed">
-          Your payment reference will be automatically verified against your bank&apos;s records.
-          This usually takes just <span className="font-black">a few seconds</span>.
-          Once confirmed, your commemorative digital certificate and public patron record will be sealed.
-          If verification cannot be completed, you&apos;ll be able to resubmit a corrected reference.
+          This frontend-only prototype does not connect to a bank or payment provider. Submitting this demo reference only updates local campaign totals and creates a prototype contribution record; no money is transferred.
         </p>
       </div>
 
@@ -180,7 +177,7 @@ export const PaymentReferenceForm: React.FC<PaymentReferenceFormProps> = ({
             <span>VERIFYING PAYMENT...</span>
           ) : (
             <>
-              <span>SUBMIT REFERENCE &amp; RECORD DONATION</span>
+              <span>RECORD DEMO CONTRIBUTION</span>
               <ArrowRight className="w-4 h-4" />
             </>
           )}

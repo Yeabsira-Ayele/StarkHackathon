@@ -28,8 +28,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-      <div className="relative w-full max-w-md bg-[#FAF6EE] dark:bg-[#14110E] border border-[#D5C8B2]/80 dark:border-[#2E2822] rounded-3xl p-6 sm:p-8 shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 bg-black/60 backdrop-blur-sm animate-in fade-in sm:items-center">
+      <div className="relative my-auto max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto overscroll-contain bg-[#FAF6EE] dark:bg-[#14110E] border border-[#D5C8B2]/80 dark:border-[#2E2822] rounded-3xl p-6 sm:p-8 shadow-2xl">
         {/* Decorative corner bank lines */}
         <div className="absolute top-0 right-0 w-24 h-24 bg-radial from-[#9A7432]/10 to-transparent pointer-events-none" />
 
@@ -54,6 +54,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {mode === 'login'
             ? 'የልገሳ ዲጂታል ምስክር ወረቀቶችዎንና አስተዋጽኦዎችን ያስተዳድሩ'
             : 'በቀጥታ የሲቪል ማኅበራት ፈቃድ ያገኙ የልገሳ ፕሮጀክቶችን ይደግፉ'}
+        </p>
+        <p className="-mt-4 mb-5 text-[10px] font-mono text-[#73685B] dark:text-[#A89E90]">
+          Prototype account stored in this browser only.
         </p>
 
         {mode === 'login' ? (

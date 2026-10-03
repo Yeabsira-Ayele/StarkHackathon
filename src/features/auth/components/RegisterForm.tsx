@@ -1,5 +1,6 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import { User as UserIcon, Lock, Phone, ArrowRight, Loader2, Building2 } from 'lucide-react';
 import { registerSchema, RegisterFormData } from '../schemas/auth.schema';
@@ -24,6 +25,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     watch,
     formState: { errors },
   } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
     defaultValues: {
       name: '',
       emailOrPhone: '',
@@ -45,7 +47,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {errorMsg && (
         <div className="p-3 text-xs rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400">
           {errorMsg}
@@ -90,7 +92,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         </label>
         <div className="relative">
           <input
-            {...register('name', { required: 'ሙሉ ስምዎን ያስገቡ' })}
+            {...register('name')}
             placeholder="ለምሳሌ፡ ሰለሞን ተስፋዬ"
             className="w-full px-3.5 py-2.5 pl-10 rounded-xl bg-[#EFE7D5] dark:bg-[#1E1A16] border border-[#D5C8B2]/70 dark:border-[#2E2822] text-xs text-[#14110E] dark:text-[#FAF6EE] focus:ring-1 focus:ring-[#9A7432] focus:outline-none"
           />
@@ -101,13 +103,32 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         )}
       </div>
 
+      {selectedRole === 'foundation' && (
+        <div>
+          <label className="mb-1.5 block text-xs font-semibold text-[#26211C] dark:text-[#F4EFE6]">
+            Organization name
+          </label>
+          <div className="relative">
+            <input
+              {...register('organizationName')}
+              placeholder="Registered organization name"
+              className="w-full rounded-xl border border-[#D5C8B2]/70 bg-[#EFE7D5] px-3.5 py-2.5 pl-10 text-xs text-[#14110E] focus:outline-none focus:ring-1 focus:ring-[#9A7432] dark:border-[#2E2822] dark:bg-[#1E1A16] dark:text-[#FAF6EE]"
+            />
+            <Building2 className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#73685B]" />
+          </div>
+          {errors.organizationName && (
+            <p className="mt-1 text-[11px] text-red-500">{errors.organizationName.message}</p>
+          )}
+        </div>
+      )}
+
       <div>
         <label className="block text-xs font-semibold text-[#26211C] dark:text-[#F4EFE6] mb-1.5">
           ስልክ ቁጥር ወይም ኢሜይል (Phone / Email)
         </label>
         <div className="relative">
           <input
-            {...register('emailOrPhone', { required: 'ስልክ ቁጥር ወይም ኢሜይል ያስገቡ' })}
+            {...register('emailOrPhone')}
             placeholder="+251 9XX XXX XXX"
             className="w-full px-3.5 py-2.5 pl-10 rounded-xl bg-[#EFE7D5] dark:bg-[#1E1A16] border border-[#D5C8B2]/70 dark:border-[#2E2822] text-xs text-[#14110E] dark:text-[#FAF6EE] focus:ring-1 focus:ring-[#9A7432] focus:outline-none"
           />
@@ -124,8 +145,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         </label>
         <div className="relative">
           <input
-            {...register('passcode', { required: 'የይለፍ ቃል ያስገቡ' })}
+            {...register('passcode')}
             type="password"
+            minLength={8}
+            autoComplete="new-password"
             placeholder="••••••••"
             className="w-full px-3.5 py-2.5 pl-10 rounded-xl bg-[#EFE7D5] dark:bg-[#1E1A16] border border-[#D5C8B2]/70 dark:border-[#2E2822] text-xs text-[#14110E] dark:text-[#FAF6EE] focus:ring-1 focus:ring-[#9A7432] focus:outline-none"
           />

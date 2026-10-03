@@ -1,9 +1,10 @@
-/**
+﻿/**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Route, Routes, useNavigate, useParams } from 'react-router';
 import { Campaign, CampaignCategory, ContributionCertificate, Organization, PaymentRail } from './types/index.ts';
 import { campaignApi } from './services/api/campaignApi.ts';
 import { INITIAL_CAMPAIGNS } from './data/mockCampaigns.ts';
@@ -18,6 +19,15 @@ import { ContributionCertificateModal } from './components/campaign/Contribution
 import { VoxideExtraction } from './services/voice/voxideService.ts';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 import { VoxideAssistant } from './features/voxide';
+import { AuthModal } from './features/auth/components/AuthModal.tsx';
+import { useAuth } from './features/auth/hooks/useAuth.ts';
+import { AdminPortal } from './features/admin/pages/AdminPortal.tsx';
+import FundraisingApp from './features/fundraising/FundraisingApp.tsx';
+import ProfilePage from './features/profile/ProfilePage.tsx';
+import MyReportsPage from './features/profile/MyReportsPage.tsx';
+import { DemoRoleSwitcher } from './features/auth/components/DemoRoleSwitcher.tsx';
+import { DEMO_ACCOUNTS, DEMO_SESSION_TOKEN, type DemoRole } from './features/auth/data/demoAccounts.ts';
+import { useAuthStore } from './features/auth/store/auth.store.ts';
 
 export type AppView =
   | 'campaigns'
@@ -33,7 +43,21 @@ export type AppView =
   | 'foundation_impact'
   | 'organization_profile';
 
-export default function App() {
+interface PlatformAppProps {
+  initialMode?: 'overview' | 'discover' | 'detail' | 'pledge' | 'vault' | 'impact' | 'treasury' | 'engrave' | 'audit';
+  initialCampaignId?: string;
+  authMode?: 'login' | 'signup';
+  openVoice?: boolean;
+}
+
+function PlatformApp({
+  initialMode = 'overview',
+  initialCampaignId,
+  authMode,
+  openVoice = false,
+}: PlatformAppProps) {
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const [currentView, setCurrentView] = useState<AppView>('campaigns');
   const [userRole, setUserRole] = useState<'donor' | 'foundation'>('donor');
   
@@ -133,6 +157,10 @@ export default function App() {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    setIsVoiceBarOpen(openVoice);
+  }, [openVoice]);
 
   // Handler: Select a single campaign
   const handleSelectCampaign = (camp: Campaign) => {
@@ -358,11 +386,21 @@ export default function App() {
         campaigns={campaigns}
         pendingCampaigns={pendingCampaigns}
         currentOrganization={currentOrganization}
+        organizations={organizations}
+        initialMode={initialMode}
+        initialCampaignId={initialCampaignId}
+        isAuthenticated={isAuthenticated}
+        canAccessFoundation={user?.role === 'foundation' || user?.role === 'admin'}
+        onRequireLogin={() => navigate('/login')}
+        onFoundationAccessDenied={() => navigate('/signup')}
         onDonate={handleDonate}
         onApproveCampaign={handleAdminApprove}
         onRejectCampaign={handleAdminReject}
         onCreateCampaign={async (data) => handleCreateCampaign(data as any, true)}
-        onOpenVoice={() => setIsVoiceBarOpen(true)}
+        onOpenVoice={() => {
+          setIsVoiceBarOpen(true);
+          navigate('/voxide');
+        }}
         onOpenScholarxiv={() => setIsScholarxivOpen(true)}
         language={language}
         isDark={isDark}
@@ -390,7 +428,10 @@ export default function App() {
       {/* Voxide Voice Assistant Dock */}
       <VoxideBar
         isOpen={isVoiceBarOpen}
-        onClose={() => setIsVoiceBarOpen(false)}
+        onClose={() => {
+          setIsVoiceBarOpen(false);
+          if (openVoice) navigate('/');
+        }}
         campaigns={campaigns}
         language={language}
         onExtractedCreation={(data) => setVoiceCampaignData(data)}
@@ -424,6 +465,13 @@ export default function App() {
       {/* Voxide Official Voice Assistant */}
       <VoxideAssistant />
 
+      <AuthModal
+        isOpen={!!authMode}
+        defaultMode={authMode === 'signup' ? 'register' : 'login'}
+        onClose={() => navigate('/')}
+        onSuccess={() => navigate('/')}
+      />
+
       {/* Toast Notification */}
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 max-w-md bg-surface text-primary rounded-xl p-4 shadow-2xl border border-[#B08A45]/40 flex items-start gap-3 animate-in fade-in slide-in-from-bottom-5">
@@ -443,5 +491,85 @@ export default function App() {
         </div>
       )}
     </div>
+  );
+}
+
+function CauseRoute({ mode = 'detail' }: { mode?: 'detail' | 'pledge' }) {
+  const { id } = useParams();
+  return <PlatformApp initialMode={mode} initialCampaignId={id} />;
+}
+
+function AdminRoute() {
+  const navigate = useNavigate();
+  const [isDark, setIsDark] = useState(() => localStorage.getItem('lewegene_theme') === 'dark');
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDark);
+    localStorage.setItem('lewegene_theme', isDark ? 'dark' : 'light');
+  }, [isDark]);
+
+  return (
+    <AdminPortal
+      isDark={isDark}
+      onToggleTheme={() => setIsDark((current) => !current)}
+      onExit={() => navigate('/')}
+    />
+  );
+}
+
+function DemoEntryRoute() {
+  const { role: roleParam } = useParams();
+  const navigate = useNavigate();
+  const setUser = useAuthStore((state) => state.setUser);
+
+  useEffect(() => {
+    const role = roleParam?.toLowerCase() as DemoRole | undefined;
+    if (!role || !Object.prototype.hasOwnProperty.call(DEMO_ACCOUNTS, role)) {
+      navigate('/profile', { replace: true });
+      return;
+    }
+    setUser(DEMO_ACCOUNTS[role], DEMO_SESSION_TOKEN);
+    const destination = role === 'admin' ? '/admin' : role === 'fundraiser' ? '/fundraising' : '/profile';
+    navigate(destination, { replace: true });
+  }, [navigate, roleParam, setUser]);
+
+  return <div className="grid min-h-screen place-items-center bg-[#F7F2E7] font-mono text-xs uppercase tracking-widest text-[#1E4D38] dark:bg-[#12100E] dark:text-[#52B788]">Opening local demo workspace…</div>;
+}
+
+export default function App() {
+  const firstCampaign = INITIAL_CAMPAIGNS.find((campaign) => campaign.status === 'approved');
+
+  return (
+    <BrowserRouter>
+      <>
+        <Routes>
+          <Route path="/" element={<PlatformApp />} />
+          <Route path="/home" element={<PlatformApp />} />
+          <Route path="/discover" element={<PlatformApp initialMode="discover" />} />
+          <Route path="/causes" element={<PlatformApp initialMode="discover" />} />
+          <Route path="/causes/:id" element={<CauseRoute />} />
+          <Route path="/campaigns/:id" element={<CauseRoute />} />
+          <Route path="/admin/*" element={<AdminRoute />} />
+          <Route path="/login" element={<PlatformApp authMode="login" />} />
+          <Route path="/signup" element={<PlatformApp authMode="signup" />} />
+          <Route path="/fundraise" element={<FundraisingApp />} />
+          <Route path="/fundraising" element={<FundraisingApp />} />
+          <Route
+            path="/donations"
+            element={<PlatformApp initialMode="pledge" initialCampaignId={firstCampaign?.id} />}
+          />
+          <Route path="/donations/:id" element={<CauseRoute mode="pledge" />} />
+          <Route path="/contributions" element={<PlatformApp initialMode="vault" />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/reports" element={<MyReportsPage />} />
+          <Route path="/demo" element={<ProfilePage />} />
+          <Route path="/demo/:role" element={<DemoEntryRoute />} />
+          <Route path="/impact" element={<PlatformApp initialMode="impact" />} />
+          <Route path="/voxide" element={<PlatformApp openVoice />} />
+          <Route path="*" element={<PlatformApp />} />
+        </Routes>
+        <DemoRoleSwitcher />
+      </>
+    </BrowserRouter>
   );
 }

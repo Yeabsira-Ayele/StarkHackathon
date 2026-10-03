@@ -30,6 +30,7 @@ export interface VerificationResult {
 export interface Donation {
   id: string;
   campaignId: string;
+  donorId?: string;
   campaignTitle?: string;
   beneficiaryName?: string;
   amount: number;

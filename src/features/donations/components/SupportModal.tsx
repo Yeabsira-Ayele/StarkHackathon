@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Campaign } from '../../campaigns/types/campaign.types';
 import { useDonationStore, SupportFlowStep } from '../store/donation.store';
 import { useBanks, useCreateDonation, useSubmitReference } from '../hooks/useDonations';
-import { mockBanks, getBankById } from '../data/banks.data';
+import { getBankById } from '../data/banks.data';
 import { DonationAmountSelector } from './DonationAmountSelector';
 import { DonorInfoForm } from './DonorInfoForm';
 import { BankSelector } from './BankSelector';
@@ -31,7 +31,12 @@ export const SupportModal: React.FC<SupportModalProps> = ({
   if (!isOpen) return null;
 
   const { t } = useTranslation();
-  const { data: banks = mockBanks, isLoading: isLoadingBanks } = useBanks();
+  const {
+    data: banks = [],
+    isLoading: isLoadingBanks,
+    isError: banksUnavailable,
+    error: banksError,
+  } = useBanks();
 
   const {
     step,
@@ -66,6 +71,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
 
   // Advance from Bank Selection to Account Details
   const handleProceedToAccountDetails = async () => {
+    if (!selectedBank) return;
     try {
       // Create pending donation in backend / state
       const res = await createDonationMutation.mutateAsync({
@@ -236,12 +242,19 @@ export const SupportModal: React.FC<SupportModalProps> = ({
           {/* STEP 3: CHOOSE BANK */}
           {step === 3 && (
             <div className="space-y-6">
-              <BankSelector
-                banks={banks}
-                selectedBankId={selectedBankId}
-                onSelectBank={setSelectedBankId}
-                isLoading={isLoadingBanks}
-              />
+              {banksUnavailable || (!isLoadingBanks && banks.length === 0) ? (
+                <div role="alert" className="border border-red-800/30 bg-red-50 p-4 text-sm text-red-900 dark:bg-red-950/30 dark:text-red-200">
+                  Verified receiver bank accounts are not available from the connected backend. Donations cannot proceed until verified account details are provided.
+                  {banksError instanceof Error && <p className="mt-2 font-mono text-xs">{banksError.message}</p>}
+                </div>
+              ) : (
+                <BankSelector
+                  banks={banks}
+                  selectedBankId={selectedBankId}
+                  onSelectBank={setSelectedBankId}
+                  isLoading={isLoadingBanks}
+                />
+              )}
 
               <div className="pt-4 flex items-center justify-between border-t border-[#26211C]/15">
                 <button
@@ -255,7 +268,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
                 <button
                   type="button"
                   onClick={handleProceedToAccountDetails}
-                  disabled={createDonationMutation.isPending}
+                  disabled={createDonationMutation.isPending || !selectedBank || banksUnavailable}
                   className="py-3 px-8 border-2 border-[#1E4D38] bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706] font-mono text-xs font-black tracking-widest uppercase hover:bg-[#163E2C] transition-all cursor-pointer flex items-center gap-2 shadow-xs disabled:opacity-50"
                 >
                   {createDonationMutation.isPending ? (

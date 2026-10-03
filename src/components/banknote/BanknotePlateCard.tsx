@@ -7,6 +7,7 @@ export interface BanknotePlateCardProps {
   campaign: Campaign;
   onSelect: (campaign: Campaign) => void;
   onQuickPledge?: (campaign: Campaign) => void;
+  showViewCause?: boolean;
   isSpotlight?: boolean;
   className?: string;
 }
@@ -15,6 +16,7 @@ export const BanknotePlateCard: React.FC<BanknotePlateCardProps> = ({
   campaign,
   onSelect,
   onQuickPledge,
+  showViewCause = false,
   isSpotlight = false,
   className = '',
 }) => {
@@ -123,34 +125,50 @@ export const BanknotePlateCard: React.FC<BanknotePlateCardProps> = ({
       </div>
 
       {/* ─── ACTION & PROMISSORY FOOTER (VINTAGE BANKNOTE GREEN BUTTON) ─── */}
-      <div className="relative z-10 pt-2 border-t border-[#26211C]/25 dark:border-[#4A3E33] flex items-center justify-between gap-2">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            if (onQuickPledge) {
-              onQuickPledge(campaign);
-            } else {
+      <div className="relative z-10 pt-2 border-t border-[#26211C]/25 dark:border-[#4A3E33] flex items-center gap-2">
+        {showViewCause ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
               onSelect(campaign);
-            }
-          }}
-          className="flex-1 py-2 px-3 border border-[#1E4D38] bg-[#1E4D38] text-white dark:bg-[#1E4D38] dark:border-[#52B788] dark:text-white font-mono text-xs font-black tracking-widest uppercase flex items-center justify-center gap-1.5 hover:bg-[#163E2C] transition-colors cursor-pointer shadow-xs active:translate-y-px"
-        >
-          <span>SUPPORT THIS CAUSE</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </button>
+            }}
+            className="w-full py-2 px-3 border border-[#1E4D38] bg-[#1E4D38] text-white dark:bg-[#1E4D38] dark:border-[#52B788] dark:text-white font-mono text-xs font-black tracking-widest uppercase flex items-center justify-center gap-1.5 hover:bg-[#163E2C] transition-colors cursor-pointer shadow-xs active:translate-y-px"
+          >
+            <span>VIEW CAUSE</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onQuickPledge) {
+                  onQuickPledge(campaign);
+                } else {
+                  onSelect(campaign);
+                }
+              }}
+              className="flex-1 py-2 px-3 border border-[#1E4D38] bg-[#1E4D38] text-white dark:bg-[#1E4D38] dark:border-[#52B788] dark:text-white font-mono text-xs font-black tracking-widest uppercase flex items-center justify-center gap-1.5 hover:bg-[#163E2C] transition-colors cursor-pointer shadow-xs active:translate-y-px"
+            >
+              <span>SUPPORT THIS CAUSE</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
 
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect(campaign);
-          }}
-          className="py-2 px-2.5 border border-[#26211C] dark:border-[#4A3E33] bg-[#EFE8D8] dark:bg-[#26201B] text-[#201C18] dark:text-[#E8DEC8] font-mono text-[10px] font-bold uppercase hover:bg-[#E5DDCB] transition-colors cursor-pointer"
-          title="Examine complete details and audit report"
-        >
-          DETAILS
-        </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect(campaign);
+              }}
+              className="py-2 px-2.5 border border-[#26211C] dark:border-[#4A3E33] bg-[#EFE8D8] dark:bg-[#26201B] text-[#201C18] dark:text-[#E8DEC8] font-mono text-[10px] font-bold uppercase hover:bg-[#E5DDCB] transition-colors cursor-pointer"
+              title="Examine complete details and audit report"
+            >
+              DETAILS
+            </button>
+          </>
+        )}
       </div>
 
       {/* ─── BOTTOM SERIAL FOOTER ─── */}

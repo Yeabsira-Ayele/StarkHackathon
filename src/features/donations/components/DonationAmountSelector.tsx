@@ -94,7 +94,7 @@ export const DonationAmountSelector: React.FC<DonationAmountSelectorProps> = ({
           </span>
         </div>
         <p className="font-mono text-[11px] text-zinc-500">
-          Minimum pledge is {minAmount} ETB. 100% is deposited into verified civic escrow.
+          Minimum demo contribution is {minAmount} ETB. No funds are transferred or deposited.
         </p>
       </div>
     </div>

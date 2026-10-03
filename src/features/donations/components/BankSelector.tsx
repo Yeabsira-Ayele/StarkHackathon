@@ -22,7 +22,7 @@ export const BankSelector: React.FC<BankSelectorProps> = ({
   if (isLoading) {
     return (
       <div className="p-8 text-center font-mono text-xs text-zinc-500 border border-[#26211C]/20 bg-[#FFFDF9] dark:bg-[#12100E]">
-        Loading verified banking rails...
+        Loading demo payment options...
       </div>
     );
   }
@@ -31,10 +31,10 @@ export const BankSelector: React.FC<BankSelectorProps> = ({
     <div className="space-y-4 font-mono text-xs">
       <div>
         <h3 className="font-serif font-black text-xl text-[#14110E] dark:text-[#FFFFFF]">
-          Choose Receiving Bank or Payment Rail
+          Choose a Demo Payment Option
         </h3>
         <p className="text-zinc-600 dark:text-zinc-400 mt-1">
-          Select the bank where you will transfer your donation directly.
+          Payment options are placeholders only. No transfer can be made from this prototype.
         </p>
       </div>
 
@@ -67,7 +67,7 @@ export const BankSelector: React.FC<BankSelectorProps> = ({
                       {localizedName}
                     </h4>
                     <span className="text-[10px] text-zinc-500 font-normal block mt-0.5">
-                      Account: {bank.accountNumber}
+                      DEMO ONLY · NOT PAYABLE
                     </span>
                   </div>
                 </div>
@@ -82,7 +82,7 @@ export const BankSelector: React.FC<BankSelectorProps> = ({
               <div className="mt-3 pt-2 border-t border-[#26211C]/10 dark:border-[#9A7432]/20 flex items-center justify-between text-[10px]">
                 <span className="text-zinc-500 truncate max-w-[170px]">{bank.branch}</span>
                 <span className="font-bold text-[#1E4D38] dark:text-[#52B788] uppercase tracking-wider shrink-0">
-                  {bank.badge}
+                  DEMO OPTION
                 </span>
               </div>
             </button>

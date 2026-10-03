@@ -6,7 +6,7 @@ import { useFundraiser } from '../hooks/useFundraiser.ts';
 import { fundraisingApi } from '../api/fundraising.api.ts';
 import type { PageProps } from '../FundraisingApp.tsx';
 
-export const FundraiserPreview: React.FC<PageProps & { id: string }> = ({ id, go, toast }) => {
+export const FundraiserPreview: React.FC<PageProps & { id: string }> = ({ id, go, toast, onCampaignsChanged }) => {
   const { data: f, isLoading } = useFundraiser(id);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,6 +19,7 @@ export const FundraiserPreview: React.FC<PageProps & { id: string }> = ({ id, go
     setError(null);
     try {
       await fundraisingApi.submit(f.id);
+      onCampaignsChanged?.();
       toast('Submitted for review. We will let you know the result.');
       go({ name: 'mine' });
     } catch (err: any) {

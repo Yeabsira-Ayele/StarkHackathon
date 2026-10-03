@@ -1,4 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Campaign, ContributionCertificate, PaymentRail, Organization } from '../../types/index.ts';
 import {
@@ -37,11 +39,58 @@ import {
   DollarSign,
   TrendingUp,
   Check,
+  HandHeart,
+  HeartHandshake,
+  BadgeCheck,
+  Flag,
+  Bookmark,
+  X,
   HelpCircle,
   Info,
   Filter,
+  UserRound,
+  LogOut,
 } from 'lucide-react';
 import { toGeezNumber } from '../../services/utils/currencyUtils.ts';
+import { adminApi } from '../../features/admin/api/admin.api.ts';
+import { useAuthStore } from '../../features/auth/store/auth.store.ts';
+
+const ETHIOPIAN_REGIONS = [
+  'Addis Ababa',
+  'Afar',
+  'Amhara',
+  'Benishangul-Gumuz',
+  'Central Ethiopia',
+  'Dire Dawa',
+  'Gambela',
+  'Harari',
+  'Oromia',
+  'Sidama',
+  'Somali',
+  'South Ethiopia',
+  "South West Ethiopia Peoples'",
+  'Tigray',
+];
+
+function hasPersonalReports(userId: string): boolean {
+  try {
+    const snapshot = JSON.parse(localStorage.getItem('lewegene_admin_snapshot_v1') || '{}') as {
+      reports?: Array<{ reporterId?: string; id?: string }>;
+    };
+    return Boolean(snapshot.reports?.some((report) => report.reporterId === userId && report.id !== 'demo-report-001'));
+  } catch {
+    return false;
+  }
+}
+
+function hasPersonalFundraisers(userId: string): boolean {
+  try {
+    const fundraisers = JSON.parse(localStorage.getItem('lewegene_fundraisers_v1') || '[]') as Array<{ creatorId?: string }>;
+    return Array.isArray(fundraisers) && fundraisers.some((fundraiser) => fundraiser.creatorId === userId);
+  } catch {
+    return false;
+  }
+}
 
 export type BanknoteZoomMode =
   | 'overview'
@@ -58,6 +107,9 @@ export interface BanknoteMasterCanvasProps {
   campaigns: Campaign[];
   pendingCampaigns: Campaign[];
   currentOrganization: Organization | null;
+  organizations?: Organization[];
+  initialMode?: BanknoteZoomMode;
+  initialCampaignId?: string;
   onDonate: (payload: {
     amount: number;
     donorName: string;
@@ -73,12 +125,282 @@ export interface BanknoteMasterCanvasProps {
   isDark: boolean;
   onToggleTheme: () => void;
   onDonationCompleted?: (cert: ContributionCertificate) => void;
+  isAuthenticated?: boolean;
+  canAccessFoundation?: boolean;
+  onRequireLogin?: (action: 'donate' | 'fundraise') => void;
+  onFoundationAccessDenied?: () => void;
 }
+
+interface HomeLandingProps {
+  campaigns: Campaign[];
+  organizations: Organization[];
+  totalRaised: number;
+  totalDonations: number;
+  showHero?: boolean;
+  showImpact?: boolean;
+  onDiscover: () => void;
+  onFundraise: () => void;
+  onVoxide: () => void;
+  onSelectCampaign: (campaign: Campaign) => void;
+}
+
+const HomeLanding: React.FC<HomeLandingProps> = ({
+  campaigns,
+  organizations,
+  totalRaised,
+  totalDonations,
+  showHero = true,
+  showImpact = true,
+  onDiscover,
+  onFundraise,
+  onVoxide,
+  onSelectCampaign,
+}) => {
+  const activeCampaigns = campaigns.filter((campaign) => campaign.status === 'approved');
+  const featuredCampaigns = [...activeCampaigns]
+    .sort((a, b) => {
+      const score = (campaign: Campaign) => {
+        const percent = campaign.goalAmount ? campaign.raisedAmount / campaign.goalAmount : 0;
+        return campaign.category === 'emergency' || percent >= 0.75 ? 1 : 0;
+      };
+
+      return score(b) - score(a);
+    })
+    .slice(0, 3);
+  const trustedOrganizations = organizations.filter((organization) => organization.verified).slice(0, 4);
+  const heroCampaign = featuredCampaigns[0];
+
+  return (
+    <div className="flex w-full flex-col gap-4 animate-in fade-in duration-300">
+      {showHero && (
+      <section className="relative overflow-hidden bg-[#EAE1CF] dark:bg-[#101711]">
+        <div className="absolute inset-0 pointer-events-none intaglio-crosshatch opacity-60" />
+        <div className="relative z-10 mx-auto grid max-w-[1500px] items-center gap-10 px-6 py-12 sm:px-12 sm:py-16 lg:grid-cols-[1.05fr_.95fr] lg:px-20 lg:py-20">
+          <div className="space-y-6">
+            <div className="inline-flex items-center gap-2 border border-[#9A7432]/50 bg-[#F7F2E7]/80 px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#805F29] dark:bg-[#161b16] dark:text-[#D8B066]">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              <span>Verified local giving · rooted in Ethiopia</span>
+            </div>
+            <div>
+              <h1 className="font-display text-4xl font-black leading-[1.08] tracking-tight text-[#201C18] dark:text-[#F4EFE6] sm:text-6xl">
+                Good grows when<br />
+                <span className="text-[#1E4D38] dark:text-[#52B788]">we give together.</span>
+              </h1>
+              <p className="mt-5 max-w-xl font-serif text-lg leading-relaxed text-[#5A4E3E] dark:text-[#C9BEAC] sm:text-xl">
+                Lewegene brings people and trusted community causes closer. Find a story that moves you, and help make its next chapter possible.
+              </p>
+              <p className="mt-3 font-ethiopic text-sm text-[#8B6A34]">« ለወገን ደራሽ ወገን ነው። »</p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <button type="button" onClick={onDiscover} className="inline-flex items-center gap-2 border-2 border-[#1E4D38] bg-[#1E4D38] px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-white shadow-md transition hover:bg-[#163E2C]">
+                Discover causes <ArrowRight className="h-4 w-4" />
+              </button>
+              <button type="button" onClick={onFundraise} className="inline-flex items-center gap-2 border border-[#26211C]/50 bg-[#F7F2E7] px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-[#201C18] transition hover:border-[#1E4D38] hover:text-[#1E4D38] dark:bg-[#1A201B] dark:text-[#F4EFE6]">
+                Start fundraising <ArrowRight className="h-4 w-4" />
+              </button>
+              <button type="button" onClick={onVoxide} className="inline-flex items-center gap-2 border border-[#9A7432]/60 bg-[#F2EADA]/70 px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-[#805F29] transition hover:bg-[#E1D4BA] dark:bg-[#181612] dark:text-[#D8B066]">
+                <Volume2 className="h-4 w-4" /> Voxide
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-x-6 gap-y-2 border-t border-[#26211C]/15 pt-4 font-mono text-[9px] font-bold uppercase tracking-wider text-[#5A4E3E] dark:text-[#B6AA98]">
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-[#1E4D38]" /> Verified organizations</span>
+              <span className="inline-flex items-center gap-1.5"><HandHeart className="h-3.5 w-3.5 text-[#9A7432]" /> Community-first giving</span>
+            </div>
+          </div>
+
+          <div className="relative mx-auto w-full max-w-[520px]">
+            <div className="absolute -inset-3 border border-[#9A7432]/45" />
+            <div className="absolute -inset-1.5 border border-[#1E4D38]/35 dark:border-[#9A7432]/35" />
+            {heroCampaign?.imageUrl ? (
+              <img src={heroCampaign.imageUrl} alt={heroCampaign.title} className="relative block aspect-[4/3] w-full object-cover filter contrast-110 saturate-90" />
+            ) : (
+              <div className="relative grid aspect-[4/3] place-items-center bg-[#1E4D38] text-6xl text-[#D8B066]">ለወገን</div>
+            )}
+            <div className="absolute inset-0 pointer-events-none intaglio-overlay opacity-50" />
+            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-4 border border-[#B88B45]/60 bg-[#F2ECE1]/95 p-4 shadow-xl dark:bg-[#141210]/95">
+              <div className="min-w-0">
+                <span className="font-mono text-[9px] font-black uppercase tracking-widest text-[#1E4D38] dark:text-[#52B788]">A cause close to home</span>
+                <p className="mt-1 truncate font-serif text-base font-bold text-[#201C18] dark:text-[#F4EFE6]">{heroCampaign?.title || 'Find your first cause'}</p>
+              </div>
+              <button type="button" onClick={onDiscover} aria-label="Discover causes" className="grid h-9 w-9 shrink-0 place-items-center border border-[#1E4D38] bg-[#1E4D38] text-white hover:bg-[#163E2C]"><ArrowRight className="h-4 w-4" /></button>
+            </div>
+            <div className="absolute -right-5 -top-5 hidden h-16 w-16 rotate-6 flex-col items-center justify-center rounded-full border border-[#B88B45] bg-[#F2ECE1] font-mono text-[8px] font-black leading-tight text-[#1E4D38] dark:bg-[#141210] dark:text-[#D8B066] sm:flex">
+              <HeartHandshake className="mb-0.5 h-5 w-5" /> GIVE<br />TOGETHER
+            </div>
+          </div>
+        </div>
+      </section>
+      )}
+
+      <section id="home-featured-causes" className="scroll-mt-20 relative mx-auto w-full max-w-6xl border-2 border-[#1E4D38]/40 bg-[#FAF6EC] p-6 shadow-xl dark:border-[#9A7432]/50 dark:bg-[#0C0A09] sm:p-8">
+        <div className="pointer-events-none absolute inset-1.5 border border-[#9A7432]/35" />
+        <div className="relative z-10 mb-7 flex flex-wrap items-end justify-between gap-4 border-b-2 border-[#1E4D38]/20 pb-4 dark:border-[#9A7432]/30">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="bg-[#1E4D38] px-2.5 py-1 font-mono text-[9px] font-black uppercase tracking-widest text-white dark:bg-[#52B788] dark:text-[#080706]">Featured &amp; urgent causes</span>
+              <span className="font-mono text-xs font-black uppercase tracking-wider text-[#8B5E14] dark:text-[#D8B066]">★ Direct underwriting ledger</span>
+            </div>
+            <h2 className="mt-1.5 font-display text-2xl font-black tracking-tight text-[#14110E] dark:text-white sm:text-3xl">Community causes &amp; live birr progress</h2>
+            <p className="mt-2 max-w-xl font-serif text-base text-zinc-600 dark:text-zinc-400">Real needs, led by local communities. Every cause is reviewed before it reaches this page.</p>
+          </div>
+          <button type="button" onClick={onDiscover} className="inline-flex items-center gap-2 border-b border-[#1E4D38] pb-1 font-mono text-[10px] font-black uppercase tracking-wider text-[#1E4D38] dark:text-[#52B788]">Browse all causes <ArrowRight className="h-3.5 w-3.5" /></button>
+        </div>
+        {featuredCampaigns.length > 0 ? (
+          <div className="relative z-10 grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {featuredCampaigns.map((campaign, index) => (
+              <BanknotePlateCard key={campaign.id} campaign={campaign} onSelect={onSelectCampaign} showViewCause isSpotlight={index === 0} />
+            ))}
+          </div>
+        ) : (
+          <div className="relative z-10 border border-dashed border-[#9A7432]/50 bg-[#F7F2E7]/70 p-10 text-center font-mono text-xs text-zinc-600 dark:bg-[#141210] dark:text-zinc-400">
+            New causes are being prepared. Check back soon or explore our community.
+          </div>
+        )}
+      </section>
+
+      <section id="home-how-it-works" className="scroll-mt-20 relative border-2 border-[#9A7432]/50 bg-[#EAE1CF]/70 dark:bg-[#111410]">
+        <div className="pointer-events-none absolute inset-2 border border-[#1E4D38]/25 dark:border-[#9A7432]/25" />
+        <div className="relative mx-auto grid max-w-[1300px] gap-9 px-6 py-8 sm:px-12 lg:grid-cols-[.72fr_1.28fr] lg:items-center lg:px-20 lg:py-10">
+          <div>
+            <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[#9A7432]">How it works</p>
+            <h2 className="mt-2 font-display text-2xl font-black leading-tight text-[#201C18] dark:text-[#F4EFE6] sm:text-3xl">Good things happen<br />one step at a time.</h2>
+            <p className="mt-3 max-w-sm font-serif text-base leading-relaxed text-zinc-600 dark:text-zinc-400">Find a community cause, lend your support, and follow the difference you helped make.</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[
+              { number: '01', title: 'Find a cause', detail: 'Explore community-led projects and choose a cause that matters to you.', icon: <Search className="h-5 w-5" /> },
+              { number: '02', title: 'Give what you can', detail: 'Every contribution matters. Support the people and purpose you believe in.', icon: <HandHeart className="h-5 w-5" /> },
+              { number: '03', title: 'See the impact', detail: 'Follow cause updates and see how your community moves forward.', icon: <TrendingUp className="h-5 w-5" /> },
+            ].map((step) => (
+              <article key={step.number} className="border border-[#26211C]/20 bg-[#F7F2E7]/75 p-5 dark:border-[#9A7432]/30 dark:bg-[#171a16]">
+                <div className="flex items-center justify-between font-mono text-[10px] font-black text-[#9A7432]"><span>{step.number}</span><span className="text-[#1E4D38] dark:text-[#52B788]">{step.icon}</span></div>
+                <h3 className="mt-5 font-serif text-lg font-bold text-[#201C18] dark:text-[#F4EFE6]">{step.title}</h3>
+                <p className="mt-2 font-mono text-[10px] leading-relaxed text-zinc-600 dark:text-zinc-400">{step.detail}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {showImpact && (
+      <section id="home-impact" className="scroll-mt-20 relative mx-auto w-full max-w-5xl border-2 border-[#9A7432]/50 bg-[#F7F2E7]/75 px-4 py-6 dark:bg-[#141210] sm:px-6">
+        <div className="pointer-events-none absolute inset-2 border border-[#1E4D38]/25 dark:border-[#9A7432]/25" />
+        <div className="relative grid grid-cols-2 gap-6 font-mono text-center lg:grid-cols-4">
+          <div className="space-y-1">
+            <p className="text-2xl font-black text-[#201C18] dark:text-[#D8B066] sm:text-3xl">
+              {totalRaised.toLocaleString()} ETB
+            </p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+              TOTAL UNDERWRITTEN BIRR
+            </p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-2xl font-black text-[#201C18] dark:text-[#D8B066] sm:text-3xl">
+              {totalDonations.toLocaleString()}
+            </p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+              COMMUNITY PATRONS
+            </p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-2xl font-black text-[#1E4D38] dark:text-[#52B788] sm:text-3xl">100%</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+              DIRECT TO BENEFICIARIES
+            </p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-2xl font-black text-[#201C18] dark:text-[#D8B066] sm:text-3xl">
+              {campaigns.length}
+            </p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+              VERIFIED CAUSE PLATES
+            </p>
+          </div>
+        </div>
+      </section>
+      )}
+
+      <section id="home-communities" className="scroll-mt-20 mx-auto w-full max-w-[1300px] px-6 py-8 sm:px-12 lg:px-20">
+        <div className="relative">
+        <div className="mb-7 text-center">
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[#9A7432]">Stronger, side by side</p>
+          <h2 className="mt-2 font-display text-2xl font-black text-[#201C18] dark:text-[#F4EFE6] sm:text-3xl">Communities making good happen</h2>
+          <p className="mx-auto mt-2 max-w-xl font-serif text-base text-zinc-600 dark:text-zinc-400">Trusted organizations working alongside their neighbors across Ethiopia.</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {trustedOrganizations.map((organization) => (
+            <article key={organization.id} className="flex min-h-36 flex-col justify-between border border-[#26211C]/20 bg-[#F7F2E7]/75 p-5 dark:border-[#9A7432]/30 dark:bg-[#141210]">
+              <div className="flex items-start justify-between gap-3">
+                <span className="grid h-9 w-9 place-items-center border border-[#9A7432]/50 bg-[#1E4D38] font-display text-lg font-black text-[#F4EFE6]">{organization.name.charAt(0)}</span>
+                <BadgeCheck className="h-4 w-4 shrink-0 text-[#1E4D38] dark:text-[#52B788]" />
+              </div>
+              <div className="mt-5">
+                <h3 className="font-serif text-sm font-bold leading-snug text-[#201C18] dark:text-[#F4EFE6]">{organization.name}</h3>
+                <p className="mt-1 font-mono text-[9px] text-zinc-500">{organization.location}</p>
+              </div>
+            </article>
+          ))}
+          {trustedOrganizations.length === 0 && <p className="col-span-full text-center font-mono text-xs text-zinc-500">Community partners will be featured here.</p>}
+        </div>
+        </div>
+      </section>
+
+      <section id="home-voxide" className="scroll-mt-20 relative overflow-hidden border-2 border-[#9A7432]/50 bg-[#F2EADA] dark:bg-[#111410]">
+        <div className="pointer-events-none absolute inset-2 border border-[#1E4D38]/25 dark:border-[#9A7432]/25" />
+        <div className="relative mx-auto grid max-w-[1300px] gap-8 px-6 py-8 sm:px-12 lg:grid-cols-[1fr_auto] lg:items-center lg:px-20">
+          <div>
+            <div className="inline-flex items-center gap-2 border border-[#9A7432]/50 bg-[#FAF6EC] px-3 py-1 font-mono text-[9px] font-black uppercase tracking-[.18em] text-[#805F29] dark:bg-[#181612] dark:text-[#D8B066]">
+              <Volume2 className="h-3.5 w-3.5" />
+              Lewegene voice assistant
+            </div>
+            <h2 className="mt-3 font-display text-3xl font-black text-[#201C18] dark:text-[#F4EFE6] sm:text-4xl">Voxide</h2>
+            <p className="mt-1 font-serif text-xl font-bold text-[#1E4D38] dark:text-[#52B788]">Speak. Find. Give.</p>
+            <p className="mt-3 max-w-2xl font-serif text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
+              Tell Voxide what you need. It understands your voice and helps you find causes, donate, or start a fundraiser.
+            </p>
+            <div className="mt-5 flex flex-wrap items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-wider text-[#201C18] dark:text-[#E8DEC8] sm:text-xs">
+              <span className="border border-[#26211C]/20 bg-[#FAF6EC] px-3 py-2 dark:border-[#9A7432]/30 dark:bg-[#171a16]">🎙️ Speak</span>
+              <ArrowRight className="h-4 w-4 text-[#9A7432]" />
+              <span className="border border-[#26211C]/20 bg-[#FAF6EC] px-3 py-2 dark:border-[#9A7432]/30 dark:bg-[#171a16]">🤖 Voxide understands</span>
+              <ArrowRight className="h-4 w-4 text-[#9A7432]" />
+              <span className="border border-[#26211C]/20 bg-[#FAF6EC] px-3 py-2 dark:border-[#9A7432]/30 dark:bg-[#171a16]">❤️ Take action</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onVoxide}
+            className="inline-flex items-center justify-center gap-2 justify-self-start border-2 border-[#1E4D38] bg-[#1E4D38] px-6 py-3 font-mono text-xs font-black uppercase tracking-wider text-white shadow-md transition hover:bg-[#163E2C] lg:justify-self-end"
+          >
+            <Volume2 className="h-4 w-4" />
+            Try Voxide
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      </section>
+
+      <section className="relative overflow-hidden border-2 border-[#9A7432]/60 bg-[#EAE1CF] px-6 py-8 text-center dark:bg-[#111410] sm:px-12">
+        <div className="absolute inset-2 border border-[#9A7432]/25 pointer-events-none" />
+        <div className="relative mx-auto max-w-2xl">
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[#9A7432]">There’s room for you here</p>
+          <h2 className="mt-3 font-display text-3xl font-black leading-tight text-[#201C18] dark:text-[#F4EFE6] sm:text-4xl">What good will you help grow?</h2>
+          <p className="mx-auto mt-3 max-w-lg font-serif text-base text-zinc-600 dark:text-zinc-400">Bring your community together around a cause, or find a good thing already growing.</p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <button type="button" onClick={onFundraise} className="inline-flex items-center gap-2 border-2 border-[#1E4D38] bg-[#1E4D38] px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-white hover:bg-[#163E2C]">Start fundraising <ArrowRight className="h-4 w-4" /></button>
+            <button type="button" onClick={onDiscover} className="inline-flex items-center gap-2 border border-[#26211C]/40 bg-[#F7F2E7] px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-[#201C18] hover:border-[#1E4D38] dark:bg-[#171a16] dark:text-[#F4EFE6]">Discover causes <ArrowRight className="h-4 w-4" /></button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+};
 
 export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
   campaigns,
   pendingCampaigns,
   currentOrganization,
+  organizations = [],
+  initialMode = 'overview',
+  initialCampaignId,
   onDonate,
   onApproveCampaign,
   onRejectCampaign,
@@ -89,13 +411,134 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
   isDark,
   onToggleTheme,
   onDonationCompleted,
+  isAuthenticated = false,
+  canAccessFoundation = false,
+  onRequireLogin,
+  onFoundationAccessDenied,
 }) => {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const authUser = useAuthStore((state) => state.user);
+  const authToken = useAuthStore((state) => state.token);
+  const setAuthUser = useAuthStore((state) => state.setUser);
+  const logout = useAuthStore((state) => state.logout);
+  const showPersonalNavigation = isAuthenticated && Boolean(authUser);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isProfileEditorOpen, setIsProfileEditorOpen] = useState(false);
+  const [profileName, setProfileName] = useState(authUser?.name || '');
+  const [profileEmail, setProfileEmail] = useState(authUser?.email || '');
+  const [profilePhone, setProfilePhone] = useState(authUser?.phone || '');
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+  const [personalDataRevision, setPersonalDataRevision] = useState(0);
+
+  useEffect(() => {
+    const refreshPersonalLinks = () => setPersonalDataRevision((revision) => revision + 1);
+    window.addEventListener('lewegene:personal-data-changed', refreshPersonalLinks);
+    window.addEventListener('storage', refreshPersonalLinks);
+    return () => {
+      window.removeEventListener('lewegene:personal-data-changed', refreshPersonalLinks);
+      window.removeEventListener('storage', refreshPersonalLinks);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isProfileMenuOpen) return;
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (event.target instanceof Node && !profileMenuRef.current?.contains(event.target)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsProfileMenuOpen(false);
+    };
+    document.addEventListener('mousedown', closeOnOutsideClick);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('mousedown', closeOnOutsideClick);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [isProfileMenuOpen]);
+
+  useEffect(() => {
+    if (!isProfileEditorOpen || !authUser) return;
+    setProfileName(authUser.name);
+    setProfileEmail(authUser.email);
+    setProfilePhone(authUser.phone || '');
+  }, [isProfileEditorOpen, authUser]);
+
+  const hasReports = useMemo(
+    () => Boolean(authUser && hasPersonalReports(authUser.id)),
+    [authUser?.id, personalDataRevision],
+  );
+  const hasFundraisers = useMemo(
+    () => Boolean(authUser && hasPersonalFundraisers(authUser.id)),
+    [authUser?.id, personalDataRevision],
+  );
 
   // Navigation State
-  const [zoomMode, setZoomMode] = useState<BanknoteZoomMode>('overview');
+  const [zoomMode, setZoomMode] = useState<BanknoteZoomMode>(initialMode);
   const [activePlateIndex, setActivePlateIndex] = useState<number>(0);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [isReportFormOpen, setIsReportFormOpen] = useState<boolean>(false);
+  const [reportReason, setReportReason] = useState<string>('');
+  const [reportDetails, setReportDetails] = useState<string>('');
+  const [reportFeedback, setReportFeedback] = useState<string>('');
+  const [savedCauseIds, setSavedCauseIds] = useState<string[]>(() => {
+    try {
+      const saved: unknown = JSON.parse(localStorage.getItem('lewegene_saved_causes') || '[]');
+      return Array.isArray(saved) ? saved.filter((id): id is string => typeof id === 'string') : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const navigateToMode = (mode: BanknoteZoomMode, path?: string) => {
+    setZoomMode(mode);
+    const modePaths: Record<BanknoteZoomMode, string> = {
+      overview: '/',
+      discover: '/discover',
+      detail: selectedCampaign ? `/causes/${selectedCampaign.id}` : '/causes',
+      pledge: selectedCampaign ? `/donations/${selectedCampaign.id}` : '/donations',
+      vault: '/profile',
+      impact: '/impact',
+      treasury: '/fundraising',
+      engrave: '/fundraising',
+      audit: '/admin',
+    };
+    navigate(path || modePaths[mode]);
+  };
+
+  useEffect(() => {
+    setZoomMode(initialMode);
+  }, [initialMode]);
+
+  useEffect(() => {
+    if (initialCampaignId) {
+      setSelectedCampaign(campaigns.find((campaign) => campaign.id === initialCampaignId) || campaigns[0] || null);
+    } else if (initialMode === 'detail' || initialMode === 'pledge') {
+      setSelectedCampaign(campaigns[0] || null);
+    }
+  }, [campaigns, initialCampaignId, initialMode]);
+
+  const openVault = () => {
+    if (!isAuthenticated) {
+      onRequireLogin?.('donate');
+      return;
+    }
+    navigateToMode('vault');
+  };
+
+  const openFoundationDesk = () => {
+    if (!isAuthenticated) {
+      onRequireLogin?.('fundraise');
+      return;
+    }
+    if (!canAccessFoundation) {
+      onFoundationAccessDenied?.();
+      return;
+    }
+    navigateToMode('treasury');
+  };
 
   // User Role Switcher
   const [userRole, setUserRole] = useState<'patron' | 'foundation'>('patron');
@@ -103,7 +546,8 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
   // Search & Filters for Causes
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [fundingStatusFilter, setFundingStatusFilter] = useState<'all' | 'active' | 'nearly_funded' | 'completed'>('all');
+  const [fundingStatusFilter, setFundingStatusFilter] = useState<'all' | 'ending_soon' | 'started_now' | 'ongoing'>('all');
+  const [selectedLocation, setSelectedLocation] = useState<string>('all');
 
   // Pledge / Contribution State (4-Step Wizard)
   const [pledgeStep, setPledgeStep] = useState<1 | 2 | 3 | 4>(1);
@@ -130,6 +574,12 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
   // Seals modal
   const [showAcsoModal, setShowAcsoModal] = useState<boolean>(false);
 
+  useEffect(() => {
+    if (!selectedCampaign) return;
+    const refreshed = campaigns.find((campaign) => campaign.id === selectedCampaign.id);
+    if (refreshed && refreshed !== selectedCampaign) setSelectedCampaign(refreshed);
+  }, [campaigns, selectedCampaign]);
+
   // Active spotlight cause for featured vignette
   const activeSpotlight =
     campaigns && campaigns.length > 0
@@ -140,7 +590,10 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
   const filteredCampaigns = useMemo(() => {
     return (campaigns || []).filter((c) => {
       if (!c) return false;
-      const matchesCategory = selectedCategory === 'all' || c.category === selectedCategory;
+      const matchesCategory =
+        selectedCategory === 'all' ||
+        c.category === selectedCategory ||
+        (selectedCategory === 'community' && c.category === 'business');
       const matchesSearch =
         searchQuery.trim() === '' ||
         (c.title && c.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -149,18 +602,26 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
         (c.organizationName && c.organizationName.toLowerCase().includes(searchQuery.toLowerCase()));
 
       const percent = c.goalAmount ? (c.raisedAmount / c.goalAmount) * 100 : 0;
-      let matchesStatus = true;
-      if (fundingStatusFilter === 'active') {
-        matchesStatus = percent < 75;
-      } else if (fundingStatusFilter === 'nearly_funded') {
-        matchesStatus = percent >= 75 && percent < 100;
-      } else if (fundingStatusFilter === 'completed') {
-        matchesStatus = percent >= 100;
-      }
+      const createdAt = new Date(c.createdAt).getTime();
+      const startedRecently = Number.isFinite(createdAt) &&
+        createdAt <= Date.now() &&
+        Date.now() - createdAt <= 30 * 24 * 60 * 60 * 1000;
+      const isOngoing = c.status === 'approved' && percent < 100;
+      const isEndingSoon = c.status === 'approved' &&
+        percent < 100 &&
+        (c.category === 'emergency' || percent >= 75);
+      const matchesStatus =
+        fundingStatusFilter === 'all' ||
+        (fundingStatusFilter === 'ending_soon' && isEndingSoon) ||
+        (fundingStatusFilter === 'started_now' && startedRecently) ||
+        (fundingStatusFilter === 'ongoing' && isOngoing);
+      const matchesLocation =
+        selectedLocation === 'all' ||
+        (c.location || '').toLowerCase().includes(selectedLocation.toLowerCase());
 
-      return matchesCategory && matchesSearch && matchesStatus;
+      return matchesCategory && matchesSearch && matchesStatus && matchesLocation;
     });
-  }, [campaigns, selectedCategory, searchQuery, fundingStatusFilter]);
+  }, [campaigns, selectedCategory, searchQuery, fundingStatusFilter, selectedLocation]);
 
   // Aggregate Metrics
   const totalRaised = (campaigns || []).reduce((acc, c) => acc + (c?.raisedAmount || 0), 0);
@@ -169,24 +630,92 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
 
   const categories = [
     { id: 'all', num: '፩', label: 'ALL CAUSES' },
-    { id: 'education', num: '፪', label: 'EDUCATION' },
-    { id: 'medical', num: '፫', label: 'HEALTHCARE' },
-    { id: 'water', num: '፬', label: 'CLEAN WATER' },
-    { id: 'emergency', num: '፭', label: 'EMERGENCY' },
-    { id: 'business', num: '፮', label: 'ARTISANS' },
+    { id: 'medical', num: '፪', label: 'MEDICAL' },
+    { id: 'education', num: '፫', label: 'EDUCATION' },
+    { id: 'emergency', num: '፬', label: 'EMERGENCY' },
+    { id: 'water', num: '፭', label: 'CLEAN WATER' },
+    { id: 'environment', num: '፮', label: 'ENVIRONMENT' },
+    { id: 'community', num: '፯', label: 'COMMUNITY' },
+    { id: 'other', num: '፰', label: 'OTHER' },
   ];
-
   // Navigation Handlers
   const handleOpenDetail = (campaign: Campaign) => {
     setSelectedCampaign(campaign);
-    setZoomMode('detail');
+    setIsReportFormOpen(false);
+    setReportReason('');
+    setReportDetails('');
+    setReportFeedback('');
+    navigateToMode('detail', `/causes/${campaign.id}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleReportSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!selectedCampaign || !reportReason) return;
+
+    try {
+      const storedReports = localStorage.getItem('lewegene_cause_reports');
+      const reports: Array<{
+        id: string;
+        campaignId: string;
+        reason: string;
+        details: string;
+        createdAt: string;
+      }> = storedReports ? JSON.parse(storedReports) : [];
+      if (!Array.isArray(reports)) {
+        throw new Error('Saved cause reports are not in the expected format.');
+      }
+
+      reports.push({
+        id: `report-${Date.now()}`,
+        campaignId: selectedCampaign.id,
+        reason: reportReason,
+        details: reportDetails.trim(),
+        createdAt: new Date().toISOString(),
+      });
+      localStorage.setItem('lewegene_cause_reports', JSON.stringify(reports));
+      const reportCategories = {
+        misleading_information: 'Misleading Content',
+        suspected_fraud: 'Fraud / Scam',
+        duplicate: 'Other',
+        inappropriate_content: 'Other',
+        other: 'Other',
+      } as const;
+      const reporterId = useAuthStore.getState().user?.id || 'demo-guest';
+      await adminApi.submitReport({
+        reporterId,
+        campaignId: selectedCampaign.id,
+        category: reportCategories[reportReason as keyof typeof reportCategories] || 'Other',
+        details: reportDetails.trim() || `Reported for ${reportReason.replaceAll('_', ' ')}.`,
+        evidence: [],
+      });
+      window.dispatchEvent(new Event('lewegene:personal-data-changed'));
+      setReportFeedback('Report saved to the local demo Admin Reports queue. It was not sent to a moderation team.');
+      setReportReason('');
+      setReportDetails('');
+    } catch (error) {
+      console.error('Failed to save cause report', error);
+      setReportFeedback('Could not save this report in the browser. Please try again.');
+    }
+  };
+
+  const toggleSavedCause = (campaign: Campaign) => {
+    try {
+      const next = savedCauseIds.includes(campaign.id)
+        ? savedCauseIds.filter((id) => id !== campaign.id)
+        : [...savedCauseIds, campaign.id];
+      localStorage.setItem('lewegene_saved_causes', JSON.stringify(next));
+      setSavedCauseIds(next);
+    } catch (error) {
+      console.error('Failed to update saved causes', error);
+      setReportFeedback('Could not update saved causes in this browser.');
+    }
   };
 
   const handleOpenPledge = (campaign: Campaign) => {
     setSelectedCampaign(campaign);
     setPledgeStep(1);
-    setZoomMode('pledge');
+    navigateToMode('pledge', `/donations/${campaign.id}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -217,6 +746,10 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
 
   const handleCreateCauseSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAuthenticated) {
+      onRequireLogin?.('fundraise');
+      return;
+    }
     if (!onCreateCampaign) return;
     setIsSubmittingCause(true);
     try {
@@ -231,12 +764,16 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
         impactMetric: `Direct verified community outcome for ${newBeneficiaries} people in ${newLocation}`,
         imageUrl: '/src/assets/images/ethiopia_school_stem_1790266427111.jpg',
       });
-      setZoomMode('discover');
+      navigateToMode('discover');
     } catch (err) {
       console.error('Failed to engrave cause', err);
     } finally {
       setIsSubmittingCause(false);
     }
+  };
+
+  const scrollToHomeSection = (sectionId: string) => {
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   return (
@@ -251,7 +788,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
       {/* ─────────────────────────────────────────────────────────────────────────────
           CLEAN WIDESCREEN NAVIGATION HEADER (HIGH USABILITY + INTAGLIO TYPOGRAPHY)
       ───────────────────────────────────────────────────────────────────────────── */}
-      <header className="relative z-20 w-full px-6 sm:px-12 lg:px-20 py-5 border-b-2 border-[#1E4D38]/20 dark:border-[#9A7432]/30 bg-[#FFFDF9]/95 dark:bg-[#12100E]/95 backdrop-blur-xs transition-colors shadow-xs">
+      <header className={`relative ${isProfileMenuOpen ? 'z-40' : 'z-20'} w-full scroll-mt-32 px-6 py-5 border-b-2 border-[#1E4D38]/20 bg-[#FFFDF9]/95 shadow-xs backdrop-blur-xs transition-colors dark:border-[#9A7432]/30 dark:bg-[#12100E]/95 sm:scroll-mt-0 sm:px-12 lg:px-20`}>
         
         {/* Top Micro-Ribbon: Edge Identification & Legal Clearing */}
         <div className="flex items-center justify-between text-[10px] font-mono pb-3 border-b border-[#26211C]/10 dark:border-[#9A7432]/15">
@@ -276,7 +813,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
           
           {/* Lewegene Logotype (Clean, Minimalist, Breathing) */}
           <div
-            onClick={() => setZoomMode('overview')}
+            onClick={() => navigateToMode('overview')}
             className="cursor-pointer group flex flex-col"
           >
             <h1 className="font-display font-black text-2xl sm:text-3xl tracking-[0.2em] text-[#201C18] dark:text-[#F4EFE6] leading-none transition-colors group-hover:text-[#1E4D38] dark:group-hover:text-[#52B788]">
@@ -288,10 +825,10 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
           </div>
 
           {/* Core Navigation Links */}
-          <nav className="flex items-center gap-1 sm:gap-3 font-mono text-xs font-black tracking-wider uppercase">
+          <nav className={`${showPersonalNavigation ? 'flex flex-wrap' : 'flex'} items-center gap-1 sm:gap-3 font-mono text-xs font-black tracking-wider uppercase`}>
             <button
               type="button"
-              onClick={() => setZoomMode('overview')}
+              onClick={() => navigateToMode('overview')}
               className={`px-3 py-2 transition-colors cursor-pointer ${
                 zoomMode === 'overview'
                   ? 'text-[#1E4D38] dark:text-[#52B788] border-b-2 border-[#1E4D38] dark:border-[#52B788]'
@@ -303,7 +840,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
 
             <button
               type="button"
-              onClick={() => setZoomMode('discover')}
+              onClick={() => navigateToMode('discover')}
               className={`px-3 py-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
                 zoomMode === 'discover'
                   ? 'text-[#1E4D38] dark:text-[#52B788] border-b-2 border-[#1E4D38] dark:border-[#52B788]'
@@ -316,29 +853,52 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               </span>
             </button>
 
-            <button
-              type="button"
-              onClick={() => setZoomMode('vault')}
-              className={`px-3 py-2 transition-colors cursor-pointer ${
-                zoomMode === 'vault'
-                  ? 'text-[#1E4D38] dark:text-[#52B788] border-b-2 border-[#1E4D38] dark:border-[#52B788]'
-                  : 'text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]'
-              }`}
-            >
-              MY CONTRIBUTIONS
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setZoomMode('treasury')}
-              className={`px-3 py-2 transition-colors cursor-pointer ${
-                zoomMode === 'treasury'
-                  ? 'text-[#1E4D38] dark:text-[#52B788] border-b-2 border-[#1E4D38] dark:border-[#52B788]'
-                  : 'text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]'
-              }`}
-            >
-              FOUNDATION DESK
-            </button>
+            {showPersonalNavigation ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => navigate('/contributions')}
+                  className="px-3 py-2 transition-colors cursor-pointer text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
+                >
+                  MY CONTRIBUTIONS
+                </button>
+                {hasReports && (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/reports')}
+                    className="px-3 py-2 transition-colors cursor-pointer text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
+                  >
+                    MY REPORTS
+                  </button>
+                )}
+                {hasFundraisers && (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/fundraising')}
+                    className="px-3 py-2 transition-colors cursor-pointer text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
+                  >
+                    MY FUNDRAISERS
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => navigate('/fundraising')}
+                  className="px-3 py-2 transition-colors cursor-pointer text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
+                >
+                  FUNDRAISE
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/signup')}
+                  className="px-3 py-2 transition-colors cursor-pointer text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
+                >
+                  SIGN UP / LOG IN
+                </button>
+              </>
+            )}
 
             {/* Subtle Divider */}
             <span className="text-zinc-300 dark:text-zinc-700 px-1 select-none">|</span>
@@ -386,12 +946,12 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
             {/* Voxide Voice Assistant */}
             <button
               type="button"
-              onClick={onOpenVoice}
+              onClick={() => (showPersonalNavigation ? navigate('/voxide') : onOpenVoice())}
               className="p-2 border border-[#1E4D38]/60 bg-[#1E4D38]/5 hover:bg-[#1E4D38]/15 text-[#1E4D38] dark:text-[#52B788] transition-colors cursor-pointer flex items-center gap-1.5"
               title="Speak with Voxide Voice Assistant"
             >
               <Volume2 className="w-3.5 h-3.5" />
-              <span className="hidden xl:inline font-mono text-[10px] font-bold uppercase">VOXIDE</span>
+              <span className={`${showPersonalNavigation ? 'font-mono text-[10px] font-bold uppercase' : 'hidden xl:inline font-mono text-[10px] font-bold uppercase'}`}>VOXIDE</span>
             </button>
 
             {/* Theme Toggle */}
@@ -403,11 +963,178 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
             >
               {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
             </button>
+
+            {showPersonalNavigation && authUser && (
+              <div ref={profileMenuRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsProfileMenuOpen((open) => !open)}
+                  aria-label="Open profile menu"
+                  aria-haspopup="menu"
+                  aria-expanded={isProfileMenuOpen}
+                  title={`Profile: ${authUser.name}`}
+                  className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-full border border-[#9A7432]/60 bg-[#F2ECE1] text-[#1E4D38] transition-colors hover:border-[#1E4D38] dark:bg-[#1C1814] dark:text-[#52B788]"
+                >
+                  {authUser.avatarUrl
+                    ? <img src={authUser.avatarUrl} alt="" className="h-full w-full object-cover" />
+                    : <span className="font-mono text-[10px] font-black">{authUser.name.trim().slice(0, 2).toUpperCase() || <UserRound className="h-4 w-4" />}</span>}
+                </button>
+                {isProfileMenuOpen && (
+                  <div
+                    role="menu"
+                    aria-label="Profile options"
+                    className="absolute right-0 top-full z-50 mt-2 w-48 border border-[#9A7432]/40 bg-[#FFFDF9] p-1.5 text-left shadow-lg dark:bg-[#171410]"
+                  >
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setIsProfileMenuOpen(false);
+                        setIsProfileEditorOpen(true);
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2.5 text-left font-mono text-[10px] font-bold uppercase tracking-wider text-[#201C18] transition-colors hover:bg-[#1E4D38]/10 hover:text-[#1E4D38] dark:text-[#E8DEC8] dark:hover:bg-[#52B788]/10 dark:hover:text-[#52B788]"
+                    >
+                      <UserRound className="h-4 w-4" />
+                      Edit My Profile
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setIsProfileMenuOpen(false);
+                        logout();
+                        navigate('/', { replace: true });
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2.5 text-left font-mono text-[10px] font-bold uppercase tracking-wider text-[#201C18] transition-colors hover:bg-red-700/10 hover:text-red-800 dark:text-[#E8DEC8] dark:hover:text-red-300"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </nav>
 
         </div>
 
       </header>
+
+      {isProfileEditorOpen && authUser && createPortal(
+        <div
+          className="fixed inset-0 z-[100] grid place-items-center bg-black/55 p-4 backdrop-blur-sm"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setIsProfileEditorOpen(false);
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="profile-editor-title"
+            className="w-full max-w-lg border border-[#9A7432]/50 bg-[#FFFDF9] p-5 text-[#201C18] shadow-2xl dark:bg-[#171410] dark:text-[#F4EFE6] sm:p-7"
+          >
+            <div className="mb-5 flex items-start justify-between gap-4 border-b border-[#9A7432]/30 pb-4">
+              <div>
+                <p className="font-mono text-[10px] font-black uppercase tracking-[.2em] text-[#9A7432]">Local demo profile</p>
+                <h2 id="profile-editor-title" className="mt-1 font-serif text-2xl font-black">Edit My Profile</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsProfileEditorOpen(false)}
+                aria-label="Close profile editor"
+                className="grid h-8 w-8 place-items-center border border-[#9A7432]/40 text-xl leading-none hover:bg-[#9A7432]/10"
+              >
+                ×
+              </button>
+            </div>
+            <form
+              className="grid gap-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                setAuthUser({
+                  ...authUser,
+                  name: profileName.trim(),
+                  email: profileEmail.trim(),
+                  phone: profilePhone.trim(),
+                }, authToken);
+                setIsProfileEditorOpen(false);
+              }}
+            >
+              <label className="grid gap-1.5 font-mono text-xs font-bold">
+                Name
+                <input
+                  required
+                  value={profileName}
+                  onChange={(event) => setProfileName(event.target.value)}
+                  className="border border-[#26211C]/20 bg-white px-3 py-2.5 font-sans text-sm dark:border-[#9A7432]/30 dark:bg-[#0E0D0B]"
+                />
+              </label>
+              <label className="grid gap-1.5 font-mono text-xs font-bold">
+                Email
+                <input
+                  required
+                  type="email"
+                  value={profileEmail}
+                  onChange={(event) => setProfileEmail(event.target.value)}
+                  className="border border-[#26211C]/20 bg-white px-3 py-2.5 font-sans text-sm dark:border-[#9A7432]/30 dark:bg-[#0E0D0B]"
+                />
+              </label>
+              <label className="grid gap-1.5 font-mono text-xs font-bold">
+                Phone
+                <input
+                  value={profilePhone}
+                  onChange={(event) => setProfilePhone(event.target.value)}
+                  className="border border-[#26211C]/20 bg-white px-3 py-2.5 font-sans text-sm dark:border-[#9A7432]/30 dark:bg-[#0E0D0B]"
+                />
+              </label>
+              <p className="text-xs text-zinc-500">Changes are saved only in this browser.</p>
+              <div className="flex justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setIsProfileEditorOpen(false)}
+                  className="border border-[#9A7432]/50 px-4 py-2.5 font-mono text-xs font-bold uppercase hover:bg-[#9A7432]/10"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-[#1E4D38] px-4 py-2.5 font-mono text-xs font-black uppercase text-white hover:bg-[#163E2C]"
+                >
+                  Save Profile
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>,
+        document.body,
+      )}
+
+      {zoomMode === 'overview' && (
+        <nav
+          aria-label="Home page sections"
+          className="sticky top-0 z-30 border-b border-[#9A7432]/40 bg-[#F7F2E7]/95 px-4 py-2 shadow-xs backdrop-blur-sm dark:bg-[#12100E]/95 sm:px-8 lg:px-16"
+        >
+          <div className="mx-auto flex max-w-[1500px] items-center gap-1 overflow-x-auto">
+            {[
+              { id: 'home-hero', label: 'Hero' },
+              { id: 'home-featured-causes', label: 'Causes' },
+              { id: 'home-how-it-works', label: 'How It Works' },
+              { id: 'home-impact', label: 'Impact' },
+              { id: 'home-communities', label: 'Communities' },
+              { id: 'home-voxide', label: 'Voxide' },
+            ].map((section) => (
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => scrollToHomeSection(section.id)}
+                className="shrink-0 border-b-2 border-transparent px-3 py-2 font-mono text-[10px] font-black uppercase tracking-wider text-[#5A4E3E] transition-colors hover:border-[#1E4D38] hover:text-[#1E4D38] dark:text-[#C9BEAC] dark:hover:border-[#52B788] dark:hover:text-[#52B788] sm:px-4 sm:text-xs"
+              >
+                {section.label}
+              </button>
+            ))}
+          </div>
+        </nav>
+      )}
 
       {/* ─────────────────────────────────────────────────────────────────────────────
           MAIN CONTENT VIEWPORT: WIDESCREEN & MINIMALIST
@@ -418,11 +1145,25 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
         {/* ══════════════════════════════════════════════════════════════════════════
             VIEW 1: OVERVIEW (HERO CINEMATIC: WIDE, MINIMALIST, HIGH USABILITY)
         ══════════════════════════════════════════════════════════════════════════ */}
+        {false && zoomMode === 'overview' && (
+          <HomeLanding
+            campaigns={campaigns}
+            organizations={organizations}
+            totalRaised={totalRaised}
+            totalDonations={totalDonations}
+            onDiscover={() => navigateToMode('discover')}
+            onFundraise={() => navigate('/fundraising')}
+            onVoxide={onOpenVoice}
+            onSelectCampaign={handleOpenDetail}
+          />
+        )}
+
         {zoomMode === 'overview' && (
-          <div className="w-full max-w-[1600px] mx-auto px-6 sm:px-12 lg:px-20 py-12 lg:py-16 space-y-16 animate-in fade-in duration-300">
+          <div className="w-full max-w-[1600px] mx-auto px-6 sm:px-12 lg:px-20 py-12 lg:py-16 space-y-8 animate-in fade-in duration-300">
             
             {/* ── Wide Hero Section: Pure Negative Space & Authority ── */}
-            <div className="max-w-4xl mx-auto text-center space-y-6">
+            <div id="home-hero" className="scroll-mt-20 max-w-4xl mx-auto text-center">
+              <div className="relative space-y-6">
               
               <div className="inline-flex items-center gap-2 px-3 py-1 border border-[#9A7432]/40 bg-[#F2EADA]/90 dark:bg-[#0E0D0B]/90 text-[10px] font-mono font-bold tracking-[0.25em] text-[#9A7432] uppercase">
                 <span>የኢትዮጵያ የሕዝብ ትብብር ሰነድ</span>
@@ -448,7 +1189,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
                 <button
                   type="button"
-                  onClick={() => setZoomMode('discover')}
+                  onClick={() => navigateToMode('discover')}
                   className="py-3.5 px-8 border-2 border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-sm font-black tracking-widest uppercase hover:bg-[#163E2C] transition-all cursor-pointer shadow-md flex items-center gap-3 active:translate-y-px"
                 >
                   <span>EXPLORE CAUSES</span>
@@ -457,13 +1198,13 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
 
                 <button
                   type="button"
-                  onClick={() => setZoomMode('treasury')}
+                  onClick={openFoundationDesk}
                   className="py-3.5 px-6 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#F2EADA]/90 dark:bg-[#0E0D0B]/90 text-[#201C18] dark:text-[#F4EFE6] font-mono text-sm font-black tracking-wider uppercase hover:bg-[#DFD3BC] transition-all cursor-pointer"
                 >
                   <span>FOR FOUNDATIONS</span>
                 </button>
               </div>
-
+              </div>
             </div>
 
             {/* ── Delicate Centerpiece Engraving (Widescreen Monument) ── */}
@@ -477,48 +1218,8 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               </div>
             </div>
 
-            {/* ── Clean Live Ledger Ticker (Printed Directly Into Paper) ── */}
-            <div className="w-full max-w-5xl mx-auto py-6 border-y border-[#26211C]/20 dark:border-[#9A7432]/30 grid grid-cols-2 lg:grid-cols-4 gap-6 font-mono text-center">
-              
-              <div className="space-y-1">
-                <p className="text-2xl sm:text-3xl font-black text-[#201C18] dark:text-[#D8B066]">
-                  {totalRaised.toLocaleString()} ETB
-                </p>
-                <p className="text-[10px] text-zinc-600 dark:text-zinc-400 font-bold uppercase tracking-wider">
-                  TOTAL UNDERWRITTEN BIRR
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-2xl sm:text-3xl font-black text-[#201C18] dark:text-[#D8B066]">
-                  {totalDonations.toLocaleString()}
-                </p>
-                <p className="text-[10px] text-zinc-600 dark:text-zinc-400 font-bold uppercase tracking-wider">
-                  COMMUNITY PATRONS
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-2xl sm:text-3xl font-black text-[#1E4D38] dark:text-[#52B788]">
-                  100%
-                </p>
-                <p className="text-[10px] text-zinc-600 dark:text-zinc-400 font-bold uppercase tracking-wider">
-                  DIRECT TO BENEFICIARIES
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-2xl sm:text-3xl font-black text-[#201C18] dark:text-[#D8B066]">
-                  {totalProjects}
-                </p>
-                <p className="text-[10px] text-zinc-600 dark:text-zinc-400 font-bold uppercase tracking-wider">
-                  VERIFIED CAUSE PLATES
-                </p>
-              </div>
-
-            </div>
-
             {/* ── Explore Causes Gallery with Live Money Progress & Direct Underwriting ── */}
+            {false && (
             <div className="w-full max-w-6xl mx-auto p-6 sm:p-8 border-2 border-[#1E4D38]/40 dark:border-[#9A7432]/50 bg-[#FAF6EC] dark:bg-[#0C0A09] space-y-8 shadow-xl relative">
               <div className="absolute inset-1.5 border border-[#9A7432]/35 pointer-events-none" />
 
@@ -588,18 +1289,18 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   {/* Funding Status Tabs */}
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase mr-1">
-                      STATUS:
+                      STATUS &amp; LOCATION:
                     </span>
                     {[
                       { id: 'all', label: 'ALL' },
-                      { id: 'active', label: 'ACTIVE' },
-                      { id: 'nearly_funded', label: 'NEARLY FUNDED' },
-                      { id: 'completed', label: 'COMPLETED' },
+                      { id: 'ending_soon', label: 'ENDING SOON' },
+                      { id: 'started_now', label: 'STARTED NOW' },
+                      { id: 'ongoing', label: 'ONGOING' },
                     ].map((status) => (
                       <button
                         key={status.id}
                         type="button"
-                        onClick={() => setFundingStatusFilter(status.id as any)}
+                        onClick={() => setFundingStatusFilter(status.id as typeof fundingStatusFilter)}
                         className={`px-2.5 py-1 border text-[10px] font-mono font-bold uppercase transition-all cursor-pointer ${
                           fundingStatusFilter === status.id
                             ? 'border-[#26211C] bg-[#26211C] text-white dark:border-[#9A7432] dark:bg-[#9A7432] dark:text-[#080706]'
@@ -609,6 +1310,17 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                         {status.label}
                       </button>
                     ))}
+                    <label className="flex items-center gap-1.5">
+                      <span className="sr-only">Filter by location</span>
+                      <select
+                        value={selectedLocation}
+                        onChange={(event) => setSelectedLocation(event.target.value)}
+                        className="px-2.5 py-1 border border-[#26211C]/25 bg-[#FAF6EC] dark:bg-[#201B16] text-[10px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300 cursor-pointer"
+                      >
+                        <option value="all">ALL LOCATIONS</option>
+                        {ETHIOPIAN_REGIONS.map((location) => <option key={location} value={location}>{location}</option>)}
+                      </select>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -636,6 +1348,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                       onClick={() => {
                         setSelectedCategory('all');
                         setFundingStatusFilter('all');
+                        setSelectedLocation('all');
                         setSearchQuery('');
                       }}
                       className="px-3 py-1 bg-[#1E4D38] text-white font-mono text-xs font-bold uppercase cursor-pointer"
@@ -646,6 +1359,19 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 )}
               </div>
             </div>
+            )}
+
+            <HomeLanding
+              campaigns={campaigns}
+              organizations={organizations}
+              totalRaised={totalRaised}
+              totalDonations={totalDonations}
+              showHero={false}
+              onDiscover={() => navigateToMode('discover')}
+              onFundraise={() => navigate('/fundraising')}
+              onVoxide={onOpenVoice}
+              onSelectCampaign={handleOpenDetail}
+            />
 
           </div>
         )}
@@ -660,7 +1386,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#26211C]/20 dark:border-[#9A7432]/30 pb-4">
               <button
                 type="button"
-                onClick={() => setZoomMode('overview')}
+                onClick={() => navigateToMode('overview')}
                 className="px-4 py-2 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#F2EADA] dark:bg-[#0E0D0B] font-mono text-xs font-bold uppercase flex items-center gap-2 hover:bg-[#DFD3BC] transition-colors cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -722,18 +1448,18 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 {/* Funding Status Tabs */}
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase mr-1">
-                    STATUS:
+                    STATUS &amp; LOCATION:
                   </span>
                   {[
                     { id: 'all', label: 'ALL' },
-                    { id: 'active', label: 'ACTIVE' },
-                    { id: 'nearly_funded', label: 'NEARLY FUNDED' },
-                    { id: 'completed', label: 'COMPLETED' },
+                    { id: 'ending_soon', label: 'ENDING SOON' },
+                    { id: 'started_now', label: 'STARTED NOW' },
+                    { id: 'ongoing', label: 'ONGOING' },
                   ].map((status) => (
                     <button
                       key={status.id}
                       type="button"
-                      onClick={() => setFundingStatusFilter(status.id as any)}
+                      onClick={() => setFundingStatusFilter(status.id as typeof fundingStatusFilter)}
                       className={`px-2.5 py-1.5 border text-[10px] font-mono font-bold uppercase transition-all cursor-pointer ${
                         fundingStatusFilter === status.id
                           ? 'border-[#26211C] bg-[#26211C] text-white dark:border-[#9A7432] dark:bg-[#9A7432] dark:text-[#080706]'
@@ -743,6 +1469,17 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                       {status.label}
                     </button>
                   ))}
+                  <label className="flex items-center gap-1.5">
+                    <span className="sr-only">Filter by location</span>
+                    <select
+                      value={selectedLocation}
+                      onChange={(event) => setSelectedLocation(event.target.value)}
+                      className="px-2.5 py-1.5 border border-[#26211C]/25 bg-[#EAE1CF] dark:bg-[#161411] text-[10px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300 cursor-pointer"
+                    >
+                      <option value="all">ALL LOCATIONS</option>
+                      {ETHIOPIAN_REGIONS.map((location) => <option key={location} value={location}>{location}</option>)}
+                    </select>
+                  </label>
                 </div>
               </div>
 
@@ -774,6 +1511,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                     setSearchQuery('');
                     setSelectedCategory('all');
                     setFundingStatusFilter('all');
+                    setSelectedLocation('all');
                   }}
                   className="px-5 py-2.5 border border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-xs font-black uppercase cursor-pointer hover:bg-[#163E2C]"
                 >
@@ -795,7 +1533,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#26211C]/20 dark:border-[#9A7432]/30 pb-4">
               <button
                 type="button"
-                onClick={() => setZoomMode('discover')}
+                onClick={() => navigateToMode('discover')}
                 className="px-4 py-2 border border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-xs font-black tracking-widest uppercase flex items-center gap-2 hover:bg-[#163E2C] transition-colors cursor-pointer shadow-xs"
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -935,7 +1673,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   </button>
 
                   <div className="text-center font-mono text-[10px] text-zinc-500 uppercase">
-                    INSTANT COMMEMORATIVE DIGITAL BANKNOTE CERTIFICATE ISSUED UPON SETTLEMENT
+                    PROTOTYPE CONTRIBUTION RECORD · NO PAYMENT IS PROCESSED
                   </div>
 
                 </div>
@@ -943,6 +1681,126 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               </div>
 
             </div>
+
+            <section className="border-t border-[#26211C]/20 pt-6 dark:border-[#9A7432]/30">
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-[#201C18] dark:text-[#F4EFE6]">Keep this cause close</h3>
+                  <p className="mt-1 font-mono text-[10px] text-zinc-600 dark:text-zinc-400">
+                    Saved causes stay in this browser and appear in your demo Donor Profile.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => toggleSavedCause(selectedCampaign)}
+                  aria-pressed={savedCauseIds.includes(selectedCampaign.id)}
+                  className="inline-flex items-center gap-2 border border-[#9A7432]/50 bg-[#F2EADA] px-4 py-2 font-mono text-xs font-bold uppercase text-[#201C18] transition hover:bg-[#E6D9C1] dark:bg-[#161411] dark:text-[#F4EFE6] dark:hover:bg-[#201B16]"
+                >
+                  <Bookmark className={`h-3.5 w-3.5 ${savedCauseIds.includes(selectedCampaign.id) ? 'fill-current' : ''}`} />
+                  {savedCauseIds.includes(selectedCampaign.id) ? 'Saved cause' : 'Save cause'}
+                </button>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-[#201C18] dark:text-[#F4EFE6]">Report a cause</h3>
+                  <p className="mt-1 font-mono text-[10px] text-zinc-600 dark:text-zinc-400">
+                    Think something is wrong with this cause? Let us know.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsReportFormOpen(true);
+                    setReportFeedback('');
+                  }}
+                  className="inline-flex items-center gap-2 border border-[#9A7432]/50 bg-[#F2EADA] px-4 py-2 font-mono text-xs font-bold uppercase text-[#201C18] transition hover:bg-[#E6D9C1] dark:bg-[#161411] dark:text-[#F4EFE6] dark:hover:bg-[#201B16]"
+                  aria-haspopup="dialog"
+                >
+                  <Flag className="h-3.5 w-3.5" />
+                  Report this cause
+                </button>
+              </div>
+              {isReportFormOpen && createPortal(
+                <div className="fixed inset-0 z-[1000] flex items-center justify-center overflow-y-auto p-4">
+                  <button
+                    type="button"
+                    aria-label="Close report dialog"
+                    onClick={() => setIsReportFormOpen(false)}
+                    className="absolute inset-0 cursor-default bg-black/60 backdrop-blur-[2px]"
+                  />
+                  <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="report-cause-title"
+                    className="relative z-10 my-auto w-full max-w-lg border-2 border-[#9A7432]/60 bg-[#F7F2E7] p-5 shadow-2xl dark:bg-[#12100E] sm:p-7"
+                  >
+                    <div className="pointer-events-none absolute inset-1.5 border border-[#1E4D38]/25 dark:border-[#9A7432]/25" />
+                    <div className="relative">
+                      <div className="mb-5 flex items-start justify-between gap-4 border-b border-[#26211C]/15 pb-4 dark:border-[#9A7432]/25">
+                        <div>
+                          <p className="font-mono text-[9px] font-black uppercase tracking-[.18em] text-[#9A7432]">Cause safety</p>
+                          <h3 id="report-cause-title" className="mt-1 font-serif text-xl font-black text-[#201C18] dark:text-[#F4EFE6]">Report a cause</h3>
+                          <p className="mt-1 font-mono text-[10px] text-zinc-600 dark:text-zinc-400">{selectedCampaign.title}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setIsReportFormOpen(false)}
+                          aria-label="Close report dialog"
+                          className="border border-[#9A7432]/40 p-2 text-[#201C18] hover:bg-[#E6D9C1] dark:text-[#F4EFE6] dark:hover:bg-[#201B16]"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <form onSubmit={handleReportSubmit} className="grid gap-4">
+                  <label className="grid gap-1.5 font-mono text-xs font-bold text-[#201C18] dark:text-[#F4EFE6]">
+                    Reason for reporting
+                    <select
+                      required
+                      value={reportReason}
+                      onChange={(event) => setReportReason(event.target.value)}
+                      className="w-full border border-[#26211C]/25 bg-[#FFFDF9] px-3 py-2.5 font-mono text-xs dark:border-[#9A7432]/30 dark:bg-[#0E0D0B]"
+                    >
+                      <option value="">Choose a reason</option>
+                      <option value="misleading_information">Misleading information</option>
+                      <option value="suspected_fraud">Suspected fraud</option>
+                      <option value="duplicate">Duplicate cause</option>
+                      <option value="inappropriate_content">Inappropriate content</option>
+                      <option value="other">Other concern</option>
+                    </select>
+                  </label>
+                  <label className="grid gap-1.5 font-mono text-xs font-bold text-[#201C18] dark:text-[#F4EFE6]">
+                    Additional details <span className="font-normal text-zinc-500">(optional)</span>
+                    <textarea
+                      rows={3}
+                      value={reportDetails}
+                      onChange={(event) => setReportDetails(event.target.value)}
+                      placeholder="Share any details that may help explain your concern."
+                      className="w-full resize-y border border-[#26211C]/25 bg-[#FFFDF9] px-3 py-2.5 font-sans text-sm font-normal dark:border-[#9A7432]/30 dark:bg-[#0E0D0B]"
+                    />
+                  </label>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="max-w-xl font-mono text-[10px] text-zinc-500">
+                      Frontend demo only: the report is saved in this browser and is not sent to Lewegene.
+                    </p>
+                    <button
+                      type="submit"
+                      className="border-2 border-[#1E4D38] bg-[#1E4D38] px-4 py-2.5 font-mono text-xs font-black uppercase text-white transition hover:bg-[#163E2C]"
+                    >
+                      Save report
+                    </button>
+                  </div>
+                  {reportFeedback && (
+                    <p role="status" className="font-mono text-xs text-[#1E4D38] dark:text-[#52B788]">
+                      {reportFeedback}
+                    </p>
+                  )}
+                      </form>
+                    </div>
+                  </div>
+                </div>,
+                document.body
+              )}
+            </section>
 
           </div>
         )}
@@ -954,14 +1812,14 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
           <div className="w-full max-w-4xl mx-auto px-6 sm:px-12 py-10 lg:py-16">
             <PledgeWizardPage
               campaign={selectedCampaign}
-              onBack={() => setZoomMode('detail')}
+              onBack={() => navigateToMode('detail')}
               onCertificateIssued={(cert) => {
                 if (onDonationCompleted) {
                   onDonationCompleted(cert);
                 }
               }}
-              onViewVault={() => setZoomMode('vault')}
-              onExploreMore={() => setZoomMode('discover')}
+              onViewVault={openVault}
+              onExploreMore={() => navigateToMode('discover')}
             />
           </div>
         )}
@@ -972,7 +1830,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
         {zoomMode === 'vault' && (
           <div className="w-full max-w-[1500px] mx-auto px-6 sm:px-12 lg:px-20 py-10 lg:py-16">
             <PatronVaultPage
-              onExploreCauses={() => setZoomMode('discover')}
+              onExploreCauses={() => navigateToMode('discover')}
               onSelectCertificate={(cert) => {
                 if (onDonationCompleted) {
                   onDonationCompleted(cert);
@@ -1032,7 +1890,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
 
               <button
                 type="button"
-                onClick={() => setZoomMode('engrave')}
+                onClick={() => navigateToMode('engrave')}
                 className="py-2.5 px-6 border border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-xs font-black uppercase cursor-pointer hover:bg-[#163E2C]"
               >
                 + CREATE NEW PROJECT
@@ -1067,9 +1925,11 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                     >
                       <option value="water">CLEAN WATER</option>
                       <option value="education">EDUCATION</option>
-                      <option value="medical">HEALTHCARE</option>
+                      <option value="medical">MEDICAL</option>
                       <option value="emergency">EMERGENCY</option>
-                      <option value="business">ARTISANS</option>
+                      <option value="environment">ENVIRONMENT</option>
+                      <option value="community">COMMUNITY</option>
+                      <option value="other">OTHER</option>
                     </select>
                   </div>
                 </div>

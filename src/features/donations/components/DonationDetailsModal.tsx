@@ -57,7 +57,7 @@ export const DonationDetailsModal: React.FC<DonationDetailsModalProps> = ({
       return (
         <span className="px-3 py-1 bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706] font-black uppercase text-[10px] tracking-wider rounded-[1px] flex items-center gap-1.5">
           <CheckCircle2 className="w-3.5 h-3.5" />
-          <span>VERIFIED &amp; CONFIRMED</span>
+          <span>SIMULATED LOCALLY</span>
         </span>
       );
     }
@@ -126,7 +126,7 @@ export const DonationDetailsModal: React.FC<DonationDetailsModalProps> = ({
             </div>
           </div>
           <span className="text-[11px] font-black text-emerald-700 dark:text-emerald-400">
-            100% DIRECT ESCROW
+            PROTOTYPE ONLY
           </span>
         </div>
 
@@ -205,7 +205,7 @@ export const DonationDetailsModal: React.FC<DonationDetailsModalProps> = ({
           <div className="p-3 border border-[#26211C]/15 dark:border-[#9A7432]/25 bg-[#F2ECE1]/50 dark:bg-[#181512]">
             <span className="text-[10px] text-zinc-500 uppercase font-bold block">BENEFICIARY</span>
             <span className="font-bold text-[#14110E] dark:text-[#FFFFFF] block mt-0.5">
-              {donation.beneficiaryName || 'Verified Partner'}
+              {donation.beneficiaryName || 'Campaign partner'}
             </span>
           </div>
 

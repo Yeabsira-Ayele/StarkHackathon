@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Campaign } from '../../campaigns/types/campaign.types';
+import { Campaign } from '../../../types/index.ts';
 import { ShieldCheck, Check, X, Building2, MapPin, AlertCircle, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 

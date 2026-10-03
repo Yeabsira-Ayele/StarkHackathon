@@ -1,6 +1,7 @@
 import type { Fundraiser, FundraiserFormValues, FundraiserStatus } from '../types/fundraiser.types.ts';
 import { getCurrentUser } from '../data/currentUser.ts';
 import { fundraiserToValues, validate } from '../schemas/fundraiser.schema.ts';
+import { campaignApi as localCampaignApi } from '../../../services/api/campaignApi.ts';
 
 /**
  * MOCK API stored in localStorage. When the backend exists, replace the bodies with real calls
@@ -23,6 +24,9 @@ function read(): Fundraiser[] {
 function write(list: Fundraiser[]) {
   try {
     localStorage.setItem(KEY, JSON.stringify(list));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('lewegene:personal-data-changed'));
+    }
   } catch {
     throw new Error('Could not save. The images may be too large — try smaller ones.');
   }
@@ -53,7 +57,15 @@ function applyValues(base: Fundraiser, v: FundraiserFormValues): Fundraiser {
 export const fundraisingApi = {
   async getMine(): Promise<Fundraiser[]> {
     await wait();
-    return read()
+    const campaigns = await localCampaignApi.getAllCampaigns();
+    const synced = read().map((fundraiser) => {
+      const campaign = campaigns.find((item) => item.id === fundraiser.id);
+      if (!campaign) return fundraiser;
+      const status: Fundraiser['status'] = campaign.status === 'needs_changes' ? 'changes_requested' : campaign.status;
+      return { ...fundraiser, status, raisedAmount: campaign.raisedAmount, updatedAt: campaign.createdAt };
+    });
+    write(synced);
+    return synced
       .filter((f) => f.creatorId === getCurrentUser().id)
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   },
@@ -98,6 +110,21 @@ export const fundraisingApi = {
     if (!f) throw new Error('Fundraiser not found.');
     if (Object.keys(validate(fundraiserToValues(f), 'submit')).length) {
       throw new Error('Complete all required fields before submitting.');
+    }
+    const campaigns = await localCampaignApi.getAllCampaigns();
+    if (!campaigns.some((campaign) => campaign.id === f.id)) {
+      await localCampaignApi.createCampaign({
+        id: f.id,
+        title: f.title,
+        story: f.story,
+        goalAmount: f.goalAmount,
+        category: f.category as import('../../../types/index.ts').CampaignCategory,
+        creatorName: getCurrentUser().name,
+        organizationId: f.organizationId || undefined,
+        organizationName: f.beneficiaryType === 'community_org' ? 'Community Organization' : undefined,
+        imageUrl: f.images[0],
+        location: f.location,
+      }, false);
     }
     const updated: Fundraiser = { ...f, status: 'pending', reviewNote: undefined, updatedAt: new Date().toISOString() };
     write(list.map((x) => (x.id === id ? updated : x)));

@@ -18,7 +18,7 @@ export const ShareDonationModal: React.FC<ShareDonationModalProps> = ({
   const [copied, setCopied] = useState<boolean>(false);
 
   const shareUrl = `${window.location.origin}/?campaignId=${donation.campaignId}`;
-  const shareText = `I just underwrote ${donation.amount.toLocaleString()} ETB to "${donation.campaignTitle || 'a verified civic cause'}" on Lewegene Ethiopian Crowdfunding! Join in solidarity:`;
+  const shareText = `I simulated a ${donation.amount.toLocaleString()} ETB contribution to "${donation.campaignTitle || 'a community campaign'}" in the Lewegene frontend prototype. No payment was made:`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
@@ -66,7 +66,7 @@ export const ShareDonationModal: React.FC<ShareDonationModalProps> = ({
             Share Your Contribution
           </h3>
           <p className="text-zinc-600 dark:text-zinc-400 text-xs">
-            Encourage your friends, diaspora circle, and community to support this verified cause.
+            Share this prototype campaign with your friends and community. This record does not represent a payment.
           </p>
         </div>
 

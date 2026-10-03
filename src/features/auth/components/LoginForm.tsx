@@ -1,5 +1,6 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import { Shield, Lock, Phone, ArrowRight, Loader2 } from 'lucide-react';
 import { loginSchema, LoginFormData } from '../schemas/auth.schema';
@@ -23,10 +24,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormData>({
-    defaultValues: {
-      emailOrPhone: '+251911223344',
-      passcode: '1234',
-    },
+    resolver: zodResolver(loginSchema),
   });
 
   const onSubmit = async (data: LoginFormData) => {
@@ -40,7 +38,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {errorMsg && (
         <div className="p-3 text-xs rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400">
           {errorMsg}
@@ -53,7 +51,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         </label>
         <div className="relative">
           <input
-            {...register('emailOrPhone', { required: 'ስልክ ቁጥር ወይም ኢሜይል ያስገቡ' })}
+            {...register('emailOrPhone')}
             placeholder="+251 9XX XXX XXX"
             className="w-full px-3.5 py-2.5 pl-10 rounded-xl bg-[#EFE7D5] dark:bg-[#1E1A16] border border-[#D5C8B2]/70 dark:border-[#2E2822] text-xs text-[#14110E] dark:text-[#FAF6EE] focus:ring-1 focus:ring-[#9A7432] focus:outline-none"
           />
@@ -70,9 +68,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         </label>
         <div className="relative">
           <input
-            {...register('passcode', { required: 'የይለፍ ቃል ያስገቡ' })}
+            {...register('passcode')}
             type="password"
-            placeholder="••••"
+            minLength={8}
+            autoComplete="current-password"
+            placeholder="••••••••"
             className="w-full px-3.5 py-2.5 pl-10 rounded-xl bg-[#EFE7D5] dark:bg-[#1E1A16] border border-[#D5C8B2]/70 dark:border-[#2E2822] text-xs text-[#14110E] dark:text-[#FAF6EE] focus:ring-1 focus:ring-[#9A7432] focus:outline-none"
           />
           <Lock className="w-4 h-4 text-[#73685B] absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -99,6 +99,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           </>
         )}
       </button>
+
+      <p className="border border-[#9A7432]/30 bg-[#EFE7D5]/60 p-2.5 text-[10px] font-mono text-[#73685B] dark:bg-[#1E1A16] dark:text-[#A89E90]">
+        Local admin demo: admin@local.lewegene / demo-admin-123
+      </p>
 
       {onSwitchToRegister && (
         <p className="text-center text-xs text-[#73685B] dark:text-[#A89E90] pt-2">

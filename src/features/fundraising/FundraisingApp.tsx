@@ -20,13 +20,14 @@ export type Route =
 export interface PageProps {
   go: (route: Route) => void;
   toast: (message: string) => void;
+  onCampaignsChanged?: () => void;
 }
 
 /**
  * Member 2 entry point. Owns its own navigation so no shared router/App file needs to change.
  * When the team adds a router, replace `go()` with navigate() — the pages do not need to change.
  */
-export default function FundraisingApp() {
+export default function FundraisingApp({ onCampaignsChanged }: { onCampaignsChanged?: () => void }) {
   const [route, setRoute] = useState<Route>({ name: 'start' });
   const [message, setMessage] = useState<string | null>(null);
 
@@ -40,7 +41,7 @@ export default function FundraisingApp() {
     setRoute(r);
     window.scrollTo({ top: 0 });
   };
-  const props: PageProps = { go, toast: setMessage };
+  const props: PageProps = { go, toast: setMessage, onCampaignsChanged };
 
   const tabs: { label: string; route: Route; active: Route['name'][] }[] = [
     { label: 'Start', route: { name: 'start' }, active: ['start', 'form'] },

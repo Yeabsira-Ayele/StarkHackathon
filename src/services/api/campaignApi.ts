@@ -98,6 +98,7 @@ function saveCertificate(cert: ContributionCertificate): void {
 }
 
 export interface CreateCampaignPayload {
+  id?: string;
   title: string;
   story: string;
   goalAmount: number;
@@ -109,10 +110,12 @@ export interface CreateCampaignPayload {
   location?: string;
   impactMetric?: string;
   beneficiariesTarget?: number;
+  verifiedOrganization?: boolean;
 }
 
 export interface DonatePayload {
   amount: number;
+  donorId?: string;
   donorName?: string;
   message?: string;
   paymentRail?: PaymentRail;
@@ -178,15 +181,15 @@ export const campaignApi = {
 
     const serialNum = Math.floor(100 + Math.random() * 900);
     const newCampaign: Campaign = {
-      id: `camp-${Date.now()}`,
+      id: payload.id || `camp-${Date.now()}`,
       serialCode: `LW-0${serialNum}`,
       title: payload.title.trim(),
       story: payload.story.trim(),
       goalAmount: Number(payload.goalAmount),
       raisedAmount: 0,
-      creatorName: payload.creatorName?.trim() || 'Organization Representative',
-      organizationId: payload.organizationId || 'org-101',
-      organizationName: payload.organizationName || 'Tikur Anbessa Pediatric Health Trust',
+      creatorName: payload.creatorName?.trim() || 'Community Organizer',
+      organizationId: payload.organizationId,
+      organizationName: payload.organizationName,
       category: payload.category || 'other',
       imageUrl: payload.imageUrl || '/src/assets/images/ethiopia_clean_water_1790266442202.jpg',
       status: autoApprove ? 'approved' : 'pending',
@@ -194,7 +197,7 @@ export const campaignApi = {
       location: payload.location?.trim() || 'Addis Ababa, Ethiopia',
       donationsCount: 0,
       donations: [],
-      verifiedOrganization: true,
+      verifiedOrganization: payload.verifiedOrganization || false,
       impactMetric: payload.impactMetric || `Support ${payload.beneficiariesTarget || 100} individuals in need`,
       beneficiariesTarget: payload.beneficiariesTarget || 100,
       updates: [],
@@ -229,6 +232,7 @@ export const campaignApi = {
     const newDonation: Donation = {
       id: `don-${Date.now()}`,
       campaignId,
+      donorId: payload.donorId,
       amount: donationAmount,
       donorName: payload.donorName?.trim() || 'Anonymous Supporter',
       message: payload.message?.trim(),
@@ -354,6 +358,16 @@ export const campaignApi = {
     return all.filter((c) => c.status === 'pending');
   },
 
+  async updateCampaign(id: string, patch: Partial<Campaign>): Promise<Campaign> {
+    const all = getStoredCampaigns();
+    const index = all.findIndex((campaign) => campaign.id === id);
+    if (index < 0) throw new Error(`Campaign ${id} not found`);
+    const updated: Campaign = { ...all[index], ...patch, id, createdAt: all[index].createdAt };
+    all[index] = updated;
+    saveCampaigns(all);
+    return updated;
+  },
+
   // PATCH /api/admin/campaigns/:id
   async updateCampaignStatus(id: string, status: CampaignStatus): Promise<Campaign> {
     await new Promise((resolve) => setTimeout(resolve, 150));
@@ -379,4 +393,3 @@ export const campaignApi = {
     localStorage.removeItem(CERTS_STORAGE_KEY);
   },
 };
-

@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { User } from '../types/auth.types';
-import { MOCK_USERS } from '../data/auth.data';
 
 interface AuthState {
   user: User | null;
@@ -11,24 +10,23 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set) => {
-  const initialUser: User = (() => {
+  const initialUser: User | null = (() => {
     try {
       const saved = localStorage.getItem('lewegene_user');
-      if (saved) return JSON.parse(saved);
-      return MOCK_USERS[0];
+      return saved ? JSON.parse(saved) as User : null;
     } catch {
-      return MOCK_USERS[0];
+      return null;
     }
   })();
 
   const initialToken = typeof window !== 'undefined'
-    ? localStorage.getItem('lewegene_auth_token') || 'demo_token'
-    : 'demo_token';
+    ? localStorage.getItem('lewegene_auth_token')
+    : null;
 
   return {
     user: initialUser,
     token: initialToken,
-    isAuthenticated: !!initialUser,
+    isAuthenticated: !!initialUser && !!initialToken,
     setUser: (user, token) => {
       if (user) {
         localStorage.setItem('lewegene_user', JSON.stringify(user));
@@ -40,7 +38,7 @@ export const useAuthStore = create<AuthState>((set) => {
       } else if (token === null) {
         localStorage.removeItem('lewegene_auth_token');
       }
-      set({ user, token: token || null, isAuthenticated: !!user });
+      set({ user, token: token || null, isAuthenticated: !!user && !!token });
     },
     logout: () => {
       localStorage.removeItem('lewegene_user');

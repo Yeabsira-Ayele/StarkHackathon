@@ -6,7 +6,9 @@ import axios from 'axios';
  * Everyone uses it. Each feature creates its own API functions on top of this.
  */
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL:
+    import.meta.env.VITE_API_BASE_URL ||
+    (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api'),
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
@@ -32,7 +34,9 @@ api.interceptors.response.use(
   (error) => {
     const customMessage =
       error.response?.data?.message ||
-      error.message ||
+      (error.response
+        ? error.message
+        : 'Cannot reach the Lewegene API. Start the backend and check VITE_API_BASE_URL.') ||
       'An unexpected network error occurred';
     return Promise.reject(new Error(customMessage));
   }

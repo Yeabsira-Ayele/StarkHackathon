@@ -35,11 +35,20 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
   onExploreCauses,
 }) => {
   const { t } = useTranslation();
-  const { data, isLoading } = useMyContributions();
+  const { data, isLoading, isError, error } = useMyContributions();
   const confirmDonationMutation = useConfirmDonation();
 
   const [statusFilter, setStatusFilter] = useState<StatusFilterValue>('all');
   const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
+
+  if (isError) {
+    return (
+      <div role="alert" className="border border-red-800/30 bg-red-50 p-5 text-sm text-red-900 dark:bg-red-950/30 dark:text-red-200">
+        Donation history is unavailable from the connected backend.
+        {error instanceof Error && <p className="mt-2 font-mono text-xs">{error.message}</p>}
+      </div>
+    );
+  }
 
   const donations = data?.donations || [];
   const stats = data?.stats || {
@@ -77,7 +86,7 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
         return (
           <>
             <CheckCircle2 className="w-3 h-3" />
-            <span>CONFIRMED</span>
+            <span>SIMULATED</span>
           </>
         );
       case 'verifying':
@@ -130,7 +139,7 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
 
   const filterTabs: { value: StatusFilterValue; label: string }[] = [
     { value: 'all', label: 'ALL' },
-    { value: 'confirmed', label: 'CONFIRMED' },
+    { value: 'confirmed', label: 'SIMULATED' },
     { value: 'pending', label: 'PENDING' },
     { value: 'verifying', label: 'VERIFYING' },
     { value: 'failed', label: 'FAILED' },
@@ -148,7 +157,7 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
             {t('nav.myContributions', 'My Contributions')}
           </h2>
           <p className="font-mono text-xs text-zinc-600 dark:text-zinc-400">
-            Portfolio of your underwritten civic pledges, verified bank receipts, and transparent impact outcomes.
+            Local prototype contributions saved in this browser. No payments or bank receipts are verified.
           </p>
         </div>
 
@@ -242,7 +251,7 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
           title="No Contributions Found"
           description={
             statusFilter === 'all'
-              ? 'You have not underwritten any causes yet. Support an active campaign to receive your official banknote certificate.'
+              ? 'You have not simulated a contribution yet. Choose a campaign to try the local prototype flow.'
               : `No ${statusFilter} contributions at the moment.`
           }
           onReset={onExploreCauses}
@@ -278,7 +287,7 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
                     <p className="text-xs text-zinc-500">
                       Beneficiary:{' '}
                       <span className="font-bold text-zinc-700 dark:text-zinc-300">
-                        {donation.beneficiaryName || 'Verified Community Partner'}
+                        {donation.beneficiaryName || 'Campaign partner'}
                       </span>
                     </p>
                     <p className="text-[11px] text-zinc-500">
@@ -308,7 +317,7 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
                   </div>
 
                   <div className="text-xs font-bold text-[#1E4D38] dark:text-[#52B788] flex items-center gap-1">
-                    <span>RECEIPT &amp; DETAILS</span>
+                    <span>DEMO RECORD DETAILS</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </div>
                 </div>

@@ -38,8 +38,8 @@ export const ContributionCertificateModal: React.FC<ContributionCertificateModal
   const geezAmount = toGeezNumber(certificate.amount);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl bg-[#FAF6EE] dark:bg-[#141210] text-[#201C18] dark:text-[#F4EFE6] rounded-2xl shadow-2xl overflow-hidden border-4 border-[#26211C] dark:border-[#9A7432] animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-start sm:items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
+      <div className="relative my-0 sm:my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl overflow-x-hidden overflow-y-auto bg-[#FAF6EE] dark:bg-[#141210] text-[#201C18] dark:text-[#F4EFE6] rounded-2xl shadow-2xl border-4 border-[#26211C] dark:border-[#9A7432] animate-in zoom-in-95 duration-200">
         
         {/* Close Button */}
         <button
@@ -88,7 +88,7 @@ export const ContributionCertificateModal: React.FC<ContributionCertificateModal
               </div>
               <div className="text-right">
                 <span className="text-[10px] font-mono tracking-widest text-[#9A7432] uppercase font-bold block">
-                  LEGAL TENDER OF SOLIDARITY
+                  LOCAL PROTOTYPE RECORD
                 </span>
                 <span className="text-[10px] font-ethiopic text-zinc-500 font-bold block">
                   የኢትዮጵያ ሕዝባዊ አስተዋጽኦ ሰነድ
@@ -99,13 +99,13 @@ export const ContributionCertificateModal: React.FC<ContributionCertificateModal
             {/* Central Master Title */}
             <div className="text-center space-y-1">
               <p className="text-[10px] font-mono tracking-[0.3em] uppercase text-[#9A7432] font-bold">
-                COMMEMORATIVE PHILANTHROPIC CERTIFICATE
+                SIMULATED CONTRIBUTION RECORD
               </p>
               <h2 className="text-3xl sm:text-4xl font-display font-black tracking-tight text-[#26211C] dark:text-[#F4EFE6] leading-tight banknote-engraved-text">
                 LEWEGENE · ለወገን
               </h2>
               <p className="text-xs font-serif italic text-zinc-600 dark:text-zinc-400">
-                This certifies an authentic, irreversible civic contribution underwritten directly into the escrow ledger
+                This browser-generated record reflects a simulated contribution. No payment was made or verified.
               </p>
             </div>
 
@@ -131,7 +131,7 @@ export const ContributionCertificateModal: React.FC<ContributionCertificateModal
 
               <div className="space-y-1 pt-2">
                 <p className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 font-bold">
-                  DEDICATED IN FULL TO VERIFIED CAUSE
+                  SIMULATED FOR CAMPAIGN
                 </p>
                 <p className="text-base sm:text-lg font-display font-bold text-[#201C18] dark:text-[#F4EFE6] max-w-xl mx-auto leading-snug">
                   {certificate.campaignTitle}
@@ -153,7 +153,7 @@ export const ContributionCertificateModal: React.FC<ContributionCertificateModal
               <div className="space-y-0.5">
                 <p className="font-bold text-[#201C18] dark:text-[#F4EFE6]">ISSUED: {formattedDate}</p>
                 <p className="text-[10px] text-zinc-500">REF: {certificate.transactionRef}</p>
-                <p className="text-[10px] text-emerald-600 font-bold">RAIL: {certificate.paymentRail.toUpperCase()} (SETTLED)</p>
+                <p className="text-[10px] text-emerald-600 font-bold">DEMO OPTION: {certificate.paymentRail.toUpperCase()} (NOT PROCESSED)</p>
               </div>
 
               <div className="text-right space-y-1">
@@ -161,7 +161,7 @@ export const ContributionCertificateModal: React.FC<ContributionCertificateModal
                   Board of Philanthropic Oversight
                 </div>
                 <p className="text-[9px] uppercase tracking-widest text-zinc-400">
-                  ACSO NATIONAL REGISTRY TRUSTEE
+                  FRONTEND PROTOTYPE · NOT AN OFFICIAL RECEIPT
                 </p>
               </div>
             </div>

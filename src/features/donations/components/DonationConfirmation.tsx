@@ -68,16 +68,14 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
   };
 
   const getHeading = () => {
-    if (isConfirmed) return 'Payment Verified & Confirmed!';
+    if (isConfirmed) return 'Demo Contribution Recorded';
     if (isVerifying) return 'Verifying Your Payment...';
     if (isFailed) return 'Verification Could Not Be Completed';
     return 'Donation Successfully Recorded!';
   };
 
   const getDescription = () => {
-    if (isConfirmed) {
-      return `Your contribution of ${donation.amount.toLocaleString()} ETB has been automatically verified and credited to ${donation.campaignTitle}.`;
-    }
+    if (isConfirmed) return `A simulated contribution of ${donation.amount.toLocaleString()} ETB was added to ${donation.campaignTitle} in this browser. No payment was made.`;
     if (isVerifying) {
       return `Verifying your payment of ${donation.amount.toLocaleString()} ETB — this usually takes a few seconds.`;
     }
@@ -93,7 +91,7 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
       return (
         <span className="bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706] px-2 py-0.5 flex items-center gap-1.5">
           <CheckCircle2 className="w-3.5 h-3.5" />
-          <span>VERIFIED &amp; CONFIRMED</span>
+          <span>SIMULATED LOCALLY</span>
         </span>
       );
     }
@@ -216,7 +214,7 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
               LEWEGENE NATIONAL CIVIC SOLIDARITY TENDER
             </span>
             <h3 className="font-serif font-black text-2xl text-[#14110E] dark:text-[#FFFFFF] mt-0.5">
-              Official Contribution Receipt
+              Prototype Contribution Record
             </h3>
           </div>
 
@@ -248,7 +246,7 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
         <div className="p-6 border-2 border-[#26211C]/30 dark:border-[#9A7432]/40 bg-[#EFE7D5] dark:bg-[#181512] flex flex-wrap items-center justify-between gap-4 rounded-[1px]">
           <div>
             <span className="text-[10px] text-zinc-600 dark:text-zinc-400 font-black uppercase block">
-              TOTAL UNDERWRITTEN AMOUNT
+              TOTAL SIMULATED AMOUNT
             </span>
             <div className="flex items-baseline gap-3 mt-1">
               <span className="text-3xl sm:text-4xl font-black text-[#1E4D38] dark:text-[#52B788]">
@@ -262,10 +260,10 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
 
           <div className="text-right">
             <span className="text-[10px] text-zinc-600 dark:text-zinc-400 font-bold uppercase block">
-              ESCROW CLEARING
+              LOCAL CAMPAIGN UPDATE
             </span>
             <span className="text-sm font-black text-emerald-700 dark:text-emerald-400">
-              100% DIRECT TO CAUSE
+              Saved in this browser
             </span>
           </div>
         </div>
@@ -302,7 +300,7 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
 
           <div className="p-3 border border-[#26211C]/15 dark:border-[#9A7432]/25 bg-[#F2ECE1]/50 dark:bg-[#181512]">
             <span className="text-[10px] text-zinc-500 uppercase font-bold block">
-              RECEIVING BANK &amp; ACCOUNT
+              DEMO PAYMENT OPTION
             </span>
             <span className="font-bold text-[#14110E] dark:text-[#FFFFFF] block mt-0.5">
               {donation.bankName || 'Direct Rail'} • {donation.accountNumber}
@@ -311,7 +309,7 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
 
           <div className="p-3 border border-[#26211C]/15 dark:border-[#9A7432]/25 bg-[#F2ECE1]/50 dark:bg-[#181512]">
             <span className="text-[10px] text-zinc-500 uppercase font-bold block">
-              PAYMENT REFERENCE
+              DEMO REFERENCE
             </span>
             <span className="font-mono font-black text-[#1E4D38] dark:text-[#52B788] block mt-0.5">
               {donation.reference || 'Submitted for verification'}
@@ -338,8 +336,8 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
         )}
 
         <div className="flex items-center justify-between text-[10px] text-zinc-500 border-t border-[#26211C]/10 dark:border-[#9A7432]/20 pt-3">
-          <span>Verification Authority: Lewegene Compliance &amp; ACSO Registry</span>
-          <span>Verified Non-Custodial Community Escrow</span>
+          <span>Simulation stored in this browser</span>
+          <span>No payment processed or verified</span>
         </div>
       </div>
 
@@ -361,7 +359,7 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
             className="py-3 px-5 border-2 border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#FFFDF9] dark:bg-[#181512] font-mono text-xs font-black uppercase tracking-wider flex items-center gap-2 hover:bg-[#F2ECE1] dark:hover:bg-[#201C18] cursor-pointer"
           >
             <Printer className="w-4 h-4 text-[#1E4D38] dark:text-[#52B788]" />
-            <span>PRINT / DOWNLOAD RECEIPT</span>
+            <span>PRINT DEMO RECORD</span>
           </button>
         </div>
 

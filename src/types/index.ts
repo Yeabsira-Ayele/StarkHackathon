@@ -1,6 +1,6 @@
-export type CampaignCategory = 'medical' | 'education' | 'emergency' | 'business' | 'water' | 'environment' | 'other';
+export type CampaignCategory = 'medical' | 'education' | 'emergency' | 'business' | 'water' | 'environment' | 'community' | 'other';
 
-export type CampaignStatus = 'pending' | 'approved' | 'rejected' | 'completed' | 'paused';
+export type CampaignStatus = 'pending' | 'approved' | 'rejected' | 'completed' | 'paused' | 'needs_changes';
 
 export type PaymentStatus = 'pending' | 'completed' | 'failed';
 
@@ -9,6 +9,7 @@ export type PaymentRail = 'telebirr' | 'cbe_birr' | 'bank_card' | 'chapa';
 export interface Donation {
   id: string;
   campaignId: string;
+  donorId?: string;
   amount: number; // In ETB (Ethiopian Birr)
   donorName: string; // Defaults to "Anonymous"
   message?: string;

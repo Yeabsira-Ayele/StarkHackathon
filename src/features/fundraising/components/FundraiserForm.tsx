@@ -215,7 +215,7 @@ export const FundraiserForm: React.FC<Props> = ({
         )}
       </Section>
 
-      <Section title="Where the money goes" hint="Donations are sent to this account.">
+      <Section title="Where the money goes" hint="Prototype only: no funds are transferred. Use dummy account details.">
         <Select id="field-bank.bankId" label="Bank" value={values.bank.bankId} error={errors['bank.bankId']}
           disabled={lockSensitive} onChange={(e) => set('bank', { ...values.bank, bankId: e.target.value })}
           options={[{ value: '', label: 'Choose a bank' }, ...banks.map((b) => ({ value: b.id, label: b.name }))]} />
@@ -227,6 +227,7 @@ export const FundraiserForm: React.FC<Props> = ({
             error={errors['bank.accountName']} disabled={lockSensitive}
             onChange={(e) => set('bank', { ...values.bank, accountName: e.target.value })} />
         </div>
+        <p className="text-xs text-zinc-500">Do not enter real financial details. These values stay in this browser and are not used for payouts.</p>
         {lockSensitive && <p className="text-xs text-zinc-500">Bank details cannot change after approval.</p>}
       </Section>
 

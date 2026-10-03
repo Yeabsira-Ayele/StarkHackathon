@@ -9,6 +9,7 @@ export interface User {
   avatarUrl?: string;
   verified: boolean;
   organizationId?: string;
+  organizationName?: string;
   totalDonated?: number;
   certificatesCount?: number;
   createdAt: string;

@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Campaign } from '../../../types/index.ts';
 import { useDonationStore } from '../store/donation.store';
 import { useBanks, useCreateDonation, useSubmitReference } from '../hooks/useDonations';
-import { mockBanks, getBankById } from '../data/banks.data';
+import { getBankById } from '../data/banks.data';
 import { DonationAmountSelector } from '../components/DonationAmountSelector';
 import { DonorInfoForm } from '../components/DonorInfoForm';
 import { BankSelector } from '../components/BankSelector';
@@ -29,7 +29,12 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
   onExploreMore,
 }) => {
   const { t } = useTranslation();
-  const { data: banks = mockBanks, isLoading: isLoadingBanks } = useBanks();
+  const {
+    data: banks = [],
+    isLoading: isLoadingBanks,
+    isError: banksUnavailable,
+    error: banksError,
+  } = useBanks();
 
   const {
     step,
@@ -64,6 +69,7 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
 
   // Advance from Bank Selection to Account Details
   const handleProceedToAccountDetails = async () => {
+    if (!selectedBank) return;
     try {
       const res = await createDonationMutation.mutateAsync({
         campaignId: campaign.id,
@@ -123,6 +129,9 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
 
   return (
     <div className="w-full max-w-3xl mx-auto space-y-8 animate-in fade-in duration-300">
+      <div role="note" className="border border-amber-700/40 bg-amber-50 px-4 py-3 font-mono text-xs text-amber-950 dark:bg-amber-950/30 dark:text-amber-100">
+        Prototype only: payment options and account details are placeholders. Do not transfer money or submit real receipt details. Continuing records a simulated contribution in this browser; no payment is made or verified.
+      </div>
       {/* Top Header */}
       <div className="flex items-center justify-between border-b-2 border-[#1E4D38]/20 dark:border-[#9A7432]/30 pb-4">
         <button
@@ -148,7 +157,7 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
             { s: 1, label: '1 AMOUNT' },
             { s: 2, label: '2 DONOR INFO' },
             { s: 3, label: '3 CHOOSE BANK' },
-            { s: 4, label: '4 PAY EXTERNALLY' },
+            { s: 4, label: '4 PAYMENT PLACEHOLDER' },
             { s: 5, label: '5 REFERENCE' },
           ].map((item) => (
             <div
@@ -175,7 +184,7 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
               {campaign.title}
             </h3>
             <p className="font-mono text-xs text-zinc-600 dark:text-zinc-400 mt-1">
-              Select or type the Birr contribution amount to underwrite into verified community escrow.
+              Select or type an amount to simulate a contribution in this browser.
             </p>
           </div>
 
@@ -245,12 +254,19 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
       {/* STEP 3: CHOOSE BANK */}
       {step === 3 && (
         <div className="p-6 sm:p-8 border-2 border-[#1E4D38]/30 dark:border-[#9A7432]/40 bg-[#FFFDF9] dark:bg-[#12100E] space-y-6 rounded-[1px] shadow-md">
-          <BankSelector
-            banks={banks}
-            selectedBankId={selectedBankId}
-            onSelectBank={setSelectedBankId}
-            isLoading={isLoadingBanks}
-          />
+          {banksUnavailable || (!isLoadingBanks && banks.length === 0) ? (
+            <div role="alert" className="border border-red-800/30 bg-red-50 p-4 text-sm text-red-900 dark:bg-red-950/30 dark:text-red-200">
+              Verified receiver bank accounts are not available from the connected backend. Donations cannot proceed until verified account details are provided.
+              {banksError instanceof Error && <p className="mt-2 font-mono text-xs">{banksError.message}</p>}
+            </div>
+          ) : (
+            <BankSelector
+              banks={banks}
+              selectedBankId={selectedBankId}
+              onSelectBank={setSelectedBankId}
+              isLoading={isLoadingBanks}
+            />
+          )}
 
           <div className="pt-4 flex items-center justify-between border-t border-[#26211C]/15">
             <button
@@ -264,14 +280,14 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
             <button
               type="button"
               onClick={handleProceedToAccountDetails}
-              disabled={createDonationMutation.isPending}
+              disabled={createDonationMutation.isPending || !selectedBank || banksUnavailable}
               className="py-3 px-8 border-2 border-[#1E4D38] bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706] font-mono text-xs font-black tracking-widest uppercase hover:bg-[#163E2C] transition-all cursor-pointer flex items-center gap-2 shadow-xs disabled:opacity-50"
             >
               {createDonationMutation.isPending ? (
-                <span>INITIALIZING ESCROW...</span>
+                <span>SAVING DEMO CONTRIBUTION...</span>
               ) : (
                 <>
-                  <span>SEE ACCOUNT DETAILS &amp; PAY</span>
+                  <span>VIEW DEMO OPTION</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}

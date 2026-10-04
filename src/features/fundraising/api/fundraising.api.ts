@@ -33,6 +33,16 @@ function write(list: Fundraiser[]) {
 }
 
 function applyValues(base: Fundraiser, v: FundraiserFormValues): Fundraiser {
+  const isCommunity = v.beneficiaryType === 'community_org';
+  const resolvedBanks = isCommunity
+    ? []
+    : v.banks && v.banks.length > 0
+      ? v.banks
+      : v.bank?.bankId
+        ? [v.bank]
+        : [];
+  const primaryBank = resolvedBanks[0] || { bankId: '', accountNumber: '', accountName: '' };
+
   return {
     ...base,
     title: v.title.trim(),
@@ -41,14 +51,15 @@ function applyValues(base: Fundraiser, v: FundraiserFormValues): Fundraiser {
     story: v.story.trim(),
     images: v.images,
     goalAmount: Number(v.goalAmount) || 0,
-    deadline: v.deadline,
+    deadline: v.deadline || '',
     beneficiaryType: v.beneficiaryType,
     beneficiary:
-      v.beneficiaryType === 'myself' || v.beneficiaryType === 'community_org'
+      v.beneficiaryType === 'myself' || isCommunity
         ? { name: '', phone: '', info: '' }
         : v.beneficiary,
-    organizationId: v.beneficiaryType === 'community_org' ? v.organizationId : undefined,
-    bank: v.bank,
+    organizationId: isCommunity ? v.organizationId : undefined,
+    bank: primaryBank,
+    banks: resolvedBanks,
     documents: v.documents,
     updatedAt: new Date().toISOString(),
   };
@@ -110,6 +121,18 @@ export const fundraisingApi = {
     if (!f) throw new Error('Fundraiser not found.');
     if (Object.keys(validate(fundraiserToValues(f), 'submit')).length) {
       throw new Error('Complete all required fields before submitting.');
+    }
+
+    // Rule 6: A user must not have more than one active/incomplete fundraiser
+    const ACTIVE_STATUSES: FundraiserStatus[] = ['pending', 'changes_requested', 'approved', 'paused'];
+    const currentUserId = getCurrentUser().id;
+    const existingActive = list.find(
+      (item) => item.creatorId === currentUserId && item.id !== id && ACTIVE_STATUSES.includes(item.status)
+    );
+    if (existingActive) {
+      throw new Error(
+        `You already have an active fundraiser in progress ("${existingActive.title}"). Lewegene policy permits only one active or incomplete fundraiser at a time.`
+      );
     }
     const campaigns = await localCampaignApi.getAllCampaigns();
     if (!campaigns.some((campaign) => campaign.id === f.id)) {

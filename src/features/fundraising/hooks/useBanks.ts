@@ -1,4 +1,4 @@
-import { mockBanks } from '../../donations/data/banks.data.ts'; // Member 4
+import { mockBanks } from '../../../mock-data/banks/banks.data.ts';
 
 // Reads Member 4's bank list and keeps only { id, name }. Ids look like 'bank_cbe'.
 // Later: swap for Member 4's bank API here — components stay unchanged.

@@ -7,9 +7,10 @@ import type { PageProps } from '../FundraisingApp.tsx';
 
 const FILTERS: { id: string; label: string; match: FundraiserStatus[] | null }[] = [
   { id: 'all', label: 'All', match: null },
-  { id: 'active', label: 'Active', match: ['approved', 'paused'] },
-  { id: 'pending', label: 'Pending', match: ['pending', 'changes_requested'] },
+  { id: 'verified', label: 'Verified', match: ['approved'] },
+  { id: 'unverified', label: 'Unverified', match: ['pending', 'changes_requested'] },
   { id: 'rejected', label: 'Rejected', match: ['rejected'] },
+  { id: 'completed', label: 'Completed', match: ['completed'] },
   { id: 'drafts', label: 'Drafts', match: ['draft'] },
 ];
 

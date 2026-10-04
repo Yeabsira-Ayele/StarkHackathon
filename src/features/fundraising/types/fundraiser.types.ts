@@ -54,6 +54,7 @@ export interface Fundraiser {
   beneficiary: Beneficiary;
   organizationId?: string; // only for community_org
   bank: BankAccount;
+  banks?: BankAccount[];
   documents: EvidenceDocument[];
   reviewNote?: string; // message from admin when changes are requested / rejected
   deleteRequested?: boolean;
@@ -74,6 +75,7 @@ export interface FundraiserFormValues {
   beneficiary: Beneficiary;
   organizationId: string;
   bank: BankAccount;
+  banks?: BankAccount[];
   documents: EvidenceDocument[];
 }
 

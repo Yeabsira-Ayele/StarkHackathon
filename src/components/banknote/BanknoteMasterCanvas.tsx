@@ -55,23 +55,9 @@ import {
 import { toGeezNumber } from '../../services/utils/currencyUtils.ts';
 import { adminApi } from '../../features/admin/api/admin.api.ts';
 import { useAuthStore } from '../../features/auth/store/auth.store.ts';
+import { DISCOVER_LOCATIONS } from '../../services/lookupService.ts';
 
-const ETHIOPIAN_REGIONS = [
-  'Addis Ababa',
-  'Afar',
-  'Amhara',
-  'Benishangul-Gumuz',
-  'Central Ethiopia',
-  'Dire Dawa',
-  'Gambela',
-  'Harari',
-  'Oromia',
-  'Sidama',
-  'Somali',
-  'South Ethiopia',
-  "South West Ethiopia Peoples'",
-  'Tigray',
-];
+const ETHIOPIAN_REGIONS = DISCOVER_LOCATIONS;
 
 function hasPersonalReports(userId: string): boolean {
   try {

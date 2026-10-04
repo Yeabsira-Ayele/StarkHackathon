@@ -47,7 +47,7 @@ export const FundraiserSummary: React.FC<{ fundraiser: Fundraiser }> = ({ fundra
       <Card className="p-5">
         <dl>
           <Row label="Goal">{f.goalAmount ? formatEtb(f.goalAmount) : ''}</Row>
-          <Row label="Deadline">{formatDate(f.deadline)}</Row>
+          <Row label="Deadline">{f.deadline ? formatDate(f.deadline) : 'Ongoing (no deadline)'}</Row>
           <Row label="Raised for">{TYPE_LABEL[f.beneficiaryType]}</Row>
           {(f.beneficiaryType === 'friend_family' || f.beneficiaryType === 'other') && (
             <>
@@ -57,11 +57,32 @@ export const FundraiserSummary: React.FC<{ fundraiser: Fundraiser }> = ({ fundra
             </>
           )}
           {f.beneficiaryType === 'community_org' && (
-            <Row label="Organization">{orgs.find((o) => o.id === f.organizationId)?.name}</Row>
+            <Row label="Organization">{orgs.find((o) => o.id === f.organizationId)?.name || 'Community Initiative'}</Row>
           )}
-          <Row label="Bank">{banks.find((b) => b.id === f.bank.bankId)?.name}</Row>
-          <Row label="Account number">{f.bank.accountNumber}</Row>
-          <Row label="Account name">{f.bank.accountName}</Row>
+          {f.beneficiaryType !== 'community_org' && (
+            <>
+              {f.banks && f.banks.length > 0 ? (
+                <Row label="Receiving banks">
+                  <ul className="space-y-1.5">
+                    {f.banks.map((b, idx) => (
+                      <li key={idx} className="text-xs">
+                        <span className="font-semibold text-[#1E4D38] dark:text-[#52B788]">
+                          {banks.find((item) => item.id === b.bankId)?.name || b.bankId}
+                        </span>
+                        : {b.accountNumber} ({b.accountName})
+                      </li>
+                    ))}
+                  </ul>
+                </Row>
+              ) : (
+                <>
+                  <Row label="Bank">{banks.find((b) => b.id === f.bank?.bankId)?.name || '—'}</Row>
+                  <Row label="Account number">{f.bank?.accountNumber || '—'}</Row>
+                  <Row label="Account name">{f.bank?.accountName || '—'}</Row>
+                </>
+              )}
+            </>
+          )}
           <Row label="Documents">
             {f.documents.length ? (
               <ul className="space-y-0.5">

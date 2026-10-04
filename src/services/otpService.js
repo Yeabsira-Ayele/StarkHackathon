@@ -4,33 +4,46 @@ const authConfig = require('../config/auth');
 const AppError = require('../utils/AppError');
 
 const MAX_ATTEMPTS = 5;
+const COOLDOWN_SECONDS = 60;
 
-const hashCode = (email, purpose, code) =>
-  crypto.createHmac('sha256', authConfig.jwtSecret).update(`${email}:${purpose}:${code}`).digest('hex');
+const hashCode = (phone, purpose, code) =>
+  crypto.createHmac('sha256', authConfig.jwtSecret).update(`${phone}:${purpose}:${code}`).digest('hex');
 
-// Creates a new 6-digit code. Any older code for the same email + purpose is removed.
-// For now the code is printed in the server console (no email provider yet).
-// Later, replace the console.log with a real email sender.
-const createOtp = async (email, purpose) => {
-  await OTP.deleteMany({ email, purpose });
+// Creates a new 6-digit code for a phone number.
+// For now the code is printed in the server console (no SMS provider yet).
+// Later, replace the console.log with a real SMS sender.
+const createOtp = async (phone, purpose) => {
+  const existing = await OTP.findOne({ phone, purpose });
+  if (existing && process.env.DISABLE_RATE_LIMIT !== 'true') {
+    const secondsAgo = (Date.now() - existing.createdAt.getTime()) / 1000;
+    if (secondsAgo < COOLDOWN_SECONDS) {
+      throw new AppError(
+        `Please wait ${Math.ceil(COOLDOWN_SECONDS - secondsAgo)} seconds before asking for a new code`,
+        429,
+        'OTP_COOLDOWN'
+      );
+    }
+  }
+
+  await OTP.deleteMany({ phone, purpose });
 
   const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
   await OTP.create({
-    email,
+    phone,
     purpose,
-    codeHash: hashCode(email, purpose, code),
+    codeHash: hashCode(phone, purpose, code),
     expiresAt: new Date(Date.now() + authConfig.otpExpiresMinutes * 60 * 1000),
   });
 
-  console.log(`[OTP] ${purpose} code for ${email}: ${code}`);
+  console.log(`[OTP] ${purpose} code for ${phone}: ${code}`);
   return authConfig.otpDevEcho ? { devOtp: code } : {};
 };
 
 // Checks the code. Throws an error when it is wrong, expired, or tried too many times.
-const verifyOtp = async (email, purpose, code) => {
-  const record = await OTP.findOne({ email, purpose });
+const verifyOtp = async (phone, purpose, code) => {
+  const record = await OTP.findOne({ phone, purpose });
   if (!record) {
-    throw new AppError('The code is invalid or has expired', 400, 'INVALID_OTP', { code: 'Invalid or expired code' });
+    throw new AppError('The code is invalid or has expired', 400, 'INVALID_OTP', { otp: 'Invalid or expired code' });
   }
 
   if (record.attempts >= MAX_ATTEMPTS) {
@@ -39,13 +52,13 @@ const verifyOtp = async (email, purpose, code) => {
   }
 
   const expected = Buffer.from(record.codeHash, 'hex');
-  const given = Buffer.from(hashCode(email, purpose, String(code).trim()), 'hex');
+  const given = Buffer.from(hashCode(phone, purpose, String(code).trim()), 'hex');
   const ok = expected.length === given.length && crypto.timingSafeEqual(expected, given);
 
   if (!ok) {
     record.attempts += 1;
     await record.save();
-    throw new AppError('The code is invalid or has expired', 400, 'INVALID_OTP', { code: 'Invalid or expired code' });
+    throw new AppError('The code is invalid or has expired', 400, 'INVALID_OTP', { otp: 'Invalid or expired code' });
   }
 
   await record.deleteOne(); // a code works only once

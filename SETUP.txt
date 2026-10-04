@@ -1,13 +1,13 @@
-LEWEGENE - PERSON 1 (Authentication and Users)
+LEWEGENE - PERSON 1 UPDATE (phone + OTP + password)
 
 1. Unzip this folder.
-2. Copy everything inside it into your backend folder (the one that has server.js).
-   Say YES when your computer asks to replace server.js and src/models/User.js.
-3. In the terminal (in your backend folder) run:
-      npm install bcryptjs jsonwebtoken google-auth-library
-4. Open your real .env file and add the lines from .env.example
-   (change JWT_SECRET to your own long random text).
-   For testing also add:  OTP_DEV_ECHO=true  and  DISABLE_RATE_LIMIT=true
+2. Copy everything inside it into your BACKEND folder (the one with server.js).
+   Say YES to replace files.
+3. In your .env file, make sure these two lines exist:
+      OTP_DEV_ECHO=true
+      DISABLE_RATE_LIMIT=true
+4. Clear the old test accounts (one time only). In the terminal:
+      node scripts/reset-auth-data.js --yes
 5. Start the server:   npm run dev
-6. In a SECOND terminal run the automatic check:   node scripts/smoke-test.js
+6. In a second terminal:   node scripts/smoke-test.js
    Every line should say PASS.

@@ -2,7 +2,6 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Organization = require('../models/Organization');
 const AppError = require('../utils/AppError');
-const { normalizePhone } = require('../utils/phone');
 
 const getProfile = async (userId) => {
   const user = await User.findById(userId);
@@ -14,10 +13,11 @@ const getProfile = async (userId) => {
   return result;
 };
 
-const updateProfile = async (userId, { name, phone, profilePhoto }) => {
+// The phone number is the account's identity, so it cannot be changed here.
+const updateProfile = async (userId, { name, email, profilePhoto }) => {
   const changes = {};
   if (name !== undefined) changes.name = name.trim();
-  if (phone !== undefined) changes.phone = phone === '' ? undefined : normalizePhone(phone);
+  if (email !== undefined) changes.email = email === '' ? undefined : email.trim().toLowerCase();
   if (profilePhoto !== undefined) changes.profilePhoto = profilePhoto;
 
   const user = await User.findById(userId);
@@ -28,7 +28,7 @@ const updateProfile = async (userId, { name, phone, profilePhoto }) => {
 };
 
 // "Delete" keeps the record (other people's donations / campaigns may point to it)
-// but removes the personal details and frees the email.
+// but removes the personal details and frees the phone number.
 const deleteAccount = async (userId, password) => {
   const user = await User.findById(userId).select('+passwordHash');
   if (!user) throw new AppError('Account not found', 404, 'USER_NOT_FOUND');
@@ -36,19 +36,17 @@ const deleteAccount = async (userId, password) => {
     throw new AppError('Admin accounts cannot be deleted here', 403, 'FORBIDDEN');
   }
 
-  if (user.passwordHash) {
-    if (typeof password !== 'string' || !(await bcrypt.compare(password, user.passwordHash))) {
-      throw new AppError('Password is incorrect', 401, 'INVALID_CREDENTIALS', {
-        password: 'Password is incorrect',
-      });
-    }
+  if (typeof password !== 'string' || !(await bcrypt.compare(password, user.passwordHash || ''))) {
+    throw new AppError('Password is incorrect', 401, 'INVALID_CREDENTIALS', {
+      password: 'Password is incorrect',
+    });
   }
 
   await User.updateOne(
     { _id: user._id },
     {
-      $set: { status: 'deleted', name: 'Deleted user', email: `deleted-${user._id}@deleted.invalid` },
-      $unset: { googleId: '', phone: '', profilePhoto: '', passwordHash: '' },
+      $set: { status: 'deleted', name: 'Deleted user' },
+      $unset: { phone: '', email: '', profilePhoto: '', passwordHash: '' },
       $inc: { tokenVersion: 1 },
     }
   );

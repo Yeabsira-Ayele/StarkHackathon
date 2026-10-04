@@ -1,30 +1,24 @@
 const mongoose = require('mongoose');
 
 // One document in the "users" collection = one person (or one organization account).
+// The PHONE number is the main identity. Email is optional.
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true, maxlength: 100 },
 
-    // Used to log in. "unique" means no two users can share an email.
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
-    },
+    // Saved in one standard form, for example +251912345678.
+    // "unique" means no two accounts share a phone.
+    // "sparse" lets deleted accounts (which have no phone) exist side by side.
+    phone: { type: String, required: true, unique: true, sparse: true, trim: true },
 
-    // The scrambled (hashed) password. Empty for people who only use Google.
+    // Optional. Organizations use their official email here.
+    email: { type: String, unique: true, sparse: true, lowercase: true, trim: true },
+
+    // The scrambled (hashed) password. Never the real password.
     // select:false means queries do NOT return it unless we ask for it.
     passwordHash: { type: String, select: false },
 
-    // Google's ID for this person. Only set for Google sign-ins.
-    googleId: { type: String, unique: true, sparse: true },
-
     profilePhoto: { type: String },
-
-    // The workflow guide says phone is collected later, only when needed.
-    phone: { type: String, trim: true },
 
     role: {
       type: String,
@@ -41,7 +35,8 @@ const userSchema = new mongoose.Schema(
       index: true,
     },
 
-    emailVerified: { type: Boolean, default: false },
+    // true once the person proved they own the phone with a one-time code.
+    phoneVerified: { type: Boolean, default: false },
 
     // Goes up by 1 on logout / password change / suspension.
     // Old login tokens carry the old number, so they stop working.
@@ -50,11 +45,11 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// A NEW user must be able to log in somehow: a password or Google.
+// A NEW user must have a password.
 // (Only checked for new users, because passwordHash is hidden when we load an existing user.)
 userSchema.pre('validate', function () {
-  if (this.isNew && !this.passwordHash && !this.googleId) {
-    this.invalidate('passwordHash', 'A password or a Google account is required');
+  if (this.isNew && !this.passwordHash) {
+    this.invalidate('passwordHash', 'A password is required');
   }
 });
 

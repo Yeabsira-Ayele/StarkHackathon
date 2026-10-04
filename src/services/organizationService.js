@@ -4,8 +4,7 @@ const User = require('../models/User');
 const Organization = require('../models/Organization');
 const AppError = require('../utils/AppError');
 const { normalizePhone } = require('../utils/phone');
-const { normalizeEmail, buildAuthResponse } = require('./authService');
-const { createOtp } = require('./otpService');
+const { buildAuthResponse } = require('./authService');
 
 const cleanAccounts = (list) =>
   list.map((a) => ({
@@ -17,8 +16,17 @@ const cleanAccounts = (list) =>
 const cleanDocuments = (list) => list.map((d) => ({ name: d.name ? String(d.name).trim() : undefined, url: d.url.trim() }));
 
 // Creates the login (User with role ORGANIZATION) and the organization application (status: pending).
+// The organization logs in with its phone number (or its official email) and a password.
+// An admin reviews the application, so no one-time code is needed here.
 const signupOrganization = async (body) => {
-  const email = normalizeEmail(body.officialEmail);
+  const email = String(body.officialEmail).trim().toLowerCase();
+  const phone = normalizePhone(body.phone);
+
+  if (await User.findOne({ phone })) {
+    throw new AppError('This phone number is already registered', 409, 'PHONE_TAKEN', {
+      phone: 'This phone number is already registered',
+    });
+  }
   if (await User.findOne({ email })) {
     throw new AppError('This email is already registered', 409, 'EMAIL_TAKEN', {
       officialEmail: 'This email is already registered',
@@ -28,7 +36,7 @@ const signupOrganization = async (body) => {
   const user = await User.create({
     name: body.name.trim(),
     email,
-    phone: normalizePhone(body.phone),
+    phone,
     role: 'ORGANIZATION',
     passwordHash: await bcrypt.hash(body.password, 12),
   });
@@ -38,7 +46,7 @@ const signupOrganization = async (body) => {
       userId: user._id,
       name: body.name.trim(),
       officialEmail: email,
-      phone: normalizePhone(body.phone),
+      phone,
       organizationType: body.organizationType,
       location: body.location.trim(),
       description: body.description.trim(),
@@ -55,8 +63,7 @@ const signupOrganization = async (body) => {
     throw err;
   }
 
-  const otp = await createOtp(email, 'verify_email');
-  return { ...(await buildAuthResponse(user)), ...otp };
+  return buildAuthResponse(user);
 };
 
 const getMyOrganization = async (userId) => {

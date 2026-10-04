@@ -19,9 +19,6 @@ module.exports = {
   get otpExpiresMinutes() {
     return Number(process.env.OTP_EXPIRES_MINUTES) || 5;
   },
-  get googleClientId() {
-    return process.env.GOOGLE_CLIENT_ID || '';
-  },
   // When "true", the one-time code is also returned in the API response.
   // Only for testing on your own computer. Never turn this on in production.
   get otpDevEcho() {

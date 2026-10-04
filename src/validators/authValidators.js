@@ -1,18 +1,21 @@
 const AppError = require('../utils/AppError');
+const { isValidPhone } = require('../utils/phone');
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// Ethiopian mobile numbers: 09..., 07..., +2519..., +2517...
-const PHONE_RE = /^(\+251|251|0)?[79]\d{8}$/;
-
 const ORG_TYPES = ['ngo', 'charity', 'community', 'religious', 'school', 'hospital', 'other'];
 
 const isText = (v) => typeof v === 'string' && v.trim().length > 0;
-const cleanPhone = (v) => v.trim().replace(/\s|-/g, '');
 
 const fail = (fields) => {
   if (Object.keys(fields).length) {
     throw new AppError('Validation failed', 400, 'VALIDATION_ERROR', fields);
   }
+};
+
+const PHONE_MESSAGE = 'A valid Ethiopian phone number is required (for example 0912345678)';
+
+const checkPhone = (fields, value, key = 'phone') => {
+  if (!isValidPhone(value)) fields[key] = PHONE_MESSAGE;
 };
 
 const checkEmail = (fields, value, key = 'email') => {
@@ -22,54 +25,57 @@ const checkEmail = (fields, value, key = 'email') => {
 const checkPassword = (fields, value, key = 'password') => {
   if (typeof value !== 'string' || value.length < 8) {
     fields[key] = 'Password must be at least 8 characters';
-  } else if (value.length > 100) {
-    fields[key] = 'Password is too long';
+  } else if (value.length > 72) {
+    fields[key] = 'Password must be 72 characters or fewer';
   }
 };
 
-const checkPhone = (fields, value, key = 'phone') => {
-  if (!isText(value) || !PHONE_RE.test(cleanPhone(value))) {
-    fields[key] = 'A valid Ethiopian phone number is required (for example 0912345678)';
-  }
+const checkOtp = (fields, value) => {
+  if (!isText(value) || !/^\d{6}$/.test(value.trim())) fields.otp = 'The code must be 6 digits';
 };
 
-const checkCode = (fields, value) => {
-  if (!isText(value) || !/^\d{6}$/.test(value.trim())) fields.code = 'The code must be 6 digits';
+/* ---------- Individuals ---------- */
+
+const validateRequestOtp = (body = {}) => {
+  const fields = {};
+  checkPhone(fields, body.phone);
+  fail(fields);
 };
 
 const validateSignup = (body = {}) => {
   const fields = {};
-  if (!isText(body.name)) fields.name = 'Name is required';
-  checkEmail(fields, body.email);
+  if (!isText(body.name) || body.name.trim().length < 2) fields.name = 'Please enter your full name';
+  checkPhone(fields, body.phone);
+  checkOtp(fields, body.otp);
   checkPassword(fields, body.password);
-  if (body.phone !== undefined && body.phone !== '') checkPhone(fields, body.phone);
   fail(fields);
 };
 
+// Login accepts a phone number (or the email saved on the account) in "identifier".
 const validateLogin = (body = {}) => {
   const fields = {};
-  checkEmail(fields, body.email);
+  const identifier = body.identifier ?? body.phone ?? body.email;
+  if (!isText(identifier)) {
+    fields.identifier = 'Phone number is required';
+  } else if (identifier.includes('@')) {
+    if (!EMAIL_RE.test(identifier.trim())) fields.identifier = 'Enter a valid phone number or email';
+  } else if (!isValidPhone(identifier)) {
+    fields.identifier = PHONE_MESSAGE;
+  }
   if (!isText(body.password)) fields.password = 'Password is required';
   fail(fields);
 };
 
-const validateEmailOnly = (body = {}) => {
+const validateForgotPassword = (body = {}) => {
   const fields = {};
-  checkEmail(fields, body.email);
-  fail(fields);
-};
-
-const validateEmailAndCode = (body = {}) => {
-  const fields = {};
-  checkEmail(fields, body.email);
-  checkCode(fields, body.code);
+  checkPhone(fields, body.phone);
   fail(fields);
 };
 
 const validateResetPassword = (body = {}) => {
   const fields = {};
-  checkEmail(fields, body.email);
-  checkCode(fields, body.code);
+  checkPhone(fields, body.phone);
+  checkOtp(fields, body.otp);
   checkPassword(fields, body.newPassword, 'newPassword');
   fail(fields);
 };
@@ -82,13 +88,16 @@ const validateChangePassword = (body = {}) => {
 
 const validateProfileUpdate = (body = {}) => {
   const fields = {};
+  if (body.phone !== undefined) fields.phone = 'The phone number cannot be changed here';
   if (body.name !== undefined && !isText(body.name)) fields.name = 'Name cannot be empty';
-  if (body.phone !== undefined && body.phone !== '') checkPhone(fields, body.phone);
+  if (body.email !== undefined && body.email !== '') checkEmail(fields, body.email);
   if (body.profilePhoto !== undefined && typeof body.profilePhoto !== 'string') {
     fields.profilePhoto = 'Profile photo must be a link (URL)';
   }
   fail(fields);
 };
+
+/* ---------- Organizations ---------- */
 
 const checkPayoutAccounts = (fields, list) => {
   if (!Array.isArray(list) || list.length === 0) {
@@ -108,7 +117,7 @@ const checkPayoutAccounts = (fields, list) => {
 
 const checkRepresentative = (fields, rep) => {
   if (!rep || !isText(rep.name)) fields['authorizedRepresentative.name'] = 'Representative name is required';
-  if (!rep || !isText(rep.phone) || !PHONE_RE.test(cleanPhone(rep.phone))) {
+  if (!rep || !isValidPhone(rep.phone)) {
     fields['authorizedRepresentative.phone'] = 'A valid representative phone number is required';
   }
 };
@@ -161,10 +170,10 @@ const validateOrganizationUpdate = (body = {}) => {
 
 module.exports = {
   ORG_TYPES,
+  validateRequestOtp,
   validateSignup,
   validateLogin,
-  validateEmailOnly,
-  validateEmailAndCode,
+  validateForgotPassword,
   validateResetPassword,
   validateChangePassword,
   validateProfileUpdate,

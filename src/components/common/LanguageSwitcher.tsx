@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { SUPPORTED_LANGUAGES, changeLanguage, resolveLanguage, type AppLanguage } from '../../i18n/index.ts';
+import { ACTIVE_UI_LANGUAGES, changeLanguage, resolveLanguage, type AppLanguage } from '../../i18n/index.ts';
 
 export interface LanguageSwitcherProps {
   /** Visual flavour so the switcher blends into every navbar. */
@@ -10,7 +10,8 @@ export interface LanguageSwitcherProps {
 }
 
 /**
- * Reusable language switcher for English / Amharic / Afaan Oromoo.
+ * Reusable language switcher for English / Amharic.
+ * For this MVP, Afaan Oromoo is retained in the architecture but hidden from the UI switcher.
  * Changing the language is persisted centrally in `i18n/config.ts`, so the
  * selection survives navigation and page reloads on every route.
  */
@@ -32,7 +33,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
         aria-label={t('nav.language', 'Language')}
         className={`flex items-center gap-0.5 rounded-md border border-[var(--admin-border)] p-0.5 ${className}`}
       >
-        {SUPPORTED_LANGUAGES.map((option) => {
+        {ACTIVE_UI_LANGUAGES.map((option) => {
           const isActive = active === option.code;
           return (
             <button
@@ -61,7 +62,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
       aria-label={t('nav.language', 'Language')}
       className={`flex items-center border border-[#9A7432]/40 rounded-[1px] overflow-hidden text-[10px] font-mono font-bold ${className}`}
     >
-      {SUPPORTED_LANGUAGES.map((option) => {
+      {ACTIVE_UI_LANGUAGES.map((option) => {
         const isActive = active === option.code;
         return (
           <button

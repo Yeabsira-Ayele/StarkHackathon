@@ -68,7 +68,6 @@ export const Navigation: React.FC<NavigationProps> = ({
   const languageOptions = [
     { code: 'en', label: 'English', native: 'English', flag: '🇺🇸' },
     { code: 'am', label: 'አማርኛ', native: 'Amharic', flag: '🇪🇹' },
-    { code: 'om', label: 'Afaan Oromoo', native: 'Oromo', flag: '🇪🇹' },
   ] as const;
 
   const currentLanguageOption =
@@ -203,7 +202,7 @@ export const Navigation: React.FC<NavigationProps> = ({
               </button>
             </div>
 
-            {/* Demo Quick Tour Trigger for Judges */}
+            {/* Guided Tour Trigger for Platform Walkthroughs */}
             <div className="relative" ref={demoRef}>
               <button
                 type="button"
@@ -211,14 +210,14 @@ export const Navigation: React.FC<NavigationProps> = ({
                 className="hidden md:flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg border border-[#B08A45]/40 bg-[#F7F4EB] dark:bg-zinc-800 text-accent hover:border-accent transition-all cursor-pointer shadow-xs"
               >
                 <Sparkles className="w-3.5 h-3.5 text-accent" />
-                <span>Demo Tours</span>
+                <span>Guided Tours</span>
                 <ChevronDown className="w-3 h-3" />
               </button>
 
               {demoMenuOpen && (
                 <div className="absolute right-0 mt-2 w-56 rounded-xl border border-border bg-surface shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 text-xs">
                   <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-                    Quick Demo Walkthroughs
+                    Platform Walkthroughs
                   </div>
 
                   <button

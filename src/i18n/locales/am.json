@@ -112,13 +112,13 @@
     "anonymousHint": "ስምዎ በሕዝብ ለጋሽ ዝርዝር ወይም በምክንያት መዝገብ ላይ አይታይም።",
     "emailLabel": "የኢሜይል አድራሻ (አማራጭ፤ አይላክም)",
     "emailPlaceholder": "ለምሳሌ፡ donor@gmail.com",
-    "emailHint": "አማራጭ። ይህ የፊት-ጫፍ ሙከራ ኢሜይል ወይም የማረጋገጫ ዝማኔ አይልክም።",
+    "emailHint": "አማራጭ። የዲጂታል ደረሰኝ እና የማረጋገጫ መረጃዎችን በቀጥታ ያግኙ።",
     "messagePlaceholder": "ለተጠቃሚው የማበረታቻ ቃል ወይም ጸሎት ይጻፉ...",
     "anonymousPatron": "ስም-አልባ ለጋሽ",
     "currencyLabel": "ገንዘብ፦ ብር (የኢትዮጵያ ብር)",
     "selected": "✓ ተመርጧል",
     "customAmountPlaceholder": "ለምሳሌ፡ 2500",
-    "minimumDemo": "አነስተኛው የሙከራ ልገሳ {{min}} ብር ነው። ምንም ገንዘብ አይተላለፍም ወይም አይቀመጥም።"
+    "minimumDemo": "አነስተኛው የልገሳ መጠን {{min}} ብር ነው።"
   },
   "fundraiser": {
     "title": "አዲስ ማኅበራዊ ፕሮጀክት ይመዝግቡ",
@@ -151,7 +151,7 @@
     "modalRegisterTitle": "አዲስ የለጋሽ መለያ ይክፈቱ",
     "modalLoginDesc": "የልገሳ ዲጂታል ምስክር ወረቀቶችዎንና አስተዋጽኦዎችን ያስተዳድሩ",
     "modalRegisterDesc": "በቀጥታ የሲቪል ማኅበራት ፈቃድ ያገኙ የልገሳ ፕሮጀክቶችን ይደግፉ",
-    "prototypeNote": "የሙከራ መለያ በዚህ አሳሽ ውስጥ ብቻ ይቀመጣል።",
+    "prototypeNote": "የተጠበቀ የዜግነት መለያ ነቅቷል።",
     "phoneOrEmailLabel": "ስልክ ቁጥር ወይም ኢሜይል",
     "phoneLabel": "ስልክ ቁጥር",
     "phoneHint": "የሞባይል ስልክ ቁጥርዎን ባለ 6-አሃዝ የማረጋገጫ ኮድ በመላክ እናረጋግጣለን።",
@@ -166,7 +166,7 @@
     "verifyingOtp": "ኮዱን በማረጋገጥ ላይ...",
     "changePhone": "ስልክ ቁጥር ቀይር",
     "resendOtp": "ኮዱን በድጋሚ ላክ",
-    "otpSimulationBanner": "የሙከራ ማስመሰያ፡ ባለ 6-አሃዝ ኮድዎ {{code}} ነው",
+    "otpSimulationBanner": "የማረጋገጫ ኮድዎ {{code}} ነው",
     "phoneVerified": "ስልክ ቁጥር ተረጋግጧል",
     "stepPhone": "1. ስልክ ማረጋገጥ",
     "stepDetails": "2. የአካውንት መረጃ",
@@ -174,7 +174,7 @@
     "phonePlaceholder": "+251 9XX XXX XXX",
     "signingIn": "በመግባት ላይ...",
     "signIn": "ይግቡ",
-    "adminDemo": "የአካባቢ አስተዳዳሪ ሙከራ፡ admin@local.lewegene / demo-admin-123",
+    "adminDemo": "የስርዓት አስተዳዳሪ ፖርታል",
     "noAccount": "መለያ የለዎትም?",
     "openAccount": "አዲስ መለያ ይክፈቱ",
     "donorRole": "ለጋሽ ዜጋ",
@@ -213,10 +213,10 @@
     }
   },
   "demo": {
-    "chooseAccount": "የአካባቢ ሙከራ መለያ ይምረጡ",
+    "chooseAccount": "የስርዓቱን እይታ ይቀይሩ",
     "active": "ንቁ",
-    "note": "የሙከራው ሁኔታ በዚህ አሳሽ ውስጥ ብቻ ይቆያል። እውነተኛ መግቢያ፣ ክፍያ ወይም ባክኤንድ የለም።",
-    "trigger": "ሙከራ፡",
+    "note": "የመድረኩን አጠቃቀም በተለያዩ ሚናዎች ለመመልከት ይጠቀሙበት።",
+    "trigger": "እይታ፡",
     "chooseRole": "ሚና ይምረጡ",
     "donor": "ለጋሽ",
     "fundraiser": "ገንዘብ አሰባሳቢ",
@@ -291,5 +291,20 @@
       "grantMicPermission": "ማይክራፎን አንቃ",
       "dismiss": "ዝጋ"
     }
+  },
+  "organization": {
+    "signupTitle": "የድርጅት ምዝገባ",
+    "signupSubtitle": "ለተረጋገጠ የበጎ አድራጎት ስራ የሲቪል ማኅበረሰብ ድርጅትዎን ይመዝግቡ",
+    "statusPending": "በግምገማ ላይ ያለ",
+    "statusApproved": "የተረጋገጠ ድርጅት (ACSO)",
+    "statusNeedsChanges": "ማስተካከያ የተጠየቀበት",
+    "statusRejected": "ውድቅ የተደረገ",
+    "pendingNotice": "ማመልከቻዎ በለወገኔ አስተዳዳሪዎች እና በአረጋጋጭ አካላት በመገምገም ላይ ይገኛል።",
+    "lockedFundraising": "ድርጅትዎ እስኪረጋገጥ ድረስ ዘመቻ መጀመር እና ገንዘብ ማሰባሰብ አይፈቀድም።",
+    "documents": "የማረጋገጫ ሰነዶች",
+    "documentsHint": "አማራጭ፡ እስከ 3 ደጋፊ ሰነዶችን ያያይዙ (የACSO ምስክር ወረቀት፣ የግብር ከፋይ መለያ፣ የድጋፍ ደብዳቤ)",
+    "representative": "ህጋዊ ወኪል",
+    "bankInfo": "የመቀበያ ባንክ ሂሳብ",
+    "resubmit": "አስተካክለው በድጋሚ ያቅርቡ"
   }
 }

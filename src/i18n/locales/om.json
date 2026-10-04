@@ -290,5 +290,20 @@
       "grantMicPermission": "Maayikirofoonii Eeyyamaa",
       "dismiss": "Cufaa"
     }
+  },
+  "organization": {
+    "signupTitle": "Galmee Dhaabbataa",
+    "signupSubtitle": "Tola ooltummaa mirkanaa'eef dhaabbata hawaasaa keessan galmeessaa",
+    "statusPending": "Mirkaneessa Eegaa Jira",
+    "statusApproved": "Dhaabbata Mirkanaa'e (ACSO)",
+    "statusNeedsChanges": "Jijjiiramni Gaafatameera",
+    "statusRejected": "Kufaa Ta'eera",
+    "pendingNotice": "Iyyannoon keessan bulchitoota Lewegene fi to'attoota ACSO'n gamaaggamaa jira.",
+    "lockedFundraising": "Hamma dhaabbanni keessan mirkanaa'utti duula jalqabuu fi maallaqa walitti qabuun hin hayyamamu.",
+    "documents": "Sanadoota Mirkaneessaa",
+    "documentsHint": "Filannoo: Sanadoota deeggarsaa hanga 3 fe'aa (waraqaa ragaa ACSO, TIN, xalayaa boordii)",
+    "representative": "Bakka Bu'aa Seeraa",
+    "bankInfo": "Herrega Baankii Fudhattuu",
+    "resubmit": "Fooyyessanii Irra Deebi'anii Galchaa"
   }
 }

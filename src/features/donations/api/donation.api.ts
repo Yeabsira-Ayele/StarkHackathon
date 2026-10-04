@@ -1,9 +1,11 @@
 import { campaignApi as localCampaignApi } from '../../../services/api/campaignApi.ts';
+import { linksetService } from '../../../services/payment/linksetService.ts';
 import { useAuthStore } from '../../auth/store/auth.store.ts';
 import {
   Donation,
   CreateDonationPayload,
   SubmitReferencePayload,
+  SubmitReceiptPayload,
   ContributionCertificate,
   DonationSummaryStats,
   DonationSubmitPayload,
@@ -159,22 +161,67 @@ export const donationApi = {
    * verification and returns a result (confirmed/failed), not just storing the reference
    * for later manual review.
    */
+  /**
+   * Endpoint: POST /donations/:donationId/verify-receipt
+   * Primary verification flow: submits the payment receipt link, verifies it via
+   * the simulated Links.et gateway, records the verified transaction data, and issues
+   * the archival contribution certificate.
+   */
+  async submitReceiptVerification(
+    donationId: string,
+    payload: SubmitReceiptPayload
+  ): Promise<Donation> {
+    const pending = getPendingDonations().find((entry) => entry.donation.id === donationId);
+    if (!pending) throw new Error('Contribution draft not found. Please restart the contribution flow.');
+    if (!payload.receiptUrl?.trim()) throw new Error('Please enter a valid payment receipt link.');
+
+    // Simulated backend call to Links.et
+    const verification = await linksetService.verifyReceipt({
+      receiptUrl: payload.receiptUrl.trim(),
+      expectedAmount: pending.donation.amount,
+      campaignId: pending.donation.campaignId,
+      donorName: pending.donation.donorName,
+      beneficiaryName: pending.donation.beneficiaryName,
+    });
+
+    if (!verification.verified) {
+      throw new Error(verification.failureReason || 'Failed to verify payment receipt link.');
+    }
+
+    const rail = (verification.paymentRail as any) || toCampaignRail(pending.donation.bankId);
+    const result = await localCampaignApi.submitDonation(pending.donation.campaignId, {
+      amount: pending.donation.amount,
+      donorId: pending.donorId,
+      donorName: pending.donation.donorName,
+      message: pending.message,
+      paymentRail: rail,
+    });
+
+    const remaining = getPendingDonations().filter((entry) => entry.donation.id !== pending.donation.id);
+    savePendingDonations(remaining);
+
+    const campaign = await localCampaignApi.getCampaignById(result.campaign.id);
+    const confirmed = toDonation(campaign, result.donation, pending.donation.bankId, verification.railReference);
+
+    confirmed.receiptUrl = payload.receiptUrl.trim();
+    confirmed.proofUrl = payload.proofUrl;
+    confirmed.reference = verification.railReference;
+    confirmed.verifiedPayment = verification;
+    confirmed.status = 'confirmed';
+    confirmed.verifiedAt = verification.timestamp;
+
+    return confirmed;
+  },
+
   async submitPaymentReference(
     donationId: string,
     payload: SubmitReferencePayload
   ): Promise<Donation> {
     const pending = getPendingDonations().find((entry) => entry.donation.id === donationId);
-    if (!pending) throw new Error('This local contribution draft could not be found. Restart the contribution flow.');
-    if (!payload.reference.trim()) throw new Error('Enter a demo reference to continue.');
-    await new Promise((resolve) => setTimeout(resolve, 450));
+    if (!pending) throw new Error('Contribution draft could not be found. Restart the contribution flow.');
+    if (!payload.reference.trim()) throw new Error('Please enter your payment reference or receipt link.');
+    await new Promise((resolve) => setTimeout(resolve, 400));
     return completePendingDonation(pending, payload.reference.trim());
-  },
-
-  async submitVerifiedReceipt(
-    campaignId: string,
-    payload: { receiptUrl: string; donorName?: string; message?: string },
-  ) {
-    throw new Error(`Receipt verification is not available in this frontend prototype for campaign ${campaignId}.`);
   },
 
   /**

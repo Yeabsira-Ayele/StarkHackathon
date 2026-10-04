@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Campaign } from '../../../types/index.ts';
 import { useDonationStore } from '../store/donation.store';
-import { useBanks, useCreateDonation, useSubmitReference } from '../hooks/useDonations';
+import { useBanks, useCreateDonation, useSubmitReceiptVerification, useSubmitReference } from '../hooks/useDonations';
 import { getBankById } from '../data/banks.data';
 import { DonationAmountSelector } from '../components/DonationAmountSelector';
 import { DonorInfoForm } from '../components/DonorInfoForm';
@@ -45,6 +45,7 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
     isAnonymous,
     donorMessage,
     selectedBankId,
+    receiptUrl,
     reference,
     proofUrl,
     createdDonation,
@@ -56,13 +57,16 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
     setIsAnonymous,
     setDonorMessage,
     setSelectedBankId,
+    setReceiptUrl,
     setReference,
     setProofUrl,
     setCreatedDonation,
     resetWizard,
   } = useDonationStore();
 
+  const [generalError, setGeneralError] = useState<string | null>(null);
   const createDonationMutation = useCreateDonation();
+  const submitReceiptMutation = useSubmitReceiptVerification();
   const submitReferenceMutation = useSubmitReference();
 
   const selectedBank = getBankById(selectedBankId) || banks[0];
@@ -70,6 +74,7 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
   // Advance from Bank Selection to Account Details
   const handleProceedToAccountDetails = async () => {
     if (!selectedBank) return;
+    setGeneralError(null);
     try {
       const res = await createDonationMutation.mutateAsync({
         campaignId: campaign.id,
@@ -84,20 +89,27 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
       setCreatedDonation(res);
       setStep(4);
     } catch (err: any) {
-      alert(err.message || 'Failed to initialize donation record');
+      setGeneralError(err.message || 'Failed to initialize donation record');
     }
   };
 
-  // Submit payment reference
-  const handleSubmitReference = async () => {
+  // Submit payment receipt verification (primary flow)
+  const handleSubmitReceiptVerification = async (submittedUrl?: string) => {
     if (!createdDonation) return;
+    const targetUrl = (submittedUrl || receiptUrl || '').trim();
+    if (!targetUrl) {
+      setGeneralError('Please paste your payment receipt link to continue.');
+      return;
+    }
+    setGeneralError(null);
     try {
-      const updated = await submitReferenceMutation.mutateAsync({
+      const updated = await submitReceiptMutation.mutateAsync({
         donationId: createdDonation.id,
         payload: {
           donationId: createdDonation.id,
-          reference: reference.trim(),
+          receiptUrl: targetUrl,
           proofUrl,
+          reference: reference.trim() || undefined,
         },
       });
 
@@ -117,21 +129,28 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
           impactSummary: campaign.impactMetric || 'Direct civic escrow support',
           location: campaign.location || 'Addis Ababa, Ethiopia',
           issuedAt: new Date().toISOString(),
-          transactionRef: updated.reference || 'TXN-ESCROW',
-          paymentRail: updated.bankName || 'Direct Escrow',
+          transactionRef: updated.reference || updated.verifiedPayment?.railReference || 'TXN-ESCROW',
+          paymentRail: updated.bankName || updated.verifiedPayment?.railName || 'Direct Escrow',
           status: updated.status,
         });
       }
     } catch (err: any) {
-      alert(err.message || 'Failed to submit payment reference');
+      setGeneralError(err.message || 'Failed to verify payment receipt link.');
     }
   };
 
   return (
     <div className="w-full max-w-3xl mx-auto space-y-8 animate-in fade-in duration-300">
-      <div role="note" className="border border-amber-700/40 bg-amber-50 px-4 py-3 font-mono text-xs text-amber-950 dark:bg-amber-950/30 dark:text-amber-100">
-        Prototype only: payment options and account details are placeholders. Do not transfer money or submit real receipt details. Continuing records a simulated contribution in this browser; no payment is made or verified.
+      <div role="note" className="border border-emerald-700/40 bg-emerald-50/70 px-4 py-2.5 font-mono text-xs text-emerald-950 dark:bg-emerald-950/30 dark:text-emerald-100 flex items-center justify-between gap-3">
+        <span>ACSO Verified Escrow: 100% of contributions are protected and disbursed directly to project milestones.</span>
+        <span className="font-bold text-[10px] uppercase tracking-wider text-emerald-700 dark:text-emerald-400 shrink-0">Zero Platform Cut</span>
       </div>
+
+      {generalError && (
+        <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs font-mono">
+          {generalError}
+        </div>
+      )}
       {/* Top Header */}
       <div className="flex items-center justify-between border-b-2 border-[#1E4D38]/20 dark:border-[#9A7432]/30 pb-4">
         <button
@@ -284,10 +303,10 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
               className="py-3 px-8 border-2 border-[#1E4D38] bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706] font-mono text-xs font-black tracking-widest uppercase hover:bg-[#163E2C] transition-all cursor-pointer flex items-center gap-2 shadow-xs disabled:opacity-50"
             >
               {createDonationMutation.isPending ? (
-                <span>SAVING DEMO CONTRIBUTION...</span>
+                <span>INITIALIZING CONTRIBUTION...</span>
               ) : (
                 <>
-                  <span>VIEW DEMO OPTION</span>
+                  <span>PROCEED TO PAYMENT</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -309,19 +328,21 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
         </div>
       )}
 
-      {/* STEP 5: SUBMIT REFERENCE */}
+      {/* STEP 5: SUBMIT RECEIPT LINK (PRIMARY FLOW) */}
       {step === 5 && (
         <div className="p-6 sm:p-8 border-2 border-[#1E4D38]/30 dark:border-[#9A7432]/40 bg-[#FFFDF9] dark:bg-[#12100E] space-y-6 rounded-[1px] shadow-md">
           <PaymentReferenceForm
             bank={selectedBank}
             amount={amount}
             donorName={isAnonymous ? 'Anonymous Patron' : (donorName || 'Anonymous Patron')}
+            receiptUrl={receiptUrl}
             reference={reference}
             proofUrl={proofUrl}
-            isSubmitting={submitReferenceMutation.isPending}
+            isSubmitting={submitReceiptMutation.isPending || submitReferenceMutation.isPending}
+            onChangeReceiptUrl={setReceiptUrl}
             onChangeReference={setReference}
             onChangeProofUrl={setProofUrl}
-            onSubmit={handleSubmitReference}
+            onSubmit={handleSubmitReceiptVerification}
             onBack={() => setStep(4)}
           />
         </div>

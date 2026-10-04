@@ -187,7 +187,7 @@ export const BanknoteFrame: React.FC<BanknoteFrameProps> = ({
                 )}
               </button>
 
-              {/* Demo Tour Menu for Judges */}
+              {/* Guided Tour Menu */}
               <div className="relative">
                 <button
                   type="button"
@@ -195,7 +195,7 @@ export const BanknoteFrame: React.FC<BanknoteFrameProps> = ({
                   className="px-2.5 py-1.5 rounded-lg border border-[#B08A45]/60 bg-[#F7F4EB] dark:bg-[#1B221E] text-xs font-mono font-bold text-[#B08A45] hover:border-accent transition-all cursor-pointer shadow-xs flex items-center gap-1"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">DEMO TOURS</span>
+                  <span className="hidden sm:inline">GUIDED TOURS</span>
                   <ChevronDown className="w-3 h-3" />
                 </button>
 

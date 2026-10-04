@@ -51,6 +51,7 @@ import {
   Filter,
   UserRound,
   LogOut,
+  Clock,
 } from 'lucide-react';
 import { toGeezNumber } from '../../services/utils/currencyUtils.ts';
 import { adminApi } from '../../features/admin/api/admin.api.ts';
@@ -736,6 +737,10 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
     e.preventDefault();
     if (!isAuthenticated) {
       onRequireLogin?.('fundraise');
+      return;
+    }
+    if (currentOrganization && currentOrganization.verificationStatus !== 'approved') {
+      console.warn('Action restricted: organization is not approved.');
       return;
     }
     if (!onCreateCampaign) return;
@@ -1849,6 +1854,32 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
             </div>
 
             {/* Foundation Project Creation Form */}
+            {currentOrganization && currentOrganization.verificationStatus !== 'approved' ? (
+              <div className="p-8 border-2 border-amber-600/60 bg-[#FAF6EC] dark:bg-[#161411] space-y-4 font-mono">
+                <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                  <Clock className="w-5 h-5 animate-pulse" />
+                  <span className="font-serif font-black text-xl text-[#201C18] dark:text-[#F4EFE6] uppercase">
+                    CAUSE PLATE ENGRAVING RESTRICTED
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                  Your organization (&ldquo;{currentOrganization.name}&rdquo;) is currently{' '}
+                  <span className="font-bold underline uppercase">
+                    {currentOrganization.verificationStatus === 'pending'
+                      ? 'PENDING ACSO REGULATORY REVIEW'
+                      : currentOrganization.verificationStatus === 'needs_changes'
+                      ? 'ACTION REQUIRED'
+                      : 'NOT APPROVED'}
+                  </span>
+                  . Under platform governance, organizations cannot engrave cause plates or collect donor contributions until verified by an administrator.
+                </p>
+                {currentOrganization.decisionNote && (
+                  <div className="p-3 bg-surface border border-border text-xs italic">
+                    Reviewer Note: &ldquo;{currentOrganization.decisionNote}&rdquo;
+                  </div>
+                )}
+              </div>
+            ) : (
             <div className="p-8 border border-[#26211C]/30 bg-[#F2EADA] dark:bg-[#0E0D0B] space-y-6">
               <h3 className="font-serif font-bold text-2xl text-[#201C18] dark:text-[#F4EFE6]">
                 REGISTER &amp; ENGRAVE NEW CAUSE PLATE
@@ -1943,6 +1974,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 </div>
               </form>
             </div>
+            )}
           </div>
         )}
 

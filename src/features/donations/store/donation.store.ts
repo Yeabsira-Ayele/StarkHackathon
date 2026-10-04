@@ -23,7 +23,8 @@ interface DonationWizardState {
   // Step 4: Account Details & Copy
   accountCopied: boolean;
 
-  // Step 5: Payment Reference
+  // Step 5: Payment Receipt Link & Reference
+  receiptUrl: string;
   reference: string;
   proofUrl?: string;
 
@@ -41,6 +42,7 @@ interface DonationWizardState {
   setDonorMessage: (msg: string) => void;
   setSelectedBankId: (bankId: string) => void;
   setAccountCopied: (copied: boolean) => void;
+  setReceiptUrl: (url: string) => void;
   setReference: (ref: string) => void;
   setProofUrl: (url?: string) => void;
   setCreatedDonation: (donation: Donation | null) => void;
@@ -66,6 +68,7 @@ export const useDonationStore = create<DonationWizardState>((set, get) => ({
   donorMessage: '',
   selectedBankId: 'bank_cbe',
   accountCopied: false,
+  receiptUrl: '',
   reference: '',
   proofUrl: undefined,
   createdDonation: null,
@@ -81,6 +84,7 @@ export const useDonationStore = create<DonationWizardState>((set, get) => ({
   setDonorMessage: (msg) => set({ donorMessage: msg }),
   setSelectedBankId: (bankId) => set({ selectedBankId: bankId }),
   setAccountCopied: (copied) => set({ accountCopied: copied }),
+  setReceiptUrl: (url) => set({ receiptUrl: url }),
   setReference: (ref) => set({ reference: ref }),
   setProofUrl: (url) => set({ proofUrl: url }),
   setCreatedDonation: (donation) => set({ createdDonation: donation }),
@@ -99,6 +103,7 @@ export const useDonationStore = create<DonationWizardState>((set, get) => ({
       donorMessage: '',
       selectedBankId: 'bank_cbe',
       accountCopied: false,
+      receiptUrl: '',
       reference: '',
       proofUrl: undefined,
       createdDonation: null,

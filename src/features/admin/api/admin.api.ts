@@ -1,5 +1,5 @@
 import { campaignApi } from '../../../services/api/campaignApi.ts';
-import { Campaign } from '../../../types/index.ts';
+import { Campaign, Organization } from '../../../types/index.ts';
 import {
   ActivityType,
   AdminAccount,
@@ -15,6 +15,43 @@ import {
 import { INITIAL_AUDIT_LOGS } from '../data/admin.data';
 
 const STORAGE_KEY = 'lewegene_admin_snapshot_v1';
+
+export function organizationToOrgApplication(org: Organization): OrgApplication {
+  const status: OrgApplication['status'] =
+    org.verificationStatus === 'verified'
+      ? 'approved'
+      : org.verificationStatus === 'under_review'
+      ? 'pending'
+      : (org.verificationStatus as OrgApplication['status']) || (org.verified ? 'approved' : 'pending');
+
+  return {
+    id: org.id,
+    name: org.name,
+    organizationType: org.type,
+    officialEmail: org.contactEmail,
+    phone: org.contactPhone,
+    address: org.location,
+    description: org.description,
+    logoUrl: org.logoUrl,
+    representative: org.representative || {
+      name: 'Authorized Official',
+      role: 'Executive Director',
+      phone: org.contactPhone,
+      email: org.contactEmail,
+    },
+    bank: org.bank || {
+      bank: 'Commercial Bank of Ethiopia (CBE)',
+      accountNumber: '1000284920194',
+      accountName: org.name,
+    },
+    documents: org.documents || [],
+    status,
+    submittedAt: org.submittedAt || new Date().toISOString(),
+    activeCauses: org.activeProjectsCount || 0,
+    totalRaised: org.totalRaised || 0,
+    decisionNote: org.decisionNote,
+  };
+}
 const DEMO_USERS: AdminSnapshot['users'] = [
   {
     id: 'demo-donor-001',
@@ -60,6 +97,15 @@ const DEMO_REPORTS: AdminReport[] = [{
 }];
 
 function getStoredSnapshot(): AdminSnapshot {
+  let orgsFromStorage: OrgApplication[] = [];
+  try {
+    const rawOrgs = localStorage.getItem('lewegene_orgs_v1');
+    if (rawOrgs) {
+      const parsedOrgs = JSON.parse(rawOrgs) as Organization[];
+      orgsFromStorage = parsedOrgs.map(organizationToOrgApplication);
+    }
+  } catch {}
+
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -73,6 +119,31 @@ function getStoredSnapshot(): AdminSnapshot {
         snapshot.reports = [];
         changed = true;
       }
+
+      // Sync organizations between lewegene_orgs_v1 and snapshot
+      if (orgsFromStorage.length > 0) {
+        const snapOrgMap = new Map(snapshot.organizations.map((o) => [o.id, o]));
+        orgsFromStorage.forEach((stOrg) => {
+          if (!snapOrgMap.has(stOrg.id)) {
+            snapshot.organizations.unshift(stOrg);
+            changed = true;
+          } else {
+            // Keep status/notes synchronized
+            const existing = snapOrgMap.get(stOrg.id)!;
+            if (existing.status !== stOrg.status || existing.decisionNote !== stOrg.decisionNote) {
+              existing.status = stOrg.status;
+              existing.decisionNote = stOrg.decisionNote;
+              changed = true;
+            }
+          }
+        });
+      } else if (snapshot.organizations?.length > 0) {
+        // Seed organizations storage from snapshot if empty
+        try {
+          localStorage.setItem('lewegene_orgs_v1', JSON.stringify(snapshot.organizations));
+        } catch {}
+      }
+
       if (changed) localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
       return snapshot;
     }
@@ -83,7 +154,7 @@ function getStoredSnapshot(): AdminSnapshot {
     users: DEMO_USERS,
     donations: [],
     reports: DEMO_REPORTS,
-    organizations: [],
+    organizations: orgsFromStorage,
     activity: [],
     admins: [{
       id: 'local-admin',
@@ -164,6 +235,23 @@ export const adminApi = {
   },
 
   async decideOrganization(id: string, status: OrgApplication['status'], note?: string): Promise<AdminSnapshot> {
+    try {
+      const raw = localStorage.getItem('lewegene_orgs_v1');
+      if (raw) {
+        const orgs = JSON.parse(raw) as Organization[];
+        const idx = orgs.findIndex((o) => o.id === id);
+        if (idx >= 0) {
+          orgs[idx] = {
+            ...orgs[idx],
+            verificationStatus: status,
+            verified: status === 'approved',
+            decisionNote: note,
+          };
+          localStorage.setItem('lewegene_orgs_v1', JSON.stringify(orgs));
+        }
+      }
+    } catch {}
+
     return updateSnapshot((snapshot) => addActivity({
       ...snapshot,
       organizations: snapshot.organizations.map((organization) => organization.id === id

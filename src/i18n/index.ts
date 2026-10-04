@@ -32,6 +32,9 @@ export const SUPPORTED_LANGUAGES: LanguageOption[] = [
   { code: 'om', short: 'OM', label: 'Afaan Oromoo' },
 ];
 
+/** Active user-facing languages for this MVP release (English & Amharic). */
+export const ACTIVE_UI_LANGUAGES: LanguageOption[] = SUPPORTED_LANGUAGES.filter((l) => l.code !== 'om');
+
 /** Amharic is the default platform language (see `config.ts`). */
 export const DEFAULT_LANGUAGE: AppLanguage = 'am';
 

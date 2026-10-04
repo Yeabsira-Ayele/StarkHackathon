@@ -1,4 +1,6 @@
 import type { User, UserRole, AuthResponse } from '../../../features/auth/types/auth.types.ts';
+import type { Organization } from '../../../types/index.ts';
+import { campaignApi } from '../../api/campaignApi.ts';
 import { DEMO_ACCOUNTS, DEMO_SESSION_TOKEN } from '../../../mock-data/users/users.data.ts';
 import { MOCK_USERS } from '../../../features/auth/data/auth.data.ts';
 
@@ -283,6 +285,8 @@ export const mockAuthAdapter = {
       throw new Error('An account with this phone number already exists.');
     }
 
+    const orgId = data.role === 'foundation' ? `org-${Date.now()}` : undefined;
+
     const newUser: User = {
       id: `local-user-${crypto.randomUUID()}`,
       name: data.name.trim(),
@@ -290,10 +294,48 @@ export const mockAuthAdapter = {
       phone: normalizedPhone,
       role: data.role,
       verified: true, // Phone is verified via OTP
-      organizationId: data.role === 'foundation' ? `local-org-${crypto.randomUUID()}` : undefined,
+      organizationId: orgId,
       organizationName: data.role === 'foundation' ? data.organizationName?.trim() : undefined,
       createdAt: new Date().toISOString(),
     };
+
+    if (data.role === 'foundation' && orgId) {
+      const pendingOrg: Organization = {
+        id: orgId,
+        name: data.organizationName?.trim() || 'New Foundation',
+        type: 'registered_ngo',
+        registrationNo: `ACSO/ET/${new Date().getFullYear()}/${Math.floor(1000 + Math.random() * 9000)}`,
+        verified: false,
+        verificationStatus: 'pending',
+        foundedYear: new Date().getFullYear(),
+        location: 'Addis Ababa, Ethiopia',
+        description: `Civil society organization registered by ${data.name.trim()}.`,
+        contactEmail: normalizedEmail,
+        contactPhone: normalizedPhone,
+        activeProjectsCount: 0,
+        totalRaised: 0,
+        totalSupporters: 0,
+        representative: {
+          name: data.name.trim(),
+          role: 'Executive Director',
+          phone: normalizedPhone,
+          email: normalizedEmail,
+        },
+        bank: {
+          bank: 'Commercial Bank of Ethiopia (CBE)',
+          accountNumber: '1000284920194',
+          accountName: data.organizationName?.trim() || data.name.trim(),
+        },
+        documents: [],
+        submittedAt: new Date().toISOString(),
+        userId: newUser.id,
+      };
+      try {
+        campaignApi.registerOrganization(pendingOrg);
+      } catch (err) {
+        console.warn('Failed to seed pending org in campaignApi', err);
+      }
+    }
 
     const accounts = getStoredAccounts();
     accounts.push({ user: newUser, passcode: data.passcode });

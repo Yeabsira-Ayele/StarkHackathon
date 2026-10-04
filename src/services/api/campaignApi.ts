@@ -301,31 +301,64 @@ export const campaignApi = {
     return getStoredOrganizations();
   },
 
+  // GET /api/organizations/:id
+  async getOrganizationById(id: string): Promise<Organization | null> {
+    const all = getStoredOrganizations();
+    return all.find((o) => o.id === id) || null;
+  },
+
   // POST /api/organizations
   async registerOrganization(data: Partial<Organization>): Promise<Organization> {
     await new Promise((resolve) => setTimeout(resolve, 250));
     const all = getStoredOrganizations();
     const newOrg: Organization = {
-      id: `org-${Date.now()}`,
-      name: data.name || 'New Foundation',
-      type: data.type || 'charity_foundation',
-      registrationNo: data.registrationNo || `ACSO/ET/${new Date().getFullYear()}/${Math.floor(1000 + Math.random() * 9000)}`,
-      verified: true,
-      verificationStatus: 'verified',
+      id: data.id || `org-${Date.now()}`,
+      name: data.name || 'New Organization',
+      type: data.type || 'registered_ngo',
+      registrationNo:
+        data.registrationNo ||
+        `ACSO/ET/${new Date().getFullYear()}/${Math.floor(1000 + Math.random() * 9000)}`,
+      verified: false,
+      verificationStatus: 'pending',
       foundedYear: data.foundedYear || new Date().getFullYear(),
       location: data.location || 'Addis Ababa, Ethiopia',
-      description: data.description || 'Community organization dedicated to transparent philanthropy in Ethiopia.',
+      description:
+        data.description ||
+        'Community organization dedicated to transparent philanthropy in Ethiopia.',
       website: data.website || '',
       contactEmail: data.contactEmail || 'contact@org.et',
       contactPhone: data.contactPhone || '+251 11 000 0000',
-      activeProjectsCount: 1,
+      activeProjectsCount: 0,
       totalRaised: 0,
       totalSupporters: 0,
+      logoUrl: data.logoUrl,
+      representative: data.representative,
+      bank: data.bank,
+      documents: data.documents || [],
+      submittedAt: new Date().toISOString(),
+      userId: data.userId,
     };
 
     all.unshift(newOrg);
     saveOrganizations(all);
     return newOrg;
+  },
+
+  // PATCH /api/organizations/:id
+  async updateOrganization(id: string, patch: Partial<Organization>): Promise<Organization> {
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    const all = getStoredOrganizations();
+    const index = all.findIndex((o) => o.id === id);
+    if (index === -1) throw new Error(`Organization ${id} not found`);
+
+    const updated: Organization = {
+      ...all[index],
+      ...patch,
+      id,
+    };
+    all[index] = updated;
+    saveOrganizations(all);
+    return updated;
   },
 
   // POST /api/campaigns/:id/updates

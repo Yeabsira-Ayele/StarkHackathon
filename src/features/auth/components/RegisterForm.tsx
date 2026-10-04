@@ -253,7 +253,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             <div className="p-2.5 rounded-lg bg-[#9A7432]/10 border border-[#9A7432]/30 text-[11px] text-[#9A7432] dark:text-[#C9A24D] font-mono">
               {t('auth.otpSimulationBanner', {
                 code: simulatedCode,
-                defaultValue: `Prototype simulation: your 6-digit code is ${simulatedCode}`,
+                defaultValue: `Your verification code is ${simulatedCode}.`,
               })}
             </div>
           )}

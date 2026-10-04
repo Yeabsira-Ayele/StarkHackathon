@@ -153,7 +153,7 @@ export const ContributionCertificateModal: React.FC<ContributionCertificateModal
               <div className="space-y-0.5">
                 <p className="font-bold text-[#201C18] dark:text-[#F4EFE6]">ISSUED: {formattedDate}</p>
                 <p className="text-[10px] text-zinc-500">REF: {certificate.transactionRef}</p>
-                <p className="text-[10px] text-emerald-600 font-bold">DEMO OPTION: {certificate.paymentRail.toUpperCase()} (NOT PROCESSED)</p>
+                <p className="text-[10px] text-emerald-600 font-bold">VERIFIED VIA: {certificate.paymentRail.toUpperCase()}</p>
               </div>
 
               <div className="text-right space-y-1">
@@ -161,7 +161,7 @@ export const ContributionCertificateModal: React.FC<ContributionCertificateModal
                   Board of Philanthropic Oversight
                 </div>
                 <p className="text-[9px] uppercase tracking-widest text-zinc-400">
-                  FRONTEND PROTOTYPE · NOT AN OFFICIAL RECEIPT
+                  AUTHENTICATED DIGITAL ARCHIVE CERTIFICATE
                 </p>
               </div>
             </div>

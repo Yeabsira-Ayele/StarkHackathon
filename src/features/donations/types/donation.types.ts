@@ -27,6 +27,21 @@ export interface VerificationResult {
   failureReason: string | null;
 }
 
+export interface VerifiedReceiptData {
+  verified: boolean;
+  status: 'completed' | 'failed' | 'pending';
+  amount: number;
+  sender: string;
+  receiver: string;
+  timestamp: string;
+  transactionId: string;
+  railReference: string;
+  receiptUrl: string;
+  paymentRail?: PaymentRail;
+  networkMessage: string;
+  failureReason?: string;
+}
+
 export interface Donation {
   id: string;
   campaignId: string;
@@ -44,6 +59,8 @@ export interface Donation {
   accountNumber?: string;
   reference?: string;
   proofUrl?: string;
+  receiptUrl?: string;
+  verifiedPayment?: VerifiedReceiptData;
   status: DonationStatus;
   verification?: VerificationResult;
   createdAt: string;
@@ -89,6 +106,13 @@ export interface SubmitReferencePayload {
   donationId: string;
   reference: string;
   proofUrl?: string;
+}
+
+export interface SubmitReceiptPayload {
+  donationId: string;
+  receiptUrl: string;
+  proofUrl?: string;
+  reference?: string;
 }
 
 export interface DonationSummaryStats {

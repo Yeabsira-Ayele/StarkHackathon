@@ -60,13 +60,34 @@ export interface Campaign {
   serialCode?: string; // e.g. LW-0421
 }
 
+export type OrganizationVerificationStatus =
+  | 'pending'
+  | 'approved'
+  | 'needs_changes'
+  | 'rejected'
+  | 'verified'
+  | 'under_review';
+
+export interface OrganizationRepresentative {
+  name: string;
+  role: string;
+  phone: string;
+  email?: string;
+}
+
+export interface OrganizationBankAccount {
+  bank: string;
+  accountNumber: string;
+  accountName: string;
+}
+
 export interface Organization {
   id: string;
   name: string;
   type: 'registered_ngo' | 'charity_foundation' | 'community_coop' | 'faith_based';
   registrationNo: string;
   verified: boolean;
-  verificationStatus: 'pending' | 'under_review' | 'verified';
+  verificationStatus: OrganizationVerificationStatus;
   foundedYear: number;
   location: string;
   description: string;
@@ -77,6 +98,12 @@ export interface Organization {
   totalRaised: number;
   totalSupporters: number;
   logoUrl?: string;
+  representative?: OrganizationRepresentative;
+  bank?: OrganizationBankAccount;
+  documents?: string[];
+  submittedAt?: string;
+  decisionNote?: string;
+  userId?: string;
 }
 
 export interface ContributionCertificate {

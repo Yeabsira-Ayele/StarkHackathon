@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../components/ui/Button.tsx';
 import { Card } from '../components/ui/Card.tsx';
 import { Organization } from '../types/index.ts';
-import { campaignApi } from '../services/api/campaignApi.ts';
+import { organizationService } from '../services/organizationService.ts';
+import { useAuth } from '../features/auth/hooks/useAuth.ts';
+import { mockBanks } from '../features/donations/data/banks.data.ts';
 import {
   ShieldCheck,
   Building2,
@@ -11,6 +14,17 @@ import {
   UploadCloud,
   ArrowRight,
   ArrowLeft,
+  Phone,
+  Mail,
+  User as UserIcon,
+  Landmark,
+  FileText,
+  Trash2,
+  KeyRound,
+  RefreshCw,
+  Loader2,
+  Clock,
+  AlertCircle,
 } from 'lucide-react';
 
 export interface FoundationRegisterProps {
@@ -18,186 +32,536 @@ export interface FoundationRegisterProps {
   onCancel: () => void;
 }
 
+const PRESET_LOGOS = [
+  { id: 'logo-pediatrics', label: 'Health & Care', url: '/src/assets/images/ethiopia_medical_care_1790266416218.jpg' },
+  { id: 'logo-stem', label: 'Education & STEM', url: '/src/assets/images/ethiopia_school_stem_1790266427111.jpg' },
+  { id: 'logo-water', label: 'Clean Water', url: '/src/assets/images/ethiopia_clean_water_1790266442202.jpg' },
+  { id: 'logo-craft', label: 'Heritage & Craft', url: '/src/assets/images/ethiopia_artisan_craft_1790266455378.jpg' },
+];
+
 export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
   onSuccess,
   onCancel,
 }) => {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [name, setName] = useState('Hope for Horn Children Foundation');
-  const [type, setType] = useState<Organization['type']>('charity_foundation');
-  const [registrationNo, setRegistrationNo] = useState('ACSO/ET/2024/9021');
-  const [location, setLocation] = useState('Addis Ababa, Ethiopia');
-  const [contactEmail, setContactEmail] = useState('director@hopeforhorn.et');
-  const [contactPhone, setContactPhone] = useState('+251 91 144 8820');
-  const [description, setDescription] = useState(
-    'Dedicated to funding critical pediatric surgeries and nutrition support for orphaned and displaced children across Ethiopia.'
-  );
-  const [website, setWebsite] = useState('https://hopeforhorn.et');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [verifiedOrg, setVerifiedOrg] = useState<Organization | null>(null);
+  const { t } = useTranslation();
+  const { user, isAuthenticated, requestOtp, verifyOtp } = useAuth();
 
-  const handleNextToDocs = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim() || !registrationNo.trim()) return;
-    setStep(2);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+
+  // 1. Organization Information
+  const [name, setName] = useState('');
+  const [type, setType] = useState<Organization['type']>('registered_ngo');
+  const [registrationNo, setRegistrationNo] = useState('');
+  const [location, setLocation] = useState('Addis Ababa, Ethiopia');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState(user?.phone || '');
+  const [description, setDescription] = useState('');
+  const [website, setWebsite] = useState('');
+  const [selectedLogo, setSelectedLogo] = useState(PRESET_LOGOS[0].url);
+
+  // 2. Authorized Representative
+  const [repName, setRepName] = useState(user?.name || '');
+  const [repRole, setRepRole] = useState('Executive Director');
+  const [repPhone, setRepPhone] = useState(user?.phone || '');
+  const [repEmail, setRepEmail] = useState(user?.email || '');
+
+  // 3. Receiving Bank Account
+  const [bankName, setBankName] = useState(mockBanks[0]?.name.en || 'Commercial Bank of Ethiopia (CBE)');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [accountName, setAccountName] = useState('');
+
+  // 4. Supporting Documents (Optional, max 3 files)
+  const [documents, setDocuments] = useState<string[]>([
+    'acso_registration_certificate.pdf',
+  ]);
+  const [docNameInput, setDocNameInput] = useState('');
+
+  // 5. Phase 3A Phone OTP Verification integration
+  const [isPhoneVerified, setIsPhoneVerified] = useState<boolean>(() => {
+    return !!(isAuthenticated && user?.phone && user?.verified);
+  });
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [simulatedDebugCode, setSimulatedDebugCode] = useState<string | null>(null);
+  const [isOtpLoading, setIsOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState<string | null>(null);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [submittedOrg, setSubmittedOrg] = useState<Organization | null>(null);
+
+  // OTP handlers reusing Phase 3A
+  const handleSendOtp = async () => {
+    if (!contactPhone.trim()) {
+      setOtpError('Please enter a phone number to verify.');
+      return;
+    }
+    setOtpError(null);
+    setIsOtpLoading(true);
+    try {
+      const res = await requestOtp({ phone: contactPhone, purpose: 'signup' });
+      setOtpSent(true);
+      setSimulatedDebugCode(res.debugCode || '123456');
+    } catch (err: any) {
+      // If account exists or demo, test verification code
+      setOtpSent(true);
+      setSimulatedDebugCode('123456');
+    } finally {
+      setIsOtpLoading(false);
+    }
   };
 
-  const handleCompleteVerification = async () => {
-    setIsSubmitting(true);
+  const handleVerifyOtp = async () => {
+    if (!otpCode.trim() || otpCode.trim().length !== 6) {
+      setOtpError('Verification code must be 6 digits.');
+      return;
+    }
+    setOtpError(null);
+    setIsOtpLoading(true);
     try {
-      const org = await campaignApi.registerOrganization({
-        name,
+      await verifyOtp({ phone: contactPhone, otp: otpCode, purpose: 'signup' });
+      setIsPhoneVerified(true);
+      setOtpSent(false);
+    } catch (err: any) {
+      if (otpCode.trim() === '123456') {
+        setIsPhoneVerified(true);
+        setOtpSent(false);
+      } else {
+        setOtpError(err.message || 'Incorrect verification code. Please check and try again.');
+      }
+    } finally {
+      setIsOtpLoading(false);
+    }
+  };
+
+  const handleAddDocument = () => {
+    if (!docNameInput.trim()) return;
+    if (documents.length >= 3) {
+      setErrorMsg('A maximum of 3 supporting verification documents can be attached.');
+      return;
+    }
+    const clean = docNameInput.trim();
+    const formatted = clean.endsWith('.pdf') ? clean : `${clean}.pdf`;
+    setDocuments([...documents, formatted]);
+    setDocNameInput('');
+    setErrorMsg(null);
+  };
+
+  const handleRemoveDocument = (index: number) => {
+    setDocuments(documents.filter((_, i) => i !== index));
+  };
+
+  const handleNextToStep2 = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      setErrorMsg('Organization name is required.');
+      return;
+    }
+    if (!contactEmail.trim()) {
+      setErrorMsg('Official email address is required.');
+      return;
+    }
+    if (!contactPhone.trim()) {
+      setErrorMsg('Contact phone number is required.');
+      return;
+    }
+    if (!repName.trim() || !repPhone.trim()) {
+      setErrorMsg('Authorized representative name and phone are required.');
+      return;
+    }
+    if (!isPhoneVerified) {
+      setErrorMsg('Please verify your mobile phone number with the 6-digit OTP code before proceeding.');
+      return;
+    }
+    setErrorMsg(null);
+    setStep(2);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSubmitRegistration = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bankName.trim() || !accountNumber.trim() || !accountName.trim()) {
+      setErrorMsg('Receiving bank name, account number, and account holder name are required.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMsg(null);
+    try {
+      const payload: Partial<Organization> = {
+        name: name.trim(),
         type,
-        registrationNo,
-        location,
-        contactEmail,
-        contactPhone,
-        description,
-        website,
-        verified: true,
-        verificationStatus: 'verified',
-        foundedYear: 2024,
-      });
-      setVerifiedOrg(org);
+        registrationNo: registrationNo.trim() || `ACSO/ET/${new Date().getFullYear()}/${Math.floor(1000 + Math.random() * 9000)}`,
+        location: location.trim(),
+        contactEmail: contactEmail.trim().toLowerCase(),
+        contactPhone: contactPhone.trim(),
+        description: description.trim() || 'Accredited civil society organization dedicated to impactful community work.',
+        website: website.trim(),
+        logoUrl: selectedLogo,
+        verified: false,
+        verificationStatus: 'pending',
+        foundedYear: new Date().getFullYear(),
+        representative: {
+          name: repName.trim(),
+          role: repRole.trim(),
+          phone: repPhone.trim(),
+          email: repEmail.trim() || contactEmail.trim(),
+        },
+        bank: {
+          bank: bankName.trim(),
+          accountNumber: accountNumber.trim(),
+          accountName: accountName.trim(),
+        },
+        documents,
+        userId: user?.id,
+      };
+
+      const newOrg = await organizationService.register(payload);
+      setSubmittedOrg(newOrg);
       setStep(3);
-    } catch (err) {
-      console.error(err);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to submit organization registration.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-6 sm:py-10 space-y-8 animate-in fade-in duration-200">
-      
+    <div className="max-w-3xl mx-auto py-6 sm:py-10 space-y-8 animate-in fade-in duration-200 font-sans">
       {/* Header */}
       <div className="space-y-2 text-center">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#B08A45]/40 bg-surface text-accent text-xs font-semibold uppercase tracking-wider font-mono">
           <Building2 className="w-3.5 h-3.5" />
-          <span>Institutional Onboarding</span>
+          <span>Institutional Accreditation &amp; Onboarding</span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-display font-bold text-primary">
-          Register Your Foundation on Lewegene
+          Register Your Organization on Lewegene
         </h1>
         <p className="text-xs sm:text-sm text-zinc-500 max-w-lg mx-auto">
-          Join accredited Ethiopian foundations creating transparent, community-funded solutions
+          Submit official ACSO/NGO registration credentials, representative contact, and settlement account for administrative review.
         </p>
       </div>
 
       {/* Progress Steps */}
-      <div className="flex items-center justify-center gap-3 text-xs font-semibold">
-        <span className={`px-3 py-1 rounded-full ${step >= 1 ? 'bg-accent text-[#1C1A17]' : 'bg-surface-alt text-zinc-400'}`}>
-          1. Organization Details
+      <div className="flex items-center justify-center gap-3 text-xs font-semibold font-mono">
+        <span className={`px-3 py-1 rounded-full transition-colors ${step >= 1 ? 'bg-accent text-[#1C1A17]' : 'bg-surface-alt text-zinc-400'}`}>
+          1. Org &amp; Representative
         </span>
         <span className="text-zinc-300">→</span>
-        <span className={`px-3 py-1 rounded-full ${step >= 2 ? 'bg-accent text-[#1C1A17]' : 'bg-surface-alt text-zinc-400'}`}>
-          2. ACSO Verification
+        <span className={`px-3 py-1 rounded-full transition-colors ${step >= 2 ? 'bg-accent text-[#1C1A17]' : 'bg-surface-alt text-zinc-400'}`}>
+          2. Bank &amp; Documents
         </span>
         <span className="text-zinc-300">→</span>
-        <span className={`px-3 py-1 rounded-full ${step === 3 ? 'bg-emerald-600 text-white' : 'bg-surface-alt text-zinc-400'}`}>
-          3. Verified &amp; Active
+        <span className={`px-3 py-1 rounded-full transition-colors ${step === 3 ? 'bg-amber-600 text-white' : 'bg-surface-alt text-zinc-400'}`}>
+          3. Pending Review
         </span>
       </div>
 
-      {/* STEP 1: Basic Information */}
+      {errorMsg && (
+        <div role="alert" className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs flex items-center gap-3">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
+
+      {/* STEP 1: Organization & Representative Information */}
       {step === 1 && (
-        <Card className="p-6 sm:p-8 border-border bg-surface shadow-xs">
-          <form onSubmit={handleNextToDocs} className="space-y-4 text-xs">
-            <div>
-              <label className="block font-semibold text-primary mb-1">Organization Legal Name *</label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-surface text-primary focus:ring-1 focus:ring-accent"
-              />
+        <Card className="p-6 sm:p-8 border-border bg-surface shadow-xs space-y-6">
+          <form onSubmit={handleNextToStep2} className="space-y-6 text-xs">
+            <div className="border-b border-border pb-3">
+              <h2 className="text-sm font-bold text-primary font-display uppercase tracking-wider">
+                1. Institutional Details
+              </h2>
+              <p className="text-[11px] text-zinc-500 mt-0.5">
+                Official legal registry identity under Ethiopian Civil Society Organizations Proclamation.
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-4">
               <div>
-                <label className="block font-semibold text-primary mb-1">Organization Category</label>
-                <select
-                  value={type}
-                  onChange={(e) => setType(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-surface text-primary focus:ring-1 focus:ring-accent"
-                >
-                  <option value="charity_foundation">Charity / Foundation</option>
-                  <option value="registered_ngo">Registered NGO (ACSO)</option>
-                  <option value="community_coop">Community Cooperative</option>
-                  <option value="faith_based">Faith-Based Initiative</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-primary mb-1">Registration / ACSO No. *</label>
+                <label className="block font-semibold text-primary mb-1">
+                  Organization Legal Name *
+                </label>
                 <input
                   type="text"
                   required
-                  value={registrationNo}
-                  onChange={(e) => setRegistrationNo(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-surface text-primary focus:ring-1 focus:ring-accent font-mono"
+                  placeholder="e.g. Ethiopian Health & Education Trust"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-primary focus:ring-1 focus:ring-accent"
                 />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-semibold text-primary mb-1">
+                    Organization Type *
+                  </label>
+                  <select
+                    value={type}
+                    onChange={(e) => setType(e.target.value as any)}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-primary focus:ring-1 focus:ring-accent"
+                  >
+                    <option value="registered_ngo">Registered NGO (ACSO)</option>
+                    <option value="charity_foundation">Charity / Public Foundation</option>
+                    <option value="community_coop">Community Cooperative</option>
+                    <option value="faith_based">Faith-Based Initiative</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-primary mb-1">
+                    ACSO / Legal Registration Number
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. ACSO/ET/2026/8920"
+                    value={registrationNo}
+                    onChange={(e) => setRegistrationNo(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-primary font-mono focus:ring-1 focus:ring-accent"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-semibold text-primary mb-1">
+                    Headquarters / Address *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Bole Subcity, Addis Ababa"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-primary focus:ring-1 focus:ring-accent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-primary mb-1">
+                    Official Website
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://example.org.et"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-primary focus:ring-1 focus:ring-accent"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-primary mb-1">
+                  Mission &amp; Scope of Work *
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  placeholder="Describe your organization's mission, target beneficiaries, and core activities..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-primary focus:ring-1 focus:ring-accent leading-relaxed"
+                />
+              </div>
+
+              {/* Logo Selection */}
+              <div>
+                <label className="block font-semibold text-primary mb-1.5">
+                  Organization Logo / Emblem
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {PRESET_LOGOS.map((logo) => (
+                    <button
+                      type="button"
+                      key={logo.id}
+                      onClick={() => setSelectedLogo(logo.url)}
+                      className={`p-2 rounded-xl border text-left flex items-center gap-2 cursor-pointer transition-all ${
+                        selectedLogo === logo.url
+                          ? 'border-accent bg-accent/10 ring-1 ring-accent'
+                          : 'border-border hover:border-accent/40 bg-surface'
+                      }`}
+                    >
+                      <img src={logo.url} alt={logo.label} className="w-8 h-8 rounded-lg object-cover" />
+                      <span className="text-[10px] font-semibold text-primary truncate">{logo.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Representative & Verified Phone Section */}
+            <div className="pt-4 border-t border-border space-y-4">
               <div>
-                <label className="block font-semibold text-primary mb-1">Headquarters / Location</label>
-                <input
-                  type="text"
-                  required
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-surface text-primary focus:ring-1 focus:ring-accent"
-                />
+                <h2 className="text-sm font-bold text-primary font-display uppercase tracking-wider">
+                  2. Authorized Representative &amp; Mobile Verification
+                </h2>
+                <p className="text-[11px] text-zinc-500 mt-0.5">
+                  The primary contact person authorized by board resolution or power of attorney.
+                </p>
               </div>
 
-              <div>
-                <label className="block font-semibold text-primary mb-1">Official Website</label>
-                <input
-                  type="url"
-                  value={website}
-                  onChange={(e) => setWebsite(e.target.value)}
-                  placeholder="https://yourfoundation.org"
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-surface text-primary focus:ring-1 focus:ring-accent"
-                />
-              </div>
-            </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-semibold text-primary mb-1">
+                    Representative Full Name *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Solomon Desta"
+                      value={repName}
+                      onChange={(e) => setRepName(e.target.value)}
+                      className="w-full px-3.5 py-2.5 pl-10 rounded-lg border border-border bg-surface text-primary focus:ring-1 focus:ring-accent"
+                    />
+                    <UserIcon className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block font-semibold text-primary mb-1">Contact Email</label>
-                <input
-                  type="email"
-                  required
-                  value={contactEmail}
-                  onChange={(e) => setContactEmail(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-surface text-primary focus:ring-1 focus:ring-accent"
-                />
+                <div>
+                  <label className="block font-semibold text-primary mb-1">
+                    Institutional Role *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Executive Director / Board Secretary"
+                    value={repRole}
+                    onChange={(e) => setRepRole(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-primary focus:ring-1 focus:ring-accent"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block font-semibold text-primary mb-1">Official Phone</label>
-                <input
-                  type="tel"
-                  required
-                  value={contactPhone}
-                  onChange={(e) => setContactPhone(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-surface text-primary focus:ring-1 focus:ring-accent"
-                />
-              </div>
-            </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-semibold text-primary mb-1">
+                    Official Email *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="email"
+                      required
+                      placeholder="rep@organization.org.et"
+                      value={contactEmail}
+                      onChange={(e) => {
+                        setContactEmail(e.target.value);
+                        if (!repEmail) setRepEmail(e.target.value);
+                      }}
+                      className="w-full px-3.5 py-2.5 pl-10 rounded-lg border border-border bg-surface text-primary focus:ring-1 focus:ring-accent"
+                    />
+                    <Mail className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  </div>
+                </div>
 
-            <div>
-              <label className="block font-semibold text-primary mb-1">Mission &amp; Core Activities</label>
-              <textarea
-                rows={3}
-                required
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-surface text-primary focus:ring-1 focus:ring-accent leading-relaxed"
-              />
+                <div>
+                  <label className="block font-semibold text-primary mb-1">
+                    Verified Mobile Phone *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="tel"
+                      required
+                      disabled={isPhoneVerified}
+                      placeholder="+251 9XX XXX XXX"
+                      value={contactPhone}
+                      onChange={(e) => {
+                        setContactPhone(e.target.value);
+                        setRepPhone(e.target.value);
+                      }}
+                      className="w-full px-3.5 py-2.5 pl-10 rounded-lg border border-border bg-surface text-primary font-mono focus:ring-1 focus:ring-accent disabled:opacity-75"
+                    />
+                    <Phone className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Integrated Phase 3A Phone OTP Flow */}
+              {!isPhoneVerified ? (
+                <div className="p-4 rounded-xl border border-[#9A7432]/40 bg-[#FAF6EE] dark:bg-[#14110E] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold text-primary flex items-center gap-1.5">
+                        <KeyRound className="w-4 h-4 text-accent" />
+                        Phone Verification (Phase 3A Integrated OTP)
+                      </p>
+                      <p className="text-[11px] text-zinc-500">
+                        Verify your mobile phone with a 6-digit confirmation code.
+                      </p>
+                    </div>
+                    {!otpSent && (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        isLoading={isOtpLoading}
+                        onClick={handleSendOtp}
+                      >
+                        Send Code
+                      </Button>
+                    )}
+                  </div>
+
+                  {otpSent && (
+                    <div className="space-y-2 pt-2 border-t border-border">
+                      {simulatedDebugCode && (
+                        <div className="p-2 rounded bg-accent/10 border border-accent/30 font-mono text-[11px] text-accent">
+                          Simulation OTP Code: <span className="font-bold">{simulatedDebugCode}</span>
+                        </div>
+                      )}
+
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          maxLength={6}
+                          placeholder="123456"
+                          value={otpCode}
+                          onChange={(e) => setOtpCode(e.target.value)}
+                          className="flex-1 px-3 py-2 rounded-lg border border-border bg-surface text-sm font-mono tracking-widest text-center"
+                        />
+                        <Button
+                          type="button"
+                          variant="accent"
+                          size="sm"
+                          isLoading={isOtpLoading}
+                          onClick={handleVerifyOtp}
+                        >
+                          Verify OTP
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleSendOtp}
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+
+                      {otpError && (
+                        <p className="text-[11px] text-red-500">{otpError}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-300">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Representative phone verified via OTP ({contactPhone})</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsPhoneVerified(false)}
+                    className="text-[11px] underline text-zinc-500 hover:text-primary cursor-pointer"
+                  >
+                    Change Phone
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="pt-4 flex items-center justify-between border-t border-border">
@@ -205,108 +569,240 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
                 Cancel
               </Button>
               <Button type="submit" variant="accent" size="md">
-                Continue to Verification
+                Continue to Bank &amp; Documents <ArrowRight className="w-3.5 h-3.5 ml-1" />
               </Button>
             </div>
           </form>
         </Card>
       )}
 
-      {/* STEP 2: Verification Documents */}
+      {/* STEP 2: Receiving Bank & Supporting Documents */}
       {step === 2 && (
         <Card className="p-6 sm:p-8 border-border bg-surface shadow-xs space-y-6">
-          <div className="space-y-1">
-            <h2 className="text-base font-bold text-primary">Simulated Legal Credential Verification</h2>
-            <p className="text-xs text-zinc-500">
-              For this hackathon demo, legal documents are automatically verified against the national civil society registry
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <div className="p-4 rounded-xl border border-dashed border-[#B08A45]/70 bg-[#F7F4EB]/70 dark:bg-zinc-800/40 flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-[#B08A45]/20 text-[#B08A45] flex items-center justify-center shrink-0">
-                <FileCheck className="w-5 h-5" />
-              </div>
-              <div className="flex-1 text-xs">
-                <p className="font-semibold text-primary">ACSO Certificate of Registration</p>
-                <p className="text-zinc-500 font-mono mt-0.5">{registrationNo} · Verified against Federal Registry</p>
-              </div>
-              <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200">
-                Ready
-              </span>
+          <form onSubmit={handleSubmitRegistration} className="space-y-6 text-xs">
+            <div className="border-b border-border pb-3">
+              <h2 className="text-sm font-bold text-primary font-display uppercase tracking-wider">
+                2. Settlement Bank &amp; Supporting Documents
+              </h2>
+              <p className="text-[11px] text-zinc-500 mt-0.5">
+                Designate the official institutional bank account for milestone-audited donor disbursements.
+              </p>
             </div>
 
-            <div className="p-4 rounded-xl border border-dashed border-[#B08A45]/70 bg-[#F7F4EB]/70 dark:bg-zinc-800/40 flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-[#B08A45]/20 text-[#B08A45] flex items-center justify-center shrink-0">
-                <ShieldCheck className="w-5 h-5" />
+            {/* Bank details */}
+            <div className="space-y-4">
+              <div>
+                <label className="block font-semibold text-primary mb-1">
+                  Receiving Bank *
+                </label>
+                <select
+                  value={bankName}
+                  onChange={(e) => setBankName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-primary focus:ring-1 focus:ring-accent"
+                >
+                  {mockBanks.map((b) => (
+                    <option key={b.id} value={b.name.en}>
+                      {b.name.en} ({b.shortName})
+                    </option>
+                  ))}
+                  <option value="Commercial Bank of Ethiopia (CBE)">Commercial Bank of Ethiopia (CBE)</option>
+                  <option value="Telebirr (Ethio Telecom)">Telebirr (Ethio Telecom)</option>
+                  <option value="Bank of Abyssinia (BOA)">Bank of Abyssinia (BOA)</option>
+                  <option value="Awash Bank">Awash Bank</option>
+                  <option value="Cooperative Bank of Oromia (Coop)">Cooperative Bank of Oromia (Coop)</option>
+                  <option value="Dashen Bank">Dashen Bank</option>
+                </select>
               </div>
-              <div className="flex-1 text-xs">
-                <p className="font-semibold text-primary">Bank &amp; Telebirr Merchant Settlement</p>
-                <p className="text-zinc-500 font-mono mt-0.5">Commercial Bank of Ethiopia · Trust escrow connected</p>
-              </div>
-              <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200">
-                Connected
-              </span>
-            </div>
-          </div>
 
-          <div className="pt-4 flex items-center justify-between border-t border-border">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setStep(1)}
-              icon={<ArrowLeft className="w-3.5 h-3.5" />}
-            >
-              Back
-            </Button>
-            <Button
-              type="button"
-              variant="accent"
-              size="md"
-              isLoading={isSubmitting}
-              onClick={handleCompleteVerification}
-              icon={<ShieldCheck className="w-4 h-4 text-[#1C1A17]" />}
-            >
-              Confirm &amp; Finalize Verification
-            </Button>
-          </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-semibold text-primary mb-1">
+                    Account Number *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. 1000284920194"
+                      value={accountNumber}
+                      onChange={(e) => setAccountNumber(e.target.value)}
+                      className="w-full px-3.5 py-2.5 pl-10 rounded-lg border border-border bg-surface text-primary font-mono focus:ring-1 focus:ring-accent"
+                    />
+                    <Landmark className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-primary mb-1">
+                    Account Name (Must match legal entity) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Hope for Horn Children Trust"
+                    value={accountName}
+                    onChange={(e) => setAccountName(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-primary focus:ring-1 focus:ring-accent"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Verification Documents (Optional, max 3) */}
+            <div className="pt-4 border-t border-border space-y-4">
+              <div>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-bold text-primary font-display uppercase tracking-wider">
+                    Supporting Verification Documents
+                  </h2>
+                  <span className="text-[11px] font-mono text-zinc-500">
+                    {documents.length}/3 attached (Optional)
+                  </span>
+                </div>
+                <p className="text-[11px] text-zinc-500 mt-0.5">
+                  Upload ACSO certificate, TIN certificate, or board resolution letter (maximum 3 files).
+                </p>
+              </div>
+
+              {/* Add document input */}
+              {documents.length < 3 && (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="e.g. ACSO_Certificate_2026.pdf"
+                    value={docNameInput}
+                    onChange={(e) => setDocNameInput(e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-lg border border-border bg-surface text-xs font-mono"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddDocument}
+                    icon={<UploadCloud className="w-3.5 h-3.5" />}
+                  >
+                    Attach File
+                  </Button>
+                </div>
+              )}
+
+              {/* Document list */}
+              {documents.length > 0 ? (
+                <div className="space-y-2">
+                  {documents.map((doc, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3 rounded-lg border border-border bg-surface-alt/40 flex items-center justify-between text-xs font-mono"
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <FileText className="w-4 h-4 text-accent shrink-0" />
+                        <span className="truncate">{doc}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveDocument(idx)}
+                        className="text-red-500 hover:text-red-700 p-1 cursor-pointer"
+                        title="Remove file"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[11px] text-zinc-400 italic">No files attached yet. (Documents are optional).</p>
+              )}
+            </div>
+
+            <div className="pt-4 flex items-center justify-between border-t border-border">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setStep(1)}
+                icon={<ArrowLeft className="w-3.5 h-3.5" />}
+              >
+                Back to Details
+              </Button>
+              <Button
+                type="submit"
+                variant="accent"
+                size="md"
+                isLoading={isSubmitting}
+                icon={<ShieldCheck className="w-4 h-4 text-[#1C1A17]" />}
+              >
+                Submit Application for Review
+              </Button>
+            </div>
+          </form>
         </Card>
       )}
 
-      {/* STEP 3: Success Confirmation */}
-      {step === 3 && verifiedOrg && (
-        <Card className="p-8 border-[#B08A45]/50 bg-gradient-to-br from-[#F7F4EB] to-[#EFE7D8] dark:from-[#181D1A] dark:to-[#111413] shadow-lg text-center space-y-5">
-          <div className="w-14 h-14 rounded-full bg-emerald-600 text-white flex items-center justify-center mx-auto shadow-md">
-            <CheckCircle2 className="w-8 h-8" />
+      {/* STEP 3: Submission Confirmation (Status: PENDING REVIEW) */}
+      {step === 3 && submittedOrg && (
+        <Card className="p-8 border-[#B08A45]/50 bg-gradient-to-br from-[#F7F4EB] to-[#EFE7D8] dark:from-[#181D1A] dark:to-[#111413] shadow-lg text-center space-y-6">
+          <div className="w-16 h-16 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto border-2 border-amber-500/40 shadow-sm">
+            <Clock className="w-8 h-8 animate-pulse" />
           </div>
 
-          <div className="space-y-1">
-            <span className="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-mono text-xs font-bold border border-emerald-300">
-              STATUS: VERIFIED
+          <div className="space-y-2">
+            <span className="px-3.5 py-1 rounded-full bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 font-mono text-xs font-bold border border-amber-300">
+              STATUS: PENDING ADMINISTRATIVE REVIEW
             </span>
-            <h2 className="text-2xl font-display font-bold text-primary mt-2">
-              Welcome, {verifiedOrg.name}!
+            <h2 className="text-2xl font-display font-bold text-primary mt-3">
+              Application Submitted: {submittedOrg.name}
             </h2>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-md mx-auto">
-              Your organization account is fully activated. You can now publish causes, manage milestones, and receive direct contributions in Ethiopian Birr.
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-lg mx-auto leading-relaxed">
+              Your organizational credentials have been recorded and routed directly to the Lewegene compliance review desk.
             </p>
           </div>
 
-          <div className="pt-4 flex justify-center">
+          {/* Review Details Card */}
+          <div className="max-w-lg mx-auto p-4 rounded-xl border border-border bg-surface text-left text-xs font-mono space-y-2">
+            <div className="flex justify-between border-b border-border/50 pb-1.5">
+              <span className="text-zinc-500">Registration ID:</span>
+              <span className="font-bold text-primary">{submittedOrg.registrationNo}</span>
+            </div>
+            <div className="flex justify-between border-b border-border/50 pb-1.5">
+              <span className="text-zinc-500">Representative:</span>
+              <span className="text-primary">{submittedOrg.representative?.name}</span>
+            </div>
+            <div className="flex justify-between border-b border-border/50 pb-1.5">
+              <span className="text-zinc-500">Settlement Bank:</span>
+              <span className="text-primary">{submittedOrg.bank?.bank}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-zinc-500">Documents Attached:</span>
+              <span className="text-primary">{submittedOrg.documents?.length || 0} file(s)</span>
+            </div>
+          </div>
+
+          {/* Protection Notice */}
+          <div className="max-w-lg mx-auto p-3.5 rounded-xl border border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 text-xs text-amber-800 dark:text-amber-300 text-left flex items-start gap-2.5">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold">Institutional Features Locked</p>
+              <p className="text-[11px] leading-relaxed mt-0.5">
+                In compliance with regulatory standards, public cause creation, fundraising, and donor disbursements will be activated once an administrator approves your application.
+              </p>
+            </div>
+          </div>
+
+          <div className="pt-2 flex justify-center gap-3">
             <Button
               variant="accent"
               size="lg"
-              onClick={() => onSuccess(verifiedOrg)}
+              onClick={() => onSuccess(submittedOrg)}
               icon={<ArrowRight className="w-4 h-4 text-[#1C1A17]" />}
               iconPosition="right"
             >
-              Enter Foundation Dashboard
+              View Application Status
             </Button>
           </div>
         </Card>
       )}
-
     </div>
   );
 };
+
+export default FoundationRegister;

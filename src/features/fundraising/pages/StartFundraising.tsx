@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Card } from '../components/bn.tsx';
-import { ArrowRight, AlertCircle } from 'lucide-react';
+import { ArrowRight, AlertCircle, ShieldAlert, Clock } from 'lucide-react';
 import { useMyFundraisers } from '../hooks/useMyFundraisers.ts';
 import type { FundraiserStatus } from '../types/fundraiser.types.ts';
 import type { PageProps } from '../FundraisingApp.tsx';
+import { useAuthStore } from '../../auth/store/auth.store.ts';
+import { organizationService } from '../../../services/organizationService.ts';
+import type { OrganizationVerificationStatus } from '../../../types/index.ts';
 
 const NEEDS = [
   ['Your story and a goal', 'Who needs help, how much, and by when.'],
@@ -18,16 +21,68 @@ export const StartFundraising: React.FC<PageProps> = ({ go }) => {
   const drafts = data.filter((f) => f.status === 'draft').length;
   const activeFundraiser = data.find((f) => ACTIVE_INCOMPLETE_STATUSES.includes(f.status));
 
+  const user = useAuthStore((state) => state.user);
+  const [orgStatus, setOrgStatus] = useState<OrganizationVerificationStatus | null>(null);
+  const [orgName, setOrgName] = useState<string>('');
+
+  useEffect(() => {
+    if (user?.role === 'foundation') {
+      organizationService.list().then((orgs) => {
+        const myOrg = orgs.find(
+          (o) =>
+            o.id === user.organizationId ||
+            (user.email && o.contactEmail?.toLowerCase() === user.email.toLowerCase()) ||
+            o.userId === user.id
+        );
+        if (myOrg) {
+          setOrgStatus(myOrg.verificationStatus);
+          setOrgName(myOrg.name);
+        } else {
+          setOrgStatus('pending');
+          setOrgName(user.organizationName || 'Organization');
+        }
+      });
+    }
+  }, [user]);
+
+  const isOrgRestricted = user?.role === 'foundation' && orgStatus && orgStatus !== 'approved';
+
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <h1 className="text-3xl font-serif font-black uppercase text-[#14110E] dark:text-[#F4EFE6]">Start a fundraiser</h1>
+        <h1 className="text-3xl font-serif font-black uppercase text-[#14110E] dark:text-[#F4EFE6]">
+          Start a fundraiser
+        </h1>
         <p className="text-sm text-zinc-500 max-w-xl">
           Tell your story and raise support from people who want to help. We review every fundraiser before it goes live.
         </p>
       </div>
 
-      {activeFundraiser && (
+      {/* Organization Verification Guard */}
+      {isOrgRestricted && (
+        <div className="p-4 border-2 border-amber-600/60 bg-[#FAF6EC] dark:bg-[#161411] space-y-2 font-mono">
+          <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+            {orgStatus === 'pending' ? <Clock className="w-4 h-4 animate-pulse" /> : <ShieldAlert className="w-4 h-4" />}
+            <span className="font-serif font-bold text-sm text-[#14110E] dark:text-[#F4EFE6] uppercase">
+              Organization Verification Required
+            </span>
+          </div>
+          <p className="text-xs text-zinc-600 dark:text-zinc-400">
+            Your organization (&ldquo;{orgName}&rdquo;) is currently{' '}
+            <span className="font-bold underline uppercase">
+              {orgStatus === 'pending'
+                ? 'pending administrative review'
+                : orgStatus === 'needs_changes'
+                ? 'awaiting requested changes'
+                : 'not approved'}
+            </span>
+            . Under platform governance, organizations cannot launch fundraisers or collect donor contributions until verified by an administrator.
+          </p>
+        </div>
+      )}
+
+      {/* Active Fundraiser Rule (Phase 2 constraint) */}
+      {!isOrgRestricted && activeFundraiser && (
         <div className="p-4 border-2 border-[#9A7432]/50 bg-[#FAF6EC] dark:bg-[#161411] space-y-2">
           <div className="flex items-center gap-2 text-[#9A7432]">
             <AlertCircle className="w-4 h-4" />
@@ -61,13 +116,21 @@ export const StartFundraising: React.FC<PageProps> = ({ go }) => {
       <div className="flex flex-wrap gap-3">
         <Button
           size="lg"
-          onClick={() => go({ name: 'form' })}
+          disabled={!!isOrgRestricted}
+          onClick={() => {
+            if (isOrgRestricted) return;
+            go({ name: 'form' });
+          }}
           icon={<ArrowRight className="w-4 h-4" />}
           iconPosition="right"
         >
-          {activeFundraiser ? 'Create draft fundraiser' : 'Start a fundraiser'}
+          {isOrgRestricted
+            ? 'Fundraising locked (Org Pending)'
+            : activeFundraiser
+            ? 'Create draft fundraiser'
+            : 'Start a fundraiser'}
         </Button>
-        {drafts > 0 && (
+        {drafts > 0 && !isOrgRestricted && (
           <Button size="lg" variant="outline" onClick={() => go({ name: 'drafts' })}>
             Continue a draft ({drafts})
           </Button>
@@ -76,4 +139,3 @@ export const StartFundraising: React.FC<PageProps> = ({ go }) => {
     </div>
   );
 };
-

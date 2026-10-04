@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -29,6 +29,10 @@ import { DemoRoleSwitcher } from './features/auth/components/DemoRoleSwitcher.ts
 import { DEMO_ACCOUNTS, DEMO_SESSION_TOKEN, type DemoRole } from './features/auth/data/demoAccounts.ts';
 import { useAuthStore } from './features/auth/store/auth.store.ts';
 import { LANGUAGE_CHANGED_EVENT } from './i18n/config.ts';
+import { FoundationRegister } from './pages/FoundationRegister.tsx';
+import { FoundationDashboard } from './pages/FoundationDashboard.tsx';
+import { OrganizationProfile } from './pages/OrganizationProfile.tsx';
+import { organizationService } from './services/organizationService.ts';
 
 export type AppView =
   | 'campaigns'
@@ -248,6 +252,11 @@ function PlatformApp({
     },
     autoApprove: boolean
   ) => {
+    if (currentOrganization && currentOrganization.verificationStatus !== 'approved') {
+      showToast('Cannot publish cause: Organization is pending review or unapproved.', 'info');
+      throw new Error('Organization must be verified before publishing a cause.');
+    }
+
     const created = await campaignApi.createCampaign(
       {
         ...payload,
@@ -403,7 +412,7 @@ function PlatformApp({
         isAuthenticated={isAuthenticated}
         canAccessFoundation={user?.role === 'foundation' || user?.role === 'admin'}
         onRequireLogin={() => navigate('/login')}
-        onFoundationAccessDenied={() => navigate('/signup')}
+        onFoundationAccessDenied={() => navigate('/organizations/register')}
         onDonate={handleDonate}
         onApproveCampaign={handleAdminApprove}
         onRejectCampaign={handleAdminReject}
@@ -547,6 +556,116 @@ function DemoEntryRoute() {
   return <div className="grid min-h-screen place-items-center bg-[#F7F2E7] font-mono text-xs uppercase tracking-widest text-[#1E4D38] dark:bg-[#12100E] dark:text-[#52B788]">Opening local demo workspace…</div>;
 }
 
+function OrganizationRegisterRoute() {
+  const navigate = useNavigate();
+  return (
+    <div className="min-h-screen bg-[#F2ECE1] dark:bg-[#080706] text-[#201C18] dark:text-[#F4EFE6] px-4 py-8">
+      <FoundationRegister
+        onSuccess={(org) => navigate(`/organizations/${org.id}`)}
+        onCancel={() => navigate('/')}
+      />
+    </div>
+  );
+}
+
+function OrganizationProfileRoute() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [org, setOrg] = useState<Organization | null>(null);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      organizationService.getById(id || ''),
+      campaignApi.getAllCampaigns(),
+    ]).then(([foundOrg, allCampaigns]) => {
+      setOrg(foundOrg);
+      setCampaigns(allCampaigns);
+      setLoading(false);
+    });
+  }, [id]);
+
+  if (loading) {
+    return <div className="p-12 text-center font-mono text-xs">Loading organization profile...</div>;
+  }
+
+  if (!org) {
+    return (
+      <div className="p-12 text-center font-mono text-xs space-y-4">
+        <p>Organization not found.</p>
+        <button onClick={() => navigate('/')} className="underline cursor-pointer">Back to home</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#F2ECE1] dark:bg-[#080706] text-[#201C18] dark:text-[#F4EFE6] px-4 py-8">
+      <OrganizationProfile
+        organization={org}
+        campaigns={campaigns}
+        onBack={() => navigate('/')}
+        onSelectCampaign={(c) => navigate(`/causes/${c.id}`)}
+      />
+    </div>
+  );
+}
+
+function FoundationDeskRoute() {
+  const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+  const [org, setOrg] = useState<Organization | null>(null);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    organizationService.list().then(async (orgList) => {
+      const myOrg =
+        orgList.find(
+          (o) =>
+            o.id === user?.organizationId ||
+            (user?.email && o.contactEmail?.toLowerCase() === user.email.toLowerCase()) ||
+            o.userId === user?.id
+        ) || orgList[0];
+      setOrg(myOrg || null);
+      const camps = await campaignApi.getAllCampaigns();
+      setCampaigns(camps);
+      setLoading(false);
+    });
+  }, [user]);
+
+  if (loading) {
+    return <div className="p-12 text-center font-mono text-xs">Loading foundation workspace...</div>;
+  }
+
+  if (!org) {
+    return (
+      <div className="min-h-screen bg-[#F2ECE1] dark:bg-[#080706] text-[#201C18] dark:text-[#F4EFE6] px-4 py-8 text-center font-mono text-xs space-y-4">
+        <p>No organization found.</p>
+        <button onClick={() => navigate('/organizations/register')} className="underline cursor-pointer">
+          Register an organization
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#F2ECE1] dark:bg-[#080706] text-[#201C18] dark:text-[#F4EFE6] px-4 py-8">
+      <FoundationDashboard
+        organization={org}
+        campaigns={campaigns}
+        onSelectCampaign={(c) => navigate(`/causes/${c.id}`)}
+        onCreateCampaign={() => navigate('/fundraise')}
+        onManageCampaign={(c) => navigate(`/causes/${c.id}`)}
+        onViewContributions={() => navigate('/contributions')}
+        onViewImpact={() => navigate('/impact')}
+        onViewProfile={() => navigate(`/organizations/${org.id}`)}
+        onOrganizationUpdated={(updated) => setOrg(updated)}
+      />
+    </div>
+  );
+}
+
 export default function App() {
   const firstCampaign = INITIAL_CAMPAIGNS.find((campaign) => campaign.status === 'approved');
 
@@ -563,6 +682,9 @@ export default function App() {
           <Route path="/admin/*" element={<AdminRoute />} />
           <Route path="/login" element={<PlatformApp authMode="login" />} />
           <Route path="/signup" element={<PlatformApp authMode="signup" />} />
+          <Route path="/organizations/register" element={<OrganizationRegisterRoute />} />
+          <Route path="/organizations/:id" element={<OrganizationProfileRoute />} />
+          <Route path="/foundation" element={<FoundationDeskRoute />} />
           <Route path="/fundraise" element={<FundraisingApp />} />
           <Route path="/fundraising" element={<FundraisingApp />} />
           <Route

@@ -1,8 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { donationApi } from '../api/donation.api';
+import { donationService } from '../../../services/donationService';
 import {
   CreateDonationPayload,
   SubmitReferencePayload,
+  SubmitReceiptPayload,
   DonationSubmitPayload,
 } from '../types/donation.types';
 import { CAMPAIGNS_QUERY_KEY } from '../../campaigns/hooks/useCampaigns';
@@ -86,6 +88,28 @@ export const useSubmitPaymentReference = () => {
 
 // Keep the old name as an alias for backward compatibility
 export const useSubmitReference = useSubmitPaymentReference;
+
+/**
+ * Primary flow: Submits a payment receipt link to Links.et verification gateway.
+ */
+export const useSubmitReceiptVerification = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      donationId,
+      payload,
+    }: {
+      donationId: string;
+      payload: SubmitReceiptPayload;
+    }) => donationService.submitReceiptVerification(donationId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: CAMPAIGNS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: DONATIONS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: CERTIFICATES_QUERY_KEY });
+    },
+  });
+};
 
 /**
  * Admin fallback: manually confirm a donation.

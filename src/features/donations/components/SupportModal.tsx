@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Campaign } from '../../campaigns/types/campaign.types';
 import { useDonationStore, SupportFlowStep } from '../store/donation.store';
-import { useBanks, useCreateDonation, useSubmitReference } from '../hooks/useDonations';
+import {
+  useBanks,
+  useCreateDonation,
+  useSubmitReceiptVerification,
+} from '../hooks/useDonations';
 import { getBankById } from '../data/banks.data';
 import { DonationAmountSelector } from './DonationAmountSelector';
 import { DonorInfoForm } from './DonorInfoForm';
@@ -10,7 +14,7 @@ import { BankSelector } from './BankSelector';
 import { BankAccountDetails } from './BankAccountDetails';
 import { PaymentReferenceForm } from './PaymentReferenceForm';
 import { DonationConfirmation } from './DonationConfirmation';
-import { X, ArrowLeft, ArrowRight, ShieldCheck } from 'lucide-react';
+import { X, ArrowLeft, ArrowRight, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { Donation } from '../types/donation.types';
 
 interface SupportModalProps {
@@ -48,6 +52,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
     donorMessage,
     selectedBankId,
     reference,
+    receiptUrl,
     proofUrl,
     createdDonation,
     setStep,
@@ -59,19 +64,22 @@ export const SupportModal: React.FC<SupportModalProps> = ({
     setDonorMessage,
     setSelectedBankId,
     setReference,
+    setReceiptUrl,
     setProofUrl,
     setCreatedDonation,
     resetWizard,
   } = useDonationStore();
 
   const createDonationMutation = useCreateDonation();
-  const submitReferenceMutation = useSubmitReference();
+  const submitReceiptMutation = useSubmitReceiptVerification();
+  const [flowError, setFlowError] = useState<string | null>(null);
 
   const selectedBank = getBankById(selectedBankId) || banks[0];
 
   // Advance from Bank Selection to Account Details
   const handleProceedToAccountDetails = async () => {
     if (!selectedBank) return;
+    setFlowError(null);
     try {
       // Create pending donation in backend / state
       const res = await createDonationMutation.mutateAsync({
@@ -87,20 +95,27 @@ export const SupportModal: React.FC<SupportModalProps> = ({
       setCreatedDonation(res);
       setStep(4);
     } catch (err: any) {
-      alert(err.message || 'Failed to initialize donation record');
+      setFlowError(err.message || 'Failed to initialize donation record');
     }
   };
 
-  // Submit reference code
-  const handleSubmitReference = async () => {
+  // Submit payment receipt link for verification (primary flow)
+  const handleSubmitReceiptVerification = async (submittedUrl?: string) => {
     if (!createdDonation) return;
+    const targetUrl = (submittedUrl || receiptUrl || '').trim();
+    if (!targetUrl) {
+      setFlowError('Please paste your payment receipt link to continue.');
+      return;
+    }
+    setFlowError(null);
     try {
-      const updated = await submitReferenceMutation.mutateAsync({
+      const updated = await submitReceiptMutation.mutateAsync({
         donationId: createdDonation.id,
         payload: {
           donationId: createdDonation.id,
-          reference: reference.trim(),
+          receiptUrl: targetUrl,
           proofUrl,
+          reference: reference.trim() || undefined,
         },
       });
 
@@ -110,11 +125,12 @@ export const SupportModal: React.FC<SupportModalProps> = ({
         onDonationRecorded(updated);
       }
     } catch (err: any) {
-      alert(err.message || 'Failed to submit payment reference');
+      setFlowError(err.message || 'Failed to verify and record payment receipt');
     }
   };
 
   const handleClose = () => {
+    setFlowError(null);
     resetWizard();
     onClose();
   };
@@ -151,7 +167,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
                 { s: 2, label: '2. DONOR INFO' },
                 { s: 3, label: '3. BANK' },
                 { s: 4, label: '4. ACCOUNT' },
-                { s: 5, label: '5. REFERENCE' },
+                { s: 5, label: '5. RECEIPT LINK' },
                 { s: 6, label: '6. CONFIRMED' },
               ].map((item) => (
                 <div
@@ -173,6 +189,12 @@ export const SupportModal: React.FC<SupportModalProps> = ({
 
         {/* Modal Scrollable Body */}
         <div className="p-5 sm:p-8 overflow-y-auto flex-1 bg-[#FFFDF9] dark:bg-[#12100E]">
+          {flowError && (
+            <div role="alert" className="mb-4 p-3 rounded-[1px] border border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-300 text-xs font-mono flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              <span>{flowError}</span>
+            </div>
+          )}
           {/* STEP 1: CHOOSE AMOUNT */}
           {step === 1 && (
             <div className="space-y-6">
@@ -295,18 +317,20 @@ export const SupportModal: React.FC<SupportModalProps> = ({
             />
           )}
 
-          {/* STEP 5: PAYMENT REFERENCE SUBMISSION */}
+          {/* STEP 5: PAYMENT RECEIPT LINK VERIFICATION */}
           {step === 5 && (
             <PaymentReferenceForm
               bank={selectedBank}
               amount={amount}
               donorName={isAnonymous ? 'Anonymous Patron' : (donorName || 'Anonymous Patron')}
+              receiptUrl={receiptUrl}
               reference={reference}
               proofUrl={proofUrl}
-              isSubmitting={submitReferenceMutation.isPending}
+              isSubmitting={submitReceiptMutation.isPending}
+              onChangeReceiptUrl={setReceiptUrl}
               onChangeReference={setReference}
               onChangeProofUrl={setProofUrl}
-              onSubmit={handleSubmitReference}
+              onSubmit={handleSubmitReceiptVerification}
               onBack={() => setStep(4)}
             />
           )}

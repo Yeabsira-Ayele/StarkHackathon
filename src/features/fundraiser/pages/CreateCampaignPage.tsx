@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Send } from 'lucide-react';
+import { ArrowLeft, Send, AlertCircle } from 'lucide-react';
 import { fundraiserSchema, FundraiserSchemaData } from '../schemas/fundraiser.schema';
 import { fundraiserApi } from '../api/fundraiser.api';
 import { CAMPAIGN_CATEGORIES } from '../../campaigns/data/categories.data';
@@ -19,6 +19,7 @@ export const CreateCampaignPage: React.FC<CreateCampaignPageProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const currentLang = (i18n.language as 'am' | 'en' | 'om') || 'am';
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
     register,
@@ -34,11 +35,12 @@ export const CreateCampaignPage: React.FC<CreateCampaignPageProps> = ({
   });
 
   const onSubmit = async (data: FundraiserSchemaData) => {
+    setSubmitError(null);
     try {
       const created = await fundraiserApi.publishProject(data);
       onCreated(created);
     } catch (e: any) {
-      alert(e.message || 'Creation failed');
+      setSubmitError(e.message || 'Creation failed');
     }
   };
 
@@ -71,6 +73,12 @@ export const CreateCampaignPage: React.FC<CreateCampaignPageProps> = ({
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 font-mono text-xs">
+          {submitError && (
+            <div role="alert" className="p-3 border border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-300 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{submitError}</span>
+            </div>
+          )}
           {/* Title */}
           <div>
             <label className="block font-bold uppercase text-[#14110E] dark:text-[#F4EFE6] mb-1">

@@ -119,6 +119,8 @@ export interface DonatePayload {
   donorName?: string;
   message?: string;
   paymentRail?: PaymentRail;
+  receiptUrl?: string;
+  transactionReference?: string;
 }
 
 export interface DonateResponse {

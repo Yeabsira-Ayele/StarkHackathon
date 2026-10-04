@@ -72,7 +72,21 @@
       "impact": "ተጽዕኖ",
       "communities": "ማኅበረሰቦች",
       "voxide": "Voxide"
-    }
+    },
+    "toggleTheme": "ገጽታ ቀይር (ብርሃን / ጨለማ)",
+    "openProfileMenu": "የመገለጫ ምናሌ ክፈት",
+    "profileOptions": "የመገለጫ አማራጮች",
+    "speakVoxide": "ከVoxide የድምፅ ረዳት ጋር ይነጋገሩ",
+    "profileMenuTitle": "መገለጫ፡ {{name}}",
+    "editMyProfile": "መገለጫዬን አስተካክል",
+    "logout": "ውጣ",
+    "backToHome": "ወደ ዋና ገጽ ተመለስ",
+    "backToExplore": "ወደ ማሰሻ ተመለስ",
+    "returnToCampaign": "ወደ ዘመቻው ተመለስ",
+    "orgDashboard": "የድርጅት ማዕከል",
+    "adminPortal": "የአስተዳዳሪ ኮንሶል",
+    "myProfile": "የእኔ መገለጫ",
+    "mainSite": "ዋና ጣቢያ"
   },
   "campaigns": {
     "title": "የተረጋገጡ የሕዝብ ምክንያቶች",
@@ -107,10 +121,10 @@
     "settling": "በብሎክቼይን እየተረጋገጠ ነው...",
     "certificateTitle": "የዜግነት ትብብር ምስክር ወረቀት",
     "certificateDesc": "በብሔራዊ ዲጂታል ማህደር የተመዘገበ ኦፊሴላዊ የልገሳ ማስረጃ",
-    "donorInfoDesc": "ለአካባቢው የሙከራ መዝገብ ስም ያክሉ ወይም ስም-አልባ ለመሆን ይምረጡ።",
+    "donorInfoDesc": "ለይፋዊው የልገሳ መዝገብና የምስክር ወረቀት ስምዎን ያስገቡ ወይም ስም-አልባ ለመሆን ይምረጡ።",
     "donorNamePlaceholder": "ለምሳሌ፡ አልማዝ በቀለ",
     "anonymousHint": "ስምዎ በሕዝብ ለጋሽ ዝርዝር ወይም በምክንያት መዝገብ ላይ አይታይም።",
-    "emailLabel": "የኢሜይል አድራሻ (አማራጭ፤ አይላክም)",
+    "emailLabel": "የኢሜይል አድራሻ (አማራጭ)",
     "emailPlaceholder": "ለምሳሌ፡ donor@gmail.com",
     "emailHint": "አማራጭ። የዲጂታል ደረሰኝ እና የማረጋገጫ መረጃዎችን በቀጥታ ያግኙ።",
     "messagePlaceholder": "ለተጠቃሚው የማበረታቻ ቃል ወይም ጸሎት ይጻፉ...",
@@ -118,7 +132,8 @@
     "currencyLabel": "ገንዘብ፦ ብር (የኢትዮጵያ ብር)",
     "selected": "✓ ተመርጧል",
     "customAmountPlaceholder": "ለምሳሌ፡ 2500",
-    "minimumDemo": "አነስተኛው የልገሳ መጠን {{min}} ብር ነው።"
+    "minimumDemo": "አነስተኛው የልገሳ መጠን {{min}} ብር ነው።",
+    "minimumContribution": "አነስተኛው የልገሳ መጠን {{min}} ብር ነው። 100% ልገሳዎ በቀጥታ ለምክንያቱ ይውላል።"
   },
   "fundraiser": {
     "title": "አዲስ ማኅበራዊ ፕሮጀክት ይመዝግቡ",

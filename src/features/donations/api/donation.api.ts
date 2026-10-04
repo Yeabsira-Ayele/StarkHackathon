@@ -57,7 +57,7 @@ function toDonation(
     anonymous: !donation.donorId,
     message: donation.message,
     bankId: bank?.id || 'bank_telebirr',
-    bankName: bank?.shortName || 'Demo payment option',
+    bankName: bank?.shortName || 'Direct Escrow',
     accountNumber: bank?.accountNumber,
     reference: reference || donation.transactionReference,
     status: donation.paymentStatus === 'completed' ? 'confirmed' : 'pending',
@@ -129,7 +129,7 @@ export const donationApi = {
       throw new Error('Contribution amount must be at least 50 ETB.');
     }
     const bank = mockBanks.find((item) => item.id === payload.bankId);
-    if (!bank) throw new Error('Choose one of the available demo payment options.');
+    if (!bank) throw new Error('Choose one of the available payment options.');
     await new Promise((resolve) => setTimeout(resolve, 180));
     const donation: Donation = {
       id: `local-donation-${crypto.randomUUID()}`,

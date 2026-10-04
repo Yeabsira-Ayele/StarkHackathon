@@ -166,9 +166,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme,
           </section>
         ))}
       </div>
-      <div className="hidden shrink-0 border-t border-[var(--admin-border)] p-3 xl:block">
-        <button type="button" onClick={onExit} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[var(--admin-muted)] transition-colors hover:bg-[var(--admin-green)]/5 hover:text-[var(--admin-green)]">
-          <ExternalLink className="h-4 w-4" /> {t('admin.nav.viewPublicSite', 'View public site')}
+      <div className="shrink-0 border-t border-[var(--admin-border)] p-3">
+        <button
+          type="button"
+          onClick={onExit}
+          title={t('admin.nav.viewPublicSite', 'View public site')}
+          className="flex w-full items-center justify-center xl:justify-start gap-2 rounded-md px-3 py-2 text-sm text-[var(--admin-muted)] transition-colors hover:bg-[var(--admin-green)]/5 hover:text-[var(--admin-green)] cursor-pointer"
+        >
+          <ExternalLink className="h-4 w-4 shrink-0" />
+          <span className="md:hidden xl:inline">{t('admin.nav.viewPublicSite', 'View public site')}</span>
         </button>
       </div>
     </nav>
@@ -224,6 +230,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme,
             </div>
 
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+              <button
+                type="button"
+                onClick={onExit}
+                title={t('admin.nav.viewPublicSite', 'View public site')}
+                className="inline-flex h-9 items-center gap-1.5 rounded-md border border-[var(--admin-border)] bg-[var(--admin-cream)] px-2.5 font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--admin-ink)] transition-colors hover:bg-[var(--admin-green)]/10 hover:text-[var(--admin-green)] cursor-pointer"
+              >
+                <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                <span>{t('nav.mainSite', 'Main Site')}</span>
+              </button>
               <LanguageSwitcher variant="admin" />
               <div className="relative">
                 <button type="button" onClick={() => { setBellOpen((open) => !open); setProfileOpen(false); }} title="Notifications" aria-label="Notifications" aria-expanded={bellOpen} className="relative grid h-9 w-9 place-items-center rounded-md border border-[var(--admin-border)] hover:bg-[var(--admin-green)]/10">
@@ -288,7 +303,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme,
             ) : !snap ? (
               <div className="rounded-md border border-[var(--admin-border)] bg-[var(--admin-card)] p-6">
                 <h1 className="font-serif text-2xl font-bold">No admin data available</h1>
-                <p className="mt-2 text-sm text-[var(--admin-muted)]">Try refreshing the local demo workspace.</p>
+                <p className="mt-2 text-sm text-[var(--admin-muted)]">Try refreshing the admin workspace.</p>
                 <button type="button" onClick={() => void store.actions.refresh()} className="mt-4 rounded-md bg-[var(--admin-green)] px-4 py-2 text-sm font-semibold text-white">Refresh data</button>
               </div>
             ) : (

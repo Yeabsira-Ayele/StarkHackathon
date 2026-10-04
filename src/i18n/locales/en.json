@@ -78,7 +78,14 @@
     "speakVoxide": "Speak with Voxide Voice Assistant",
     "profileMenuTitle": "Profile: {{name}}",
     "editMyProfile": "Edit My Profile",
-    "logout": "Logout"
+    "logout": "Logout",
+    "backToHome": "Back to Home",
+    "backToExplore": "Back to Explore",
+    "returnToCampaign": "Return to Campaign",
+    "orgDashboard": "Organization Hub",
+    "adminPortal": "Admin Console",
+    "myProfile": "My Profile",
+    "mainSite": "Main Site"
   },
   "campaigns": {
     "title": "Verified Civic Causes",
@@ -113,10 +120,10 @@
     "settling": "Settling On-Chain...",
     "certificateTitle": "Digital Solidarity Certificate",
     "certificateDesc": "Official immutable record minted to the National Civic Repository",
-    "donorInfoDesc": "Add a name for the local prototype record or choose to remain anonymous.",
+    "donorInfoDesc": "Enter your name for your official contribution certificate or choose to remain anonymous.",
     "donorNamePlaceholder": "e.g. Almaz Bekele",
     "anonymousHint": "Your name will not appear on the public donor roll or cause ledger.",
-    "emailLabel": "Email Address (optional; not sent)",
+    "emailLabel": "Email Address (optional)",
     "emailPlaceholder": "e.g. donor@gmail.com",
     "emailHint": "Optional. Receive digital receipts and milestone verification updates directly.",
     "messagePlaceholder": "Write words of encouragement or a prayer for the beneficiary...",
@@ -124,7 +131,8 @@
     "currencyLabel": "Currency: ETB (Ethiopian Birr)",
     "selected": "✓ SELECTED",
     "customAmountPlaceholder": "e.g. 2500",
-    "minimumDemo": "Minimum contribution is {{min}} ETB."
+    "minimumDemo": "Minimum contribution is {{min}} ETB.",
+    "minimumContribution": "Minimum contribution is {{min}} ETB. 100% of your contribution goes directly to the cause."
   },
   "fundraiser": {
     "title": "Publish Social Project",

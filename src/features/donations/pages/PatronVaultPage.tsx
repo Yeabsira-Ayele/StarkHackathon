@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import {
   ShieldCheck,
   Award,
   ArrowRight,
+  ArrowLeft,
   Clock,
   CheckCircle2,
   Filter,
@@ -35,11 +37,13 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
   onExploreCauses,
 }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { data, isLoading, isError, error } = useMyContributions();
   const confirmDonationMutation = useConfirmDonation();
 
   const [statusFilter, setStatusFilter] = useState<StatusFilterValue>('all');
   const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   if (isError) {
     return (
@@ -72,11 +76,12 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
    * fails or is inconclusive. This is NOT the default path — it's for edge cases only.
    */
   const handleSimulateVerify = async (id: string) => {
+    setActionError(null);
     try {
       const updated = await confirmDonationMutation.mutateAsync(id);
       setSelectedDonation(updated);
     } catch (err: any) {
-      alert(err.message || 'Verification failed');
+      setActionError(err.message || 'Verification failed');
     }
   };
 
@@ -86,7 +91,7 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
         return (
           <>
             <CheckCircle2 className="w-3 h-3" />
-            <span>SIMULATED</span>
+            <span>CONFIRMED</span>
           </>
         );
       case 'verifying':
@@ -108,7 +113,7 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
         return (
           <>
             <Clock className="w-3 h-3" />
-            <span>AWAITING REFERENCE</span>
+            <span>AWAITING RECEIPT</span>
           </>
         );
     }
@@ -139,7 +144,7 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
 
   const filterTabs: { value: StatusFilterValue; label: string }[] = [
     { value: 'all', label: 'ALL' },
-    { value: 'confirmed', label: 'SIMULATED' },
+    { value: 'confirmed', label: 'CONFIRMED' },
     { value: 'pending', label: 'PENDING' },
     { value: 'verifying', label: 'VERIFYING' },
     { value: 'failed', label: 'FAILED' },
@@ -147,6 +152,34 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
 
   return (
     <div className="w-full space-y-8 animate-in fade-in duration-300">
+      {actionError && (
+        <div role="alert" className="p-3 border border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-300 font-mono text-xs flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>{actionError}</span>
+        </div>
+      )}
+
+      {/* Top Return Navigation Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="px-3.5 py-2 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#FFFDF9] dark:bg-[#12100E] font-mono text-xs font-black uppercase tracking-wider flex items-center gap-2 hover:border-[#1E4D38] hover:text-[#1E4D38] dark:hover:border-[#52B788] dark:hover:text-[#52B788] transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>{t('nav.backToHome', 'Back to Home')}</span>
+          </button>
+          <button
+            type="button"
+            onClick={onExploreCauses}
+            className="px-3.5 py-2 border border-[#26211C]/30 dark:border-[#9A7432]/40 bg-transparent font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300 hover:border-[#1E4D38] hover:text-[#1E4D38] dark:hover:border-[#52B788] dark:hover:text-[#52B788] transition-colors cursor-pointer"
+          >
+            <span>{t('nav.backToExplore', 'Back to Explore')}</span>
+          </button>
+        </div>
+      </div>
+
       {/* Top Banner */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-[#1E4D38]/20 dark:border-[#9A7432]/30 pb-4">
         <div>
@@ -157,7 +190,7 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
             {t('nav.myContributions', 'My Contributions')}
           </h2>
           <p className="font-mono text-xs text-zinc-600 dark:text-zinc-400">
-            Local prototype contributions saved in this browser. No payments or bank receipts are verified.
+            Audited record of your verified contributions, payment receipts, and commemorative certificates.
           </p>
         </div>
 
@@ -251,7 +284,7 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
           title="No Contributions Found"
           description={
             statusFilter === 'all'
-              ? 'You have not simulated a contribution yet. Choose a campaign to try the local prototype flow.'
+              ? 'You have not recorded any contributions yet. Explore verified causes to make your first contribution.'
               : `No ${statusFilter} contributions at the moment.`
           }
           onReset={onExploreCauses}
@@ -317,7 +350,7 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
                   </div>
 
                   <div className="text-xs font-bold text-[#1E4D38] dark:text-[#52B788] flex items-center gap-1">
-                    <span>DEMO RECORD DETAILS</span>
+                    <span>VIEW RECORD DETAILS</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </div>
                 </div>

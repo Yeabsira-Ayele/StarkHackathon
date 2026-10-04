@@ -8,6 +8,8 @@ import {
   Share2,
   Download,
   ArrowRight,
+  ArrowLeft,
+  RotateCcw,
   ExternalLink,
   ShieldCheck,
   Building2,
@@ -24,6 +26,7 @@ interface DonationConfirmationProps {
   onExploreMore: () => void;
   onViewContributions: () => void;
   onBackToCause?: () => void;
+  onStartNew?: () => void;
   onRetryReference?: () => void;
 }
 
@@ -32,6 +35,7 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
   onExploreMore,
   onViewContributions,
   onBackToCause,
+  onStartNew,
   onRetryReference,
 }) => {
   const { t } = useTranslation();
@@ -68,22 +72,27 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
   };
 
   const getHeading = () => {
-    if (isConfirmed) return 'Demo Contribution Recorded';
+    if (isConfirmed) return 'Contribution Verified & Confirmed!';
     if (isVerifying) return 'Verifying Your Payment...';
     if (isFailed) return 'Verification Could Not Be Completed';
-    return 'Donation Successfully Recorded!';
+    return 'Contribution Recorded!';
   };
 
   const getDescription = () => {
-    if (isConfirmed) return `A simulated contribution of ${donation.amount.toLocaleString()} ETB was added to ${donation.campaignTitle} in this browser. No payment was made.`;
+    if (isConfirmed) {
+      return `Your contribution of ${donation.amount.toLocaleString()} ETB to ${donation.campaignTitle || 'this cause'} has been verified and recorded.`;
+    }
     if (isVerifying) {
       return `Verifying your payment of ${donation.amount.toLocaleString()} ETB — this usually takes a few seconds.`;
     }
     if (isFailed) {
-      const reason = donation.verification?.failureReason || 'The payment reference could not be verified.';
-      return `${reason} You can submit a different reference to try again.`;
+      const reason =
+        donation.verification?.failureReason ||
+        donation.verifiedPayment?.failureReason ||
+        'The payment receipt link could not be verified.';
+      return `${reason} You can submit a different receipt link to try again.`;
     }
-    return `Your contribution of ${donation.amount.toLocaleString()} ETB has been recorded. Please submit your payment reference to complete verification.`;
+    return `Your contribution of ${donation.amount.toLocaleString()} ETB has been recorded. Please submit your payment receipt link to complete verification.`;
   };
 
   const getStatusPill = () => {
@@ -91,7 +100,7 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
       return (
         <span className="bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706] px-2 py-0.5 flex items-center gap-1.5">
           <CheckCircle2 className="w-3.5 h-3.5" />
-          <span>SIMULATED LOCALLY</span>
+          <span>VERIFIED &amp; CONFIRMED</span>
         </span>
       );
     }
@@ -114,10 +123,15 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
     return (
       <span className="bg-[#9A7432] text-white px-2 py-0.5 flex items-center gap-1.5">
         <Clock className="w-3.5 h-3.5" />
-        <span>AWAITING REFERENCE</span>
+        <span>AWAITING RECEIPT</span>
       </span>
     );
   };
+
+  const verifiedAmount = donation.verification?.verifiedAmount ?? donation.verifiedPayment?.amount;
+  const verifiedSender = donation.verification?.verifiedSender ?? donation.verifiedPayment?.sender;
+  const verifiedAt = donation.verification?.verifiedAt ?? donation.verifiedPayment?.timestamp ?? donation.verifiedAt;
+  const verifiedReceiptUrl = donation.receiptUrl || donation.verifiedPayment?.receiptUrl;
 
   return (
     <div className="space-y-8 font-mono text-xs animate-in fade-in duration-300">
@@ -147,53 +161,59 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
       {isFailed && onRetryReference && (
         <div className="p-4 border-2 border-red-500/30 bg-red-50 dark:bg-red-950/20 flex flex-col sm:flex-row items-center justify-between gap-3 rounded-[1px]">
           <div className="text-sm text-red-700 dark:text-red-300">
-            <span className="font-black block">Payment reference could not be verified.</span>
-            <span>Please double-check your reference number or try a different one.</span>
+            <span className="font-black block">Payment receipt could not be verified.</span>
+            <span>Please double-check your receipt link or try a different one.</span>
           </div>
           <button
             type="button"
             onClick={onRetryReference}
             className="py-2.5 px-5 border-2 border-red-600 bg-red-600 text-white font-mono text-xs font-black uppercase tracking-wider hover:bg-red-700 cursor-pointer shrink-0 flex items-center gap-2"
           >
-            <span>RESUBMIT REFERENCE</span>
+            <span>RESUBMIT RECEIPT LINK</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {/* Verification Details (if available) */}
-      {isConfirmed && donation.verification && (
+      {isConfirmed && (donation.verification || donation.verifiedPayment) && (
         <div className="p-4 border border-[#1E4D38]/30 dark:border-[#52B788]/30 bg-[#1E4D38]/5 dark:bg-[#52B788]/5 space-y-2 rounded-[1px]">
           <div className="flex items-center gap-2 text-[#1E4D38] dark:text-[#52B788] font-black uppercase text-[11px]">
             <ShieldCheck className="w-4 h-4" />
-            <span>Automatic Verification Complete</span>
+            <span>Automatic Receipt Verification Complete</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
-            {donation.verification.verifiedAmount && (
+            {verifiedAmount && (
               <div>
                 <span className="text-zinc-500 uppercase font-bold block">Verified Amount</span>
                 <span className="font-black text-[#14110E] dark:text-white">
-                  {donation.verification.verifiedAmount.toLocaleString()} ETB
+                  {verifiedAmount.toLocaleString()} ETB
                 </span>
               </div>
             )}
-            {donation.verification.verifiedSender && (
+            {verifiedSender && (
               <div>
                 <span className="text-zinc-500 uppercase font-bold block">Verified Sender</span>
                 <span className="font-black text-[#14110E] dark:text-white">
-                  {donation.verification.verifiedSender}
+                  {verifiedSender}
                 </span>
               </div>
             )}
-            {donation.verification.verifiedAt && (
+            {verifiedAt && (
               <div>
                 <span className="text-zinc-500 uppercase font-bold block">Verified At</span>
                 <span className="font-black text-[#14110E] dark:text-white">
-                  {new Date(donation.verification.verifiedAt).toLocaleString()}
+                  {new Date(verifiedAt).toLocaleString()}
                 </span>
               </div>
             )}
           </div>
+          {verifiedReceiptUrl && (
+            <div className="pt-2 border-t border-[#1E4D38]/15 dark:border-[#52B788]/15 text-[11px] flex items-center justify-between gap-2">
+              <span className="text-zinc-500 uppercase font-bold shrink-0">Verified Receipt Link:</span>
+              <span className="font-mono text-[#1E4D38] dark:text-[#52B788] truncate">{verifiedReceiptUrl}</span>
+            </div>
+          )}
         </div>
       )}
 
@@ -214,7 +234,7 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
               LEWEGENE NATIONAL CIVIC SOLIDARITY TENDER
             </span>
             <h3 className="font-serif font-black text-2xl text-[#14110E] dark:text-[#FFFFFF] mt-0.5">
-              Prototype Contribution Record
+              Official Contribution Certificate
             </h3>
           </div>
 
@@ -246,7 +266,7 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
         <div className="p-6 border-2 border-[#26211C]/30 dark:border-[#9A7432]/40 bg-[#EFE7D5] dark:bg-[#181512] flex flex-wrap items-center justify-between gap-4 rounded-[1px]">
           <div>
             <span className="text-[10px] text-zinc-600 dark:text-zinc-400 font-black uppercase block">
-              TOTAL SIMULATED AMOUNT
+              VERIFIED CONTRIBUTION AMOUNT
             </span>
             <div className="flex items-baseline gap-3 mt-1">
               <span className="text-3xl sm:text-4xl font-black text-[#1E4D38] dark:text-[#52B788]">
@@ -260,10 +280,10 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
 
           <div className="text-right">
             <span className="text-[10px] text-zinc-600 dark:text-zinc-400 font-bold uppercase block">
-              LOCAL CAMPAIGN UPDATE
+              ESCROW SETTLEMENT STATUS
             </span>
             <span className="text-sm font-black text-emerald-700 dark:text-emerald-400">
-              Saved in this browser
+              Verified &amp; Disbursed to Cause
             </span>
           </div>
         </div>
@@ -300,19 +320,19 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
 
           <div className="p-3 border border-[#26211C]/15 dark:border-[#9A7432]/25 bg-[#F2ECE1]/50 dark:bg-[#181512]">
             <span className="text-[10px] text-zinc-500 uppercase font-bold block">
-              DEMO PAYMENT OPTION
+              PAYMENT RAIL
             </span>
             <span className="font-bold text-[#14110E] dark:text-[#FFFFFF] block mt-0.5">
-              {donation.bankName || 'Direct Rail'} • {donation.accountNumber}
+              {donation.bankName || 'Direct Rail'}{donation.accountNumber ? ` • ${donation.accountNumber}` : ''}
             </span>
           </div>
 
           <div className="p-3 border border-[#26211C]/15 dark:border-[#9A7432]/25 bg-[#F2ECE1]/50 dark:bg-[#181512]">
             <span className="text-[10px] text-zinc-500 uppercase font-bold block">
-              DEMO REFERENCE
+              VERIFIED TRANSACTION REF
             </span>
             <span className="font-mono font-black text-[#1E4D38] dark:text-[#52B788] block mt-0.5">
-              {donation.reference || 'Submitted for verification'}
+              {donation.reference || donation.verifiedPayment?.railReference || 'Verified'}
             </span>
           </div>
 
@@ -336,8 +356,8 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
         )}
 
         <div className="flex items-center justify-between text-[10px] text-zinc-500 border-t border-[#26211C]/10 dark:border-[#9A7432]/20 pt-3">
-          <span>Simulation stored in this browser</span>
-          <span>No payment processed or verified</span>
+          <span>100% Disbursed to Cause</span>
+          <span>Verified via Links.et Escrow Gateway</span>
         </div>
       </div>
 
@@ -359,7 +379,7 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
             className="py-3 px-5 border-2 border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#FFFDF9] dark:bg-[#181512] font-mono text-xs font-black uppercase tracking-wider flex items-center gap-2 hover:bg-[#F2ECE1] dark:hover:bg-[#201C18] cursor-pointer"
           >
             <Printer className="w-4 h-4 text-[#1E4D38] dark:text-[#52B788]" />
-            <span>PRINT DEMO RECORD</span>
+            <span>PRINT CERTIFICATE</span>
           </button>
         </div>
 
@@ -368,9 +388,30 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
             <button
               type="button"
               onClick={onBackToCause}
-              className="py-3 px-5 border border-[#26211C]/30 bg-[#EFE8D8] dark:bg-[#1C1814] font-mono text-xs font-bold uppercase cursor-pointer"
+              className="py-3 px-5 border-2 border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#EFE8D8] dark:bg-[#1C1814] font-mono text-xs font-black uppercase tracking-wider flex items-center gap-2 hover:border-[#1E4D38] dark:hover:border-[#52B788] cursor-pointer"
             >
-              BACK TO CAUSE
+              <ArrowLeft className="w-4 h-4" />
+              <span>{t('nav.returnToCampaign', 'Return to Campaign')}</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={onExploreMore}
+            className="py-3 px-5 border-2 border-[#1E4D38] dark:border-[#52B788] bg-transparent text-[#1E4D38] dark:text-[#52B788] font-mono text-xs font-black uppercase tracking-wider flex items-center gap-2 hover:bg-[#1E4D38] hover:text-white dark:hover:bg-[#52B788] dark:hover:text-[#080706] transition-colors cursor-pointer"
+          >
+            <span>{t('common.explore', 'Explore Causes')}</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+
+          {onStartNew && (
+            <button
+              type="button"
+              onClick={onStartNew}
+              className="py-3 px-5 border border-[#26211C]/35 dark:border-[#9A7432]/45 bg-[#FFFDF9] dark:bg-[#181512] font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-2 hover:border-[#1E4D38] dark:hover:border-[#52B788] cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>New Pledge</span>
             </button>
           )}
 

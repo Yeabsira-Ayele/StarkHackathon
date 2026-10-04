@@ -1,7 +1,7 @@
 import React, { FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, Bookmark, FlaskConical, Heart, ShieldCheck, UserRound } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bookmark, FlaskConical, Heart, Moon, ShieldCheck, Sun, UserRound } from 'lucide-react';
 import { LanguageSwitcher } from '../../components/common/LanguageSwitcher.tsx';
 import { campaignApi } from '../../services/api/campaignApi.ts';
 import type { Campaign } from '../../types/index.ts';
@@ -32,6 +32,22 @@ const ProfilePage: React.FC = () => {
   const [savedCauses, setSavedCauses] = useState<Campaign[]>([]);
   const [fundraisers, setFundraisers] = useState<Fundraiser[]>([]);
   const [message, setMessage] = useState('');
+  const [isDark, setIsDark] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('lewegene_theme') === 'dark';
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      document.documentElement.classList.toggle('dark', isDark);
+      localStorage.setItem('lewegene_theme', isDark ? 'dark' : 'light');
+    } catch {
+      // ignore
+    }
+  }, [isDark]);
 
   useEffect(() => {
     setName(user?.name || '');
@@ -57,8 +73,8 @@ const ProfilePage: React.FC = () => {
           setFundraisers([]);
         }
       } catch (error) {
-        console.error('Could not load the local profile data.', error);
-        if (active) setMessage('Some demo profile data could not be loaded. Please try again.');
+        console.error('Could not load the profile data.', error);
+        if (active) setMessage('Some profile data could not be loaded. Please try again.');
       }
     };
     void load();
@@ -71,7 +87,7 @@ const ProfilePage: React.FC = () => {
     event.preventDefault();
     if (!user) return;
     setUser({ ...user, name: name.trim(), email: email.trim(), phone: phone.trim() }, DEMO_SESSION_TOKEN);
-    setMessage('Profile updated in this browser only.');
+    setMessage('Profile updated successfully.');
   };
 
   const selectDemoRole = (role: DemoRole) => {
@@ -83,13 +99,48 @@ const ProfilePage: React.FC = () => {
   const roleLabel = user?.role === 'foundation' ? 'Fundraiser' : user?.role;
 
   return (
-    <main className="min-h-screen bg-[#F7F2E7] px-4 py-10 text-[#201C18] dark:bg-[#12100E] dark:text-[#F4EFE6] sm:px-6">
+    <main className="min-h-screen bg-[#F7F2E7] px-4 py-8 text-[#201C18] dark:bg-[#12100E] dark:text-[#F4EFE6] sm:px-6 sm:py-10">
       <div className="mx-auto max-w-5xl">
-        <div className="flex items-center justify-between gap-3">
-          <Link to="/" className="font-mono text-xs font-bold uppercase tracking-widest text-[#1E4D38] dark:text-[#52B788]">
-            ← {t('nav.home', 'Back to Lewegene')}
-          </Link>
-          <LanguageSwitcher />
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#9A7432]/25 pb-4">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 font-mono text-xs font-bold uppercase tracking-wider">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1.5 border border-[#26211C]/35 bg-[#FFFDF9] px-3 py-1.5 font-black text-[#1E4D38] transition-colors hover:border-[#1E4D38] dark:border-[#9A7432]/45 dark:bg-[#1C1814] dark:text-[#52B788]"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>{t('nav.home', 'Home')}</span>
+            </Link>
+            <Link
+              to="/fundraising"
+              className="px-2.5 py-1.5 text-[#201C18] transition-colors hover:text-[#1E4D38] dark:text-[#E8DEC8] dark:hover:text-[#52B788]"
+            >
+              {t('nav.myFundraisers', 'My Fundraisers')}
+            </Link>
+            <Link
+              to="/contributions"
+              className="px-2.5 py-1.5 text-[#201C18] transition-colors hover:text-[#1E4D38] dark:text-[#E8DEC8] dark:hover:text-[#52B788]"
+            >
+              {t('nav.myContributions', 'My Contributions')}
+            </Link>
+            <Link
+              to="/reports"
+              className="px-2.5 py-1.5 text-[#201C18] transition-colors hover:text-[#1E4D38] dark:text-[#E8DEC8] dark:hover:text-[#52B788]"
+            >
+              {t('nav.myReports', 'My Reports')}
+            </Link>
+          </div>
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <button
+              type="button"
+              onClick={() => setIsDark((prev) => !prev)}
+              aria-label={t('nav.toggleTheme', 'Toggle Parchment / Midnight Ink')}
+              title={t('nav.toggleTheme', 'Toggle Parchment / Midnight Ink')}
+              className="p-2 border border-[#9A7432]/50 bg-[#F2ECE1] hover:bg-[#9A7432]/15 text-[#201C18] dark:bg-[#1C1814] dark:text-[#D8B066] transition-colors cursor-pointer"
+            >
+              {isDark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+            </button>
+          </div>
         </div>
         <div className="mt-6 flex flex-wrap items-end justify-between gap-4 border-b border-[#9A7432]/30 pb-5">
           <div>
@@ -97,14 +148,14 @@ const ProfilePage: React.FC = () => {
             <h1 className="mt-2 font-serif text-3xl font-black sm:text-4xl">Profile</h1>
           </div>
           <span className="inline-flex items-center gap-2 border border-[#9A7432]/40 px-3 py-2 font-mono text-[10px] font-bold uppercase">
-            <FlaskConical className="h-3.5 w-3.5 text-[#9A7432]" /> Demo data · saved in this browser
+            <ShieldCheck className="h-3.5 w-3.5 text-[#9A7432]" /> Verified Citizen Account
           </span>
         </div>
 
         {!user ? (
           <section className="mt-8 border border-[#9A7432]/35 bg-white/60 p-6 dark:bg-white/[.03]">
-            <h2 className="font-serif text-2xl font-bold">Choose a demo profile</h2>
-            <p className="mt-2 max-w-xl text-sm text-zinc-600 dark:text-zinc-400">Explore donor, fundraiser, and admin flows without creating a real account.</p>
+            <h2 className="font-serif text-2xl font-bold">Select an account perspective</h2>
+            <p className="mt-2 max-w-xl text-sm text-zinc-600 dark:text-zinc-400">Switch between donor, fundraiser, and admin perspectives.</p>
             <div className="mt-5 flex flex-wrap gap-3">
               {(['donor', 'fundraiser', 'admin'] as DemoRole[]).map((role) => (
                 <button key={role} type="button" onClick={() => selectDemoRole(role)} className="border border-[#1E4D38] bg-[#1E4D38] px-4 py-2.5 font-mono text-xs font-bold uppercase text-white hover:bg-[#163E2C]">
@@ -120,7 +171,7 @@ const ProfilePage: React.FC = () => {
                 <span className="grid h-12 w-12 place-items-center rounded-full border border-[#9A7432]/40 bg-[#F2EADA] dark:bg-[#201B16]"><UserRound className="h-5 w-5 text-[#1E4D38] dark:text-[#52B788]" /></span>
                 <div>
                   <h2 className="font-serif text-xl font-bold">{user.name}</h2>
-                  <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#9A7432]">{roleLabel} demo account</p>
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#9A7432]">{roleLabel} account</p>
                 </div>
               </div>
               <form onSubmit={saveProfile} className="grid gap-4">

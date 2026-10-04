@@ -553,7 +553,7 @@ function DemoEntryRoute() {
     navigate(destination, { replace: true });
   }, [navigate, roleParam, setUser]);
 
-  return <div className="grid min-h-screen place-items-center bg-[#F7F2E7] font-mono text-xs uppercase tracking-widest text-[#1E4D38] dark:bg-[#12100E] dark:text-[#52B788]">Opening local demo workspace…</div>;
+  return <div className="grid min-h-screen place-items-center bg-[#F7F2E7] font-mono text-xs uppercase tracking-widest text-[#1E4D38] dark:bg-[#12100E] dark:text-[#52B788]">Opening workspace…</div>;
 }
 
 function OrganizationRegisterRoute() {
@@ -640,17 +640,22 @@ function FoundationDeskRoute() {
 
   if (!org) {
     return (
-      <div className="min-h-screen bg-[#F2ECE1] dark:bg-[#080706] text-[#201C18] dark:text-[#F4EFE6] px-4 py-8 text-center font-mono text-xs space-y-4">
+      <div className="min-h-screen bg-[#F2ECE1] dark:bg-[#080706] text-[#201C18] dark:text-[#F4EFE6] px-4 sm:px-6 py-8 text-center font-mono text-xs space-y-4">
         <p>No organization found.</p>
-        <button onClick={() => navigate('/organizations/register')} className="underline cursor-pointer">
-          Register an organization
-        </button>
+        <div className="flex items-center justify-center gap-4">
+          <button onClick={() => navigate('/')} className="underline cursor-pointer">
+            ← Back to Home
+          </button>
+          <button onClick={() => navigate('/organizations/register')} className="underline cursor-pointer">
+            Register an organization
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F2ECE1] dark:bg-[#080706] text-[#201C18] dark:text-[#F4EFE6] px-4 py-8">
+    <div className="min-h-screen bg-[#F2ECE1] dark:bg-[#080706] text-[#201C18] dark:text-[#F4EFE6] px-4 sm:px-6 py-8">
       <FoundationDashboard
         organization={org}
         campaigns={campaigns}
@@ -661,6 +666,7 @@ function FoundationDeskRoute() {
         onViewImpact={() => navigate('/impact')}
         onViewProfile={() => navigate(`/organizations/${org.id}`)}
         onOrganizationUpdated={(updated) => setOrg(updated)}
+        onBack={() => navigate('/')}
       />
     </div>
   );
@@ -693,8 +699,10 @@ export default function App() {
           />
           <Route path="/donations/:id" element={<CauseRoute mode="pledge" />} />
           <Route path="/contributions" element={<PlatformApp initialMode="vault" />} />
+          <Route path="/my-donations" element={<PlatformApp initialMode="vault" />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/reports" element={<MyReportsPage />} />
+          <Route path="/my-reports" element={<MyReportsPage />} />
           <Route path="/demo" element={<ProfilePage />} />
           <Route path="/demo/:role" element={<DemoEntryRoute />} />
           <Route path="/impact" element={<PlatformApp initialMode="impact" />} />

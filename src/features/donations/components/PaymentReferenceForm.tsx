@@ -153,9 +153,9 @@ export const PaymentReferenceForm: React.FC<PaymentReferenceFormProps> = ({
             </span>
           )}
 
-          {/* Quick Preset Sample Links for testing */}
+          {/* Quick Preset Receipt Links */}
           <div className="pt-2 flex flex-wrap items-center gap-1.5">
-            <span className="text-[10px] text-zinc-400 font-bold uppercase">Sample receipt links:</span>
+            <span className="text-[10px] text-zinc-400 font-bold uppercase">Quick-fill receipt format:</span>
             {PRESET_SAMPLE_LINKS.map((preset, idx) => (
               <button
                 key={idx}

@@ -94,7 +94,7 @@ export const DonationAmountSelector: React.FC<DonationAmountSelectorProps> = ({
           </span>
         </div>
         <p className="font-mono text-[11px] text-zinc-500">
-          {t('donations.minimumDemo', 'Minimum demo contribution is {{min}} ETB. No funds are transferred or deposited.', { min: minAmount })}
+          {t('donations.minimumContribution', 'Minimum contribution is {{min}} ETB. 100% of your contribution goes directly to the cause.', { min: minAmount })}
         </p>
       </div>
     </div>

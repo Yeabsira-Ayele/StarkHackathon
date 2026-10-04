@@ -34,7 +34,7 @@ export const AdminDonations: React.FC = () => {
 
   return (
     <div>
-      <SectionHeader title="Donations" subtitle="Donations are verified manually: Pending, Admin Verification, Confirmed." actions={<SearchBox value={q} onChange={setQ} placeholder="Search donor, cause, reference…" />} />
+      <SectionHeader title="Donations" subtitle="Donations are verified via digital receipt links, with admin review for pending or disputed records." actions={<SearchBox value={q} onChange={setQ} placeholder="Search donor, cause, reference…" />} />
       <FilterTabs value={tab} onChange={(t) => setTab(t as any)} tabs={TABS.map((t) => ({ id: t, label: t === 'all' ? 'All' : t[0].toUpperCase() + t.slice(1), count: t === 'all' ? s.donations.length : s.donations.filter((d) => d.status === t).length }))} />
 
       {rows.length === 0 ? (

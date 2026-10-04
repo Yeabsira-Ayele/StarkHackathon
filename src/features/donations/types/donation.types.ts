@@ -38,6 +38,7 @@ export interface VerifiedReceiptData {
   railReference: string;
   receiptUrl: string;
   paymentRail?: PaymentRail;
+  railName?: string;
   networkMessage: string;
   failureReason?: string;
 }

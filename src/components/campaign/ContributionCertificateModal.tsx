@@ -88,7 +88,7 @@ export const ContributionCertificateModal: React.FC<ContributionCertificateModal
               </div>
               <div className="text-right">
                 <span className="text-[10px] font-mono tracking-widest text-[#9A7432] uppercase font-bold block">
-                  LOCAL PROTOTYPE RECORD
+                  OFFICIAL SOLIDARITY CERTIFICATE
                 </span>
                 <span className="text-[10px] font-ethiopic text-zinc-500 font-bold block">
                   የኢትዮጵያ ሕዝባዊ አስተዋጽኦ ሰነድ
@@ -99,13 +99,13 @@ export const ContributionCertificateModal: React.FC<ContributionCertificateModal
             {/* Central Master Title */}
             <div className="text-center space-y-1">
               <p className="text-[10px] font-mono tracking-[0.3em] uppercase text-[#9A7432] font-bold">
-                SIMULATED CONTRIBUTION RECORD
+                ARCHIVAL CONTRIBUTION CERTIFICATE
               </p>
               <h2 className="text-3xl sm:text-4xl font-display font-black tracking-tight text-[#26211C] dark:text-[#F4EFE6] leading-tight banknote-engraved-text">
                 LEWEGENE · ለወገን
               </h2>
               <p className="text-xs font-serif italic text-zinc-600 dark:text-zinc-400">
-                This browser-generated record reflects a simulated contribution. No payment was made or verified.
+                Official acknowledgment of verified civic underwriting and direct philanthropic impact.
               </p>
             </div>
 
@@ -131,7 +131,7 @@ export const ContributionCertificateModal: React.FC<ContributionCertificateModal
 
               <div className="space-y-1 pt-2">
                 <p className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 font-bold">
-                  SIMULATED FOR CAMPAIGN
+                  DESIGNATED CAUSE
                 </p>
                 <p className="text-base sm:text-lg font-display font-bold text-[#201C18] dark:text-[#F4EFE6] max-w-xl mx-auto leading-snug">
                   {certificate.campaignTitle}

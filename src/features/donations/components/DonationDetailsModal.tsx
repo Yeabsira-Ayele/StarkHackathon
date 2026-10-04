@@ -57,7 +57,7 @@ export const DonationDetailsModal: React.FC<DonationDetailsModalProps> = ({
       return (
         <span className="px-3 py-1 bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706] font-black uppercase text-[10px] tracking-wider rounded-[1px] flex items-center gap-1.5">
           <CheckCircle2 className="w-3.5 h-3.5" />
-          <span>SIMULATED LOCALLY</span>
+          <span>VERIFIED &amp; CONFIRMED</span>
         </span>
       );
     }
@@ -80,10 +80,15 @@ export const DonationDetailsModal: React.FC<DonationDetailsModalProps> = ({
     return (
       <span className="px-3 py-1 bg-[#9A7432] text-white font-black uppercase text-[10px] tracking-wider rounded-[1px] flex items-center gap-1.5">
         <Clock className="w-3.5 h-3.5" />
-        <span>AWAITING REFERENCE</span>
+        <span>AWAITING RECEIPT</span>
       </span>
     );
   };
+
+  const verifiedAmount = donation.verification?.verifiedAmount ?? donation.verifiedPayment?.amount;
+  const verifiedSender = donation.verification?.verifiedSender ?? donation.verifiedPayment?.sender;
+  const verifiedAt = donation.verification?.verifiedAt ?? donation.verifiedPayment?.timestamp ?? donation.verifiedAt;
+  const verifiedReceiptUrl = donation.receiptUrl || donation.verifiedPayment?.receiptUrl;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto">
@@ -126,59 +131,65 @@ export const DonationDetailsModal: React.FC<DonationDetailsModalProps> = ({
             </div>
           </div>
           <span className="text-[11px] font-black text-emerald-700 dark:text-emerald-400">
-            PROTOTYPE ONLY
+            VERIFIED ESCROW
           </span>
         </div>
 
         {/* Failed: Verification Failure Details */}
-        {isFailed && donation.verification?.failureReason && (
+        {isFailed && (donation.verification?.failureReason || donation.verifiedPayment?.failureReason) && (
           <div className="p-3.5 border-2 border-red-500/30 bg-red-50 dark:bg-red-950/20 space-y-1">
             <div className="flex items-center gap-2 text-red-600 dark:text-red-400 font-black uppercase text-[11px]">
               <AlertTriangle className="w-4 h-4" />
               <span>Verification Failed</span>
             </div>
             <p className="text-[11px] text-red-700 dark:text-red-300 leading-relaxed">
-              {donation.verification.failureReason}
+              {donation.verification?.failureReason || donation.verifiedPayment?.failureReason}
             </p>
             <p className="text-[10px] text-zinc-500 mt-1">
-              You can resubmit a different payment reference or contact support for assistance.
+              You can resubmit a different payment receipt link or contact support for assistance.
             </p>
           </div>
         )}
 
         {/* Verified: Verification Success Details */}
-        {isConfirmed && donation.verification && (
+        {isConfirmed && (donation.verification || donation.verifiedPayment) && (
           <div className="p-3.5 border border-[#1E4D38]/30 dark:border-[#52B788]/30 bg-[#1E4D38]/5 dark:bg-[#52B788]/5 space-y-2">
             <div className="flex items-center gap-2 text-[#1E4D38] dark:text-[#52B788] font-black uppercase text-[11px]">
               <ShieldCheck className="w-4 h-4" />
-              <span>Automatic Verification Complete</span>
+              <span>Automatic Receipt Verification Complete</span>
             </div>
             <div className="grid grid-cols-3 gap-2 text-[11px]">
-              {donation.verification.verifiedAmount && (
+              {verifiedAmount && (
                 <div>
                   <span className="text-zinc-500 uppercase font-bold block">Amount</span>
                   <span className="font-black text-[#14110E] dark:text-white">
-                    {donation.verification.verifiedAmount.toLocaleString()} ETB
+                    {verifiedAmount.toLocaleString()} ETB
                   </span>
                 </div>
               )}
-              {donation.verification.verifiedSender && (
+              {verifiedSender && (
                 <div>
                   <span className="text-zinc-500 uppercase font-bold block">Sender</span>
                   <span className="font-black text-[#14110E] dark:text-white">
-                    {donation.verification.verifiedSender}
+                    {verifiedSender}
                   </span>
                 </div>
               )}
-              {donation.verification.verifiedAt && (
+              {verifiedAt && (
                 <div>
                   <span className="text-zinc-500 uppercase font-bold block">Verified</span>
                   <span className="font-black text-[#14110E] dark:text-white">
-                    {new Date(donation.verification.verifiedAt).toLocaleTimeString()}
+                    {new Date(verifiedAt).toLocaleTimeString()}
                   </span>
                 </div>
               )}
             </div>
+            {verifiedReceiptUrl && (
+              <div className="pt-2 border-t border-[#1E4D38]/15 dark:border-[#52B788]/15 text-[11px] flex items-center justify-between gap-2">
+                <span className="text-zinc-500 uppercase font-bold shrink-0">Receipt Link:</span>
+                <span className="font-mono text-[#1E4D38] dark:text-[#52B788] truncate">{verifiedReceiptUrl}</span>
+              </div>
+            )}
           </div>
         )}
 

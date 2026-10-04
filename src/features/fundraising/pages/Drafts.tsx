@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '../components/bn.tsx';
 import { FundraiserCard } from '../components/FundraiserCard.tsx';
 import { useMyFundraisers } from '../hooks/useMyFundraisers.ts';
@@ -7,6 +7,7 @@ import type { PageProps } from '../FundraisingApp.tsx';
 
 export const Drafts: React.FC<PageProps> = ({ go, toast }) => {
   const { data, isLoading, refresh } = useMyFundraisers();
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const drafts = data.filter((f) => f.status === 'draft');
 
   return (
@@ -26,21 +27,36 @@ export const Drafts: React.FC<PageProps> = ({ go, toast }) => {
               key={f.id}
               fundraiser={f}
               actions={
-                <>
-                  <Button size="sm" onClick={() => go({ name: 'edit', id: f.id })}>Continue editing</Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={async () => {
-                      if (!window.confirm('Delete this draft? This cannot be undone.')) return;
-                      await fundraisingApi.requestDelete(f.id);
-                      toast('Draft deleted.');
-                      refresh();
-                    }}
-                  >
-                    Delete draft
-                  </Button>
-                </>
+                confirmingId === f.id ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">Delete this draft?</span>
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        await fundraisingApi.requestDelete(f.id);
+                        setConfirmingId(null);
+                        toast('Draft deleted.');
+                        refresh();
+                      }}
+                    >
+                      Confirm
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setConfirmingId(null)}>
+                      Cancel
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <Button size="sm" onClick={() => go({ name: 'edit', id: f.id })}>Continue editing</Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setConfirmingId(f.id)}
+                    >
+                      Delete draft
+                    </Button>
+                  </>
+                )
               }
             />
           ))}

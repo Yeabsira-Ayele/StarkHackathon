@@ -39,8 +39,10 @@ export const DemoRoleSwitcher: React.FC = () => {
     navigate(ROLE_DESTINATIONS[role]);
   };
 
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
   return (
-    <div className="fixed bottom-4 left-4 z-[80] font-mono">
+    <div className={`fixed bottom-4 z-[80] font-mono transition-all ${isAdminRoute ? 'left-4 md:left-22 xl:left-64' : 'left-4'}`}>
       {open && (
         <div className="mb-2 w-60 border border-[#9A7432]/50 bg-[#FFFDF9] p-2 shadow-xl dark:bg-[#12100E]">
           <p className="px-2 py-1 text-[9px] font-black uppercase tracking-widest text-[#9A7432]">{t('demo.chooseAccount', 'Switch Platform Perspective')}</p>

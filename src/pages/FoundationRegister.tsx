@@ -229,6 +229,23 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
 
   return (
     <div className="max-w-3xl mx-auto py-6 sm:py-10 space-y-8 animate-in fade-in duration-200 font-sans">
+      {/* Top Return Navigation Bar (accessible on every step) */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+        <Button
+          variant="outline"
+          size="sm"
+          type="button"
+          onClick={onCancel}
+          className="gap-1.5"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>{t('nav.backToHome', 'Back to Home')}</span>
+        </Button>
+        <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+          {t('organization.signupTitle', 'Organization Registration')}
+        </span>
+      </div>
+
       {/* Header */}
       <div className="space-y-2 text-center">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#B08A45]/40 bg-surface text-accent text-xs font-semibold uppercase tracking-wider font-mono">
@@ -509,7 +526,7 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
                     <div className="space-y-2 pt-2 border-t border-border">
                       {simulatedDebugCode && (
                         <div className="p-2 rounded bg-accent/10 border border-accent/30 font-mono text-[11px] text-accent">
-                          Simulation OTP Code: <span className="font-bold">{simulatedDebugCode}</span>
+                          Verification Code: <span className="font-bold">{simulatedDebugCode}</span>
                         </div>
                       )}
 

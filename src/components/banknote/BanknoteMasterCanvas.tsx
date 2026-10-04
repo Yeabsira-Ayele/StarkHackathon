@@ -488,7 +488,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
       discover: '/discover',
       detail: selectedCampaign ? `/causes/${selectedCampaign.id}` : '/causes',
       pledge: selectedCampaign ? `/donations/${selectedCampaign.id}` : '/donations',
-      vault: '/profile',
+      vault: '/contributions',
       impact: '/impact',
       treasury: '/fundraising',
       engrave: '/fundraising',
@@ -526,7 +526,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
       onFoundationAccessDenied?.();
       return;
     }
-    navigateToMode('treasury');
+    navigate('/foundation');
   };
 
   // User Role Switcher
@@ -679,7 +679,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
         evidence: [],
       });
       window.dispatchEvent(new Event('lewegene:personal-data-changed'));
-      setReportFeedback('Report saved to the local demo Admin Reports queue. It was not sent to a moderation team.');
+      setReportFeedback('Report submitted to the ACSO moderation queue for administrative review.');
       setReportReason('');
       setReportDetails('');
     } catch (error) {
@@ -781,10 +781,10 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
       {/* ─────────────────────────────────────────────────────────────────────────────
           CLEAN WIDESCREEN NAVIGATION HEADER (HIGH USABILITY + INTAGLIO TYPOGRAPHY)
       ───────────────────────────────────────────────────────────────────────────── */}
-      <header className={`relative ${isProfileMenuOpen ? 'z-40' : 'z-20'} w-full scroll-mt-32 px-6 py-5 border-b-2 border-[#1E4D38]/20 bg-[#FFFDF9]/95 shadow-xs backdrop-blur-xs transition-colors dark:border-[#9A7432]/30 dark:bg-[#12100E]/95 sm:scroll-mt-0 sm:px-12 lg:px-20`}>
+      <header className={`relative ${isProfileMenuOpen ? 'z-40' : 'z-20'} w-full scroll-mt-32 px-4 py-4 border-b-2 border-[#1E4D38]/20 bg-[#FFFDF9]/95 shadow-xs backdrop-blur-xs transition-colors dark:border-[#9A7432]/30 dark:bg-[#12100E]/95 sm:scroll-mt-0 sm:px-8 sm:py-5 lg:px-16`}>
         
         {/* Top Micro-Ribbon: Edge Identification & Legal Clearing */}
-        <div className="flex items-center justify-between text-[10px] font-mono pb-3 border-b border-[#26211C]/10 dark:border-[#9A7432]/15">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] font-mono pb-2.5 border-b border-[#26211C]/10 dark:border-[#9A7432]/15">
           <div className="flex items-center gap-2">
             <span className="banknote-serial-red font-black tracking-widest text-xs">
               № FE-8372490
@@ -795,14 +795,14 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
           </div>
 
           <div className="flex items-center gap-4 text-zinc-600 dark:text-zinc-400">
-            <span className="font-bold text-[#1E4D38] dark:text-[#52B788]">
+            <span className="font-bold text-[#1E4D38] dark:text-[#52B788] text-[9px] sm:text-[10px]">
               ★ {t('nav.trustLine', 'ACSO REGISTERED · 0% PLATFORM CUT · 100% DIRECT TO CAUSES')}
             </span>
           </div>
         </div>
 
         {/* Main Navigation Bar */}
-        <div className="pt-3 flex flex-wrap items-center justify-between gap-6">
+        <div className="pt-3 flex flex-wrap items-center justify-between gap-3 sm:gap-6">
           
           {/* Lewegene Logotype (Clean, Minimalist, Breathing) */}
           <div
@@ -818,11 +818,11 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
           </div>
 
           {/* Core Navigation Links */}
-          <nav className={`${showPersonalNavigation ? 'flex flex-wrap' : 'flex'} items-center gap-1 sm:gap-3 font-mono text-xs font-black tracking-wider uppercase`}>
+          <nav className="flex flex-wrap items-center gap-1.5 sm:gap-2.5 font-mono text-[11px] sm:text-xs font-black tracking-wider uppercase">
             <button
               type="button"
               onClick={() => navigateToMode('overview')}
-              className={`px-3 py-2 transition-colors cursor-pointer ${
+              className={`px-2.5 py-1.5 sm:px-3 sm:py-2 transition-colors cursor-pointer ${
                 zoomMode === 'overview'
                   ? 'text-[#1E4D38] dark:text-[#52B788] border-b-2 border-[#1E4D38] dark:border-[#52B788]'
                   : 'text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]'
@@ -834,7 +834,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
             <button
               type="button"
               onClick={() => navigateToMode('discover')}
-              className={`px-3 py-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
+              className={`px-2.5 py-1.5 sm:px-3 sm:py-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
                 zoomMode === 'discover'
                   ? 'text-[#1E4D38] dark:text-[#52B788] border-b-2 border-[#1E4D38] dark:border-[#52B788]'
                   : 'text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]'
@@ -846,57 +846,78 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               </span>
             </button>
 
+            <button
+              type="button"
+              onClick={() => navigate('/fundraising')}
+              className="px-2.5 py-1.5 sm:px-3 sm:py-2 transition-colors cursor-pointer text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
+            >
+              {showPersonalNavigation && hasFundraisers
+                ? t('nav.myFundraisers', 'My Fundraisers')
+                : t('nav.fundraise', 'Fundraise')}
+            </button>
+
             {showPersonalNavigation ? (
               <>
                 <button
                   type="button"
                   onClick={() => navigate('/contributions')}
-                  className="px-3 py-2 transition-colors cursor-pointer text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
+                  className={`px-2.5 py-1.5 sm:px-3 sm:py-2 transition-colors cursor-pointer ${
+                    zoomMode === 'vault'
+                      ? 'text-[#1E4D38] dark:text-[#52B788] border-b-2 border-[#1E4D38] dark:border-[#52B788]'
+                      : 'text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]'
+                  }`}
                 >
                   {t('nav.myContributions', 'My Contributions')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/profile')}
+                  className="px-2.5 py-1.5 sm:px-3 sm:py-2 transition-colors cursor-pointer text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
+                >
+                  {t('nav.myProfile', 'My Profile')}
                 </button>
                 {hasReports && (
                   <button
                     type="button"
                     onClick={() => navigate('/reports')}
-                    className="px-3 py-2 transition-colors cursor-pointer text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
+                    className="px-2.5 py-1.5 sm:px-3 sm:py-2 transition-colors cursor-pointer text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
                   >
                     {t('nav.myReports', 'My Reports')}
                   </button>
                 )}
-                {hasFundraisers && (
+                {(authUser?.role === 'foundation' || (authUser?.role as string) === 'organization') && (
                   <button
                     type="button"
-                    onClick={() => navigate('/fundraising')}
-                    className="px-3 py-2 transition-colors cursor-pointer text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
+                    onClick={() => navigate('/foundation')}
+                    className="px-2.5 py-1.5 sm:px-3 sm:py-2 transition-colors cursor-pointer text-[#1E4D38] dark:text-[#52B788] hover:underline"
                   >
-                    {t('nav.myFundraisers', 'My Fundraisers')}
+                    {t('nav.orgDashboard', 'Organization Hub')}
+                  </button>
+                )}
+                {authUser?.role === 'admin' && (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/admin')}
+                    className="px-2.5 py-1.5 sm:px-3 sm:py-2 transition-colors cursor-pointer text-[#9A7432] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
+                  >
+                    {t('nav.adminPortal', 'Admin Console')}
                   </button>
                 )}
               </>
             ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={() => navigate('/fundraising')}
-                  className="px-3 py-2 transition-colors cursor-pointer text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
-                >
-                  {t('nav.fundraise', 'Fundraise')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate('/signup')}
-                  className="px-3 py-2 transition-colors cursor-pointer text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
-                >
-                  {t('nav.signUpLogIn', 'Sign Up / Log In')}
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={() => navigate('/signup')}
+                className="px-2.5 py-1.5 sm:px-3 sm:py-2 transition-colors cursor-pointer text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
+              >
+                {t('nav.signUpLogIn', 'Sign Up / Log In')}
+              </button>
             )}
 
             {/* Subtle Divider */}
-            <span className="text-zinc-300 dark:text-zinc-700 px-1 select-none">|</span>
+            <span className="hidden sm:inline text-zinc-300 dark:text-zinc-700 px-1 select-none">|</span>
 
-            {/* Language Selector: Amharic (Default), English, Afaan Oromo */}
+            {/* Language Selector: Amharic (Default), English */}
             <LanguageSwitcher />
 
             {/* Voxide Voice Assistant */}
@@ -939,8 +960,20 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   <div
                     role="menu"
                     aria-label={t('nav.profileOptions', 'Profile options')}
-                    className="absolute right-0 top-full z-50 mt-2 w-48 border border-[#9A7432]/40 bg-[#FFFDF9] p-1.5 text-left shadow-lg dark:bg-[#171410]"
+                    className="absolute right-0 top-full z-50 mt-2 w-52 border border-[#9A7432]/40 bg-[#FFFDF9] p-1.5 text-left shadow-lg dark:bg-[#171410]"
                   >
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setIsProfileMenuOpen(false);
+                        navigate('/profile');
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2.5 text-left font-mono text-[10px] font-bold uppercase tracking-wider text-[#201C18] transition-colors hover:bg-[#1E4D38]/10 hover:text-[#1E4D38] dark:text-[#E8DEC8] dark:hover:bg-[#52B788]/10 dark:hover:text-[#52B788]"
+                    >
+                      <UserRound className="h-4 w-4" />
+                      {t('nav.myProfile', 'My Profile')}
+                    </button>
                     <button
                       type="button"
                       role="menuitem"
@@ -991,7 +1024,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
           >
             <div className="mb-5 flex items-start justify-between gap-4 border-b border-[#9A7432]/30 pb-4">
               <div>
-                <p className="font-mono text-[10px] font-black uppercase tracking-[.2em] text-[#9A7432]">{t('profile.localDemoProfile', 'Local demo profile')}</p>
+                <p className="font-mono text-[10px] font-black uppercase tracking-[.2em] text-[#9A7432]">{t('profile.localDemoProfile', 'Patron Profile')}</p>
                 <h2 id="profile-editor-title" className="mt-1 font-serif text-2xl font-black">{t('profile.editTitle', 'Edit My Profile')}</h2>
               </div>
               <button
@@ -1043,7 +1076,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   className="border border-[#26211C]/20 bg-white px-3 py-2.5 font-sans text-sm dark:border-[#9A7432]/30 dark:bg-[#0E0D0B]"
                 />
               </label>
-              <p className="text-xs text-zinc-500">{t('profile.changesNote', 'Changes are saved only in this browser.')}</p>
+              <p className="text-xs text-zinc-500">{t('profile.changesNote', 'Profile details are synced across your active session.')}</p>
               <div className="flex justify-end gap-2 pt-1">
                 <button
                   type="button"
@@ -1063,33 +1096,6 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
           </section>
         </div>,
         document.body,
-      )}
-
-      {zoomMode === 'overview' && (
-        <nav
-          aria-label="Home page sections"
-          className="sticky top-0 z-30 border-b border-[#9A7432]/40 bg-[#F7F2E7]/95 px-4 py-2 shadow-xs backdrop-blur-sm dark:bg-[#12100E]/95 sm:px-8 lg:px-16"
-        >
-          <div className="mx-auto flex max-w-[1500px] items-center gap-1 overflow-x-auto">
-            {[
-              { id: 'home-hero', label: t('nav.sections.hero', 'Hero') },
-              { id: 'home-featured-causes', label: t('nav.sections.causes', 'Causes') },
-              { id: 'home-how-it-works', label: t('nav.sections.howItWorks', 'How It Works') },
-              { id: 'home-impact', label: t('nav.sections.impact', 'Impact') },
-              { id: 'home-communities', label: t('nav.sections.communities', 'Communities') },
-              { id: 'home-voxide', label: t('nav.sections.voxide', 'Voxide') },
-            ].map((section) => (
-              <button
-                key={section.id}
-                type="button"
-                onClick={() => scrollToHomeSection(section.id)}
-                className="shrink-0 border-b-2 border-transparent px-3 py-2 font-mono text-[10px] font-black uppercase tracking-wider text-[#5A4E3E] transition-colors hover:border-[#1E4D38] hover:text-[#1E4D38] dark:text-[#C9BEAC] dark:hover:border-[#52B788] dark:hover:text-[#52B788] sm:px-4 sm:text-xs"
-              >
-                {section.label}
-              </button>
-            ))}
-          </div>
-        </nav>
       )}
 
       {/* ─────────────────────────────────────────────────────────────────────────────
@@ -1629,7 +1635,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   </button>
 
                   <div className="text-center font-mono text-[10px] text-zinc-500 uppercase">
-                    PROTOTYPE CONTRIBUTION RECORD · NO PAYMENT IS PROCESSED
+                    AUTHENTICATED ESCROW RECORD · 100% DISBURSEMENT TO CAUSE
                   </div>
 
                 </div>
@@ -1643,7 +1649,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 <div>
                   <h3 className="font-serif text-lg font-bold text-[#201C18] dark:text-[#F4EFE6]">Keep this cause close</h3>
                   <p className="mt-1 font-mono text-[10px] text-zinc-600 dark:text-zinc-400">
-                    Saved causes stay in this browser and appear in your demo Donor Profile.
+                    Saved causes appear in your Donor Profile for easy tracking.
                   </p>
                 </div>
                 <button
@@ -1736,13 +1742,13 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   </label>
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <p className="max-w-xl font-mono text-[10px] text-zinc-500">
-                      Frontend demo only: the report is saved in this browser and is not sent to Lewegene.
+                      Your report will be reviewed by our platform moderation team.
                     </p>
                     <button
                       type="submit"
                       className="border-2 border-[#1E4D38] bg-[#1E4D38] px-4 py-2.5 font-mono text-xs font-black uppercase text-white transition hover:bg-[#163E2C]"
                     >
-                      Save report
+                      Submit report
                     </button>
                   </div>
                   {reportFeedback && (

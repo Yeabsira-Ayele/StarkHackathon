@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Campaign } from '../../../types/index.ts';
@@ -152,15 +152,32 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
         </div>
       )}
       {/* Top Header */}
-      <div className="flex items-center justify-between border-b-2 border-[#1E4D38]/20 dark:border-[#9A7432]/30 pb-4">
-        <button
-          type="button"
-          onClick={onBack}
-          className="px-4 py-2 border-2 border-[#26211C]/30 bg-[#FFFDF9] dark:bg-[#12100E] font-mono text-xs font-bold uppercase flex items-center gap-2 hover:bg-[#F2ECE1] transition-colors cursor-pointer rounded-[1px]"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>← {t('common.back')}</span>
-        </button>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-[#1E4D38]/20 dark:border-[#9A7432]/30 pb-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (step === 6) resetWizard();
+              onBack();
+            }}
+            className="px-4 py-2 border-2 border-[#26211C]/30 bg-[#FFFDF9] dark:bg-[#12100E] font-mono text-xs font-bold uppercase flex items-center gap-2 hover:bg-[#F2ECE1] dark:hover:bg-[#1C1814] transition-colors cursor-pointer rounded-[1px]"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>{step === 6 ? t('nav.returnToCampaign', 'Return to Campaign') : t('common.back')}</span>
+          </button>
+          {step === 6 && (
+            <button
+              type="button"
+              onClick={() => {
+                resetWizard();
+                onExploreMore();
+              }}
+              className="px-4 py-2 border border-[#1E4D38]/50 dark:border-[#52B788]/50 bg-transparent font-mono text-xs font-bold uppercase text-[#1E4D38] dark:text-[#52B788] hover:bg-[#1E4D38]/10 transition-colors cursor-pointer rounded-[1px]"
+            >
+              {t('common.explore', 'Explore Causes')}
+            </button>
+          )}
+        </div>
 
         <div className="text-right font-mono">
           <span className="text-xs font-black text-[#1E4D38] dark:text-[#52B788]">
@@ -176,8 +193,8 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
             { s: 1, label: '1 AMOUNT' },
             { s: 2, label: '2 DONOR INFO' },
             { s: 3, label: '3 CHOOSE BANK' },
-            { s: 4, label: '4 PAYMENT PLACEHOLDER' },
-            { s: 5, label: '5 REFERENCE' },
+            { s: 4, label: '4 ESCROW ACCOUNT' },
+            { s: 5, label: '5 RECEIPT LINK' },
           ].map((item) => (
             <div
               key={item.s}
@@ -203,7 +220,7 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
               {campaign.title}
             </h3>
             <p className="font-mono text-xs text-zinc-600 dark:text-zinc-400 mt-1">
-              Select or type an amount to simulate a contribution in this browser.
+              Select or enter your contribution amount in Ethiopian Birr (ETB).
             </p>
           </div>
 
@@ -363,6 +380,9 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
           onBackToCause={() => {
             resetWizard();
             onBack();
+          }}
+          onStartNew={() => {
+            resetWizard();
           }}
         />
       )}

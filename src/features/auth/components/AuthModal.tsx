@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LoginForm } from './LoginForm';
@@ -19,6 +19,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const [mode, setMode] = useState<'login' | 'register'>(defaultMode);
+
+  useEffect(() => {
+    setMode(defaultMode);
+  }, [defaultMode, isOpen]);
 
   if (!isOpen) return null;
 
@@ -56,9 +60,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {mode === 'login'
             ? t('auth.modalLoginDesc', 'Manage your donation certificates and contributions')
             : t('auth.modalRegisterDesc', 'Support accredited civil society donation projects directly')}
-        </p>
-        <p className="-mt-4 mb-5 text-[10px] font-mono text-[#73685B] dark:text-[#A89E90]">
-          {t('auth.prototypeNote', 'Prototype account stored in this browser only.')}
         </p>
 
         {mode === 'login' ? (

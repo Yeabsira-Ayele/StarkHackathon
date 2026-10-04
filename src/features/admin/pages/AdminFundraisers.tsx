@@ -94,9 +94,9 @@ export const AdminFundraisers: React.FC = () => {
         }
       >
         {open && !info && (
-          <Panel title="Local review information unavailable">
+          <Panel title="Additional review details unavailable">
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              This fundraiser has no additional beneficiary, receiver, or document metadata in local prototype storage.
+              This fundraiser has no additional beneficiary, receiver, or document metadata attached.
             </p>
           </Panel>
         )}

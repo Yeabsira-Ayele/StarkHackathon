@@ -77,7 +77,7 @@ export const VoxideBar: React.FC<VoxideBarProps> = ({
         recognition.onerror = (event: any) => {
           console.warn('Speech recognition error:', event.error);
           setIsListening(false);
-          setStatusMessage('Microphone access unavailable or quiet. You can use sample prompts.');
+          setStatusMessage('Microphone access unavailable or quiet. You can use the example voice commands below.');
         };
 
         recognition.onend = () => {

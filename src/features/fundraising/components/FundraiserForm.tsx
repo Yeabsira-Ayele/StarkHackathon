@@ -281,7 +281,7 @@ export const FundraiserForm: React.FC<Props> = ({
               <Upload className="w-3.5 h-3.5" /> Upload image
               <input type="file" accept="image/*" multiple className="sr-only" onChange={(e) => addImages(e.target.files)} />
             </label>
-            <span className="text-xs text-zinc-500">or use a sample:</span>
+            <span className="text-xs text-zinc-500">or choose a cover photo:</span>
             {PRESET_IMAGES.map((p) => (
               <button
                 key={p.url}

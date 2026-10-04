@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, ExternalLink, Flag, FlaskConical } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Flag, FlaskConical, Moon, Sun } from 'lucide-react';
 import { LanguageSwitcher } from '../../components/common/LanguageSwitcher.tsx';
 import { adminApi } from '../admin/api/admin.api.ts';
 import type { AdminReport } from '../admin/types/admin.types.ts';
@@ -13,6 +13,22 @@ const MyReportsPage = () => {
   const [reports, setReports] = useState<AdminReport[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isDark, setIsDark] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('lewegene_theme') === 'dark';
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      document.documentElement.classList.toggle('dark', isDark);
+      localStorage.setItem('lewegene_theme', isDark ? 'dark' : 'light');
+    } catch {
+      // ignore
+    }
+  }, [isDark]);
 
   useEffect(() => {
     let active = true;
@@ -40,13 +56,48 @@ const MyReportsPage = () => {
   }, [user?.id]);
 
   return (
-    <main className="min-h-screen bg-[#F7F2E7] px-4 py-10 text-[#201C18] dark:bg-[#12100E] dark:text-[#F4EFE6] sm:px-6">
+    <main className="min-h-screen bg-[#F7F2E7] px-4 py-8 text-[#201C18] dark:bg-[#12100E] dark:text-[#F4EFE6] sm:px-6 sm:py-10">
       <div className="mx-auto max-w-4xl">
-        <div className="flex items-center justify-between gap-3">
-          <Link to="/" className="inline-flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-widest text-[#1E4D38] dark:text-[#52B788]">
-            <ArrowLeft className="h-4 w-4" /> {t('nav.home', 'Home')}
-          </Link>
-          <LanguageSwitcher />
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#9A7432]/25 pb-4">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 font-mono text-xs font-bold uppercase tracking-wider">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1.5 border border-[#26211C]/35 bg-[#FFFDF9] px-3 py-1.5 font-black text-[#1E4D38] transition-colors hover:border-[#1E4D38] dark:border-[#9A7432]/45 dark:bg-[#1C1814] dark:text-[#52B788]"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>{t('nav.home', 'Home')}</span>
+            </Link>
+            <Link
+              to="/fundraising"
+              className="px-2.5 py-1.5 text-[#201C18] transition-colors hover:text-[#1E4D38] dark:text-[#E8DEC8] dark:hover:text-[#52B788]"
+            >
+              {t('nav.myFundraisers', 'My Fundraisers')}
+            </Link>
+            <Link
+              to="/contributions"
+              className="px-2.5 py-1.5 text-[#201C18] transition-colors hover:text-[#1E4D38] dark:text-[#E8DEC8] dark:hover:text-[#52B788]"
+            >
+              {t('nav.myContributions', 'My Contributions')}
+            </Link>
+            <Link
+              to="/profile"
+              className="px-2.5 py-1.5 text-[#201C18] transition-colors hover:text-[#1E4D38] dark:text-[#E8DEC8] dark:hover:text-[#52B788]"
+            >
+              {t('nav.myProfile', 'My Profile')}
+            </Link>
+          </div>
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <button
+              type="button"
+              onClick={() => setIsDark((prev) => !prev)}
+              aria-label={t('nav.toggleTheme', 'Toggle Parchment / Midnight Ink')}
+              title={t('nav.toggleTheme', 'Toggle Parchment / Midnight Ink')}
+              className="p-2 border border-[#9A7432]/50 bg-[#F2ECE1] hover:bg-[#9A7432]/15 text-[#201C18] dark:bg-[#1C1814] dark:text-[#D8B066] transition-colors cursor-pointer"
+            >
+              {isDark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+            </button>
+          </div>
         </div>
         <header className="mt-6 flex flex-wrap items-end justify-between gap-4 border-b border-[#9A7432]/30 pb-5">
           <div>
@@ -54,20 +105,20 @@ const MyReportsPage = () => {
             <h1 className="mt-2 font-serif text-3xl font-black sm:text-4xl">My Reports</h1>
           </div>
           <span className="inline-flex items-center gap-2 border border-[#9A7432]/40 px-3 py-2 font-mono text-[10px] font-bold uppercase">
-            <FlaskConical className="h-3.5 w-3.5 text-[#9A7432]" /> Demo only · stored in this browser
+            <Flag className="h-3.5 w-3.5 text-[#9A7432]" /> ACSO Moderation Queue
           </span>
         </header>
 
         {!user && (
           <p className="mt-6 border border-[#9A7432]/30 bg-white/60 p-5 text-sm dark:bg-white/[.03]">
-            Choose a demo profile to view reports submitted from that profile.
+            Sign in or select an account perspective to view your submitted cause reports.
           </p>
         )}
         {loading && <p className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">Loading your reports…</p>}
         {error && <p role="alert" className="mt-6 border border-red-700/30 bg-red-50 p-4 text-sm text-red-800 dark:bg-red-950/30 dark:text-red-200">{error}</p>}
         {!loading && !error && user && reports.length === 0 && (
           <p className="mt-6 border border-[#9A7432]/30 bg-white/60 p-5 text-sm dark:bg-white/[.03]">
-            You have not submitted any cause reports from this demo profile.
+            You have not submitted any cause reports from this account.
           </p>
         )}
 

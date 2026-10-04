@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Campaign, Donation, Organization } from '../types/index.ts';
 import { Card } from '../components/ui/Card.tsx';
@@ -13,6 +14,7 @@ import {
   Users,
   Bell,
   ArrowRight,
+  ArrowLeft,
   FileText,
   DollarSign,
   AlertCircle,
@@ -39,6 +41,7 @@ export interface FoundationDashboardProps {
   onViewImpact: () => void;
   onViewProfile: () => void;
   onOrganizationUpdated?: (updated: Organization) => void;
+  onBack?: () => void;
 }
 
 export const FoundationDashboard: React.FC<FoundationDashboardProps> = ({
@@ -51,8 +54,10 @@ export const FoundationDashboard: React.FC<FoundationDashboardProps> = ({
   onViewImpact,
   onViewProfile,
   onOrganizationUpdated,
+  onBack,
 }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [org, setOrg] = useState<Organization>(initialOrg);
   const [isEditingForResubmit, setIsEditingForResubmit] = useState(false);
   const [resubmitDescription, setResubmitDescription] = useState(org.description || '');
@@ -100,6 +105,33 @@ export const FoundationDashboard: React.FC<FoundationDashboardProps> = ({
   if (status !== 'approved') {
     return (
       <div className="max-w-4xl mx-auto space-y-8 pb-16 animate-in fade-in duration-200 font-sans">
+        {/* Top Navigation Return Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              type="button"
+              onClick={() => (onBack ? onBack() : navigate('/'))}
+              className="gap-1.5"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>{t('nav.backToHome', 'Back to Home')}</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              type="button"
+              onClick={() => navigate('/discover')}
+            >
+              {t('nav.backToExplore', 'Back to Explore')}
+            </Button>
+          </div>
+          <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+            {t('nav.orgDashboard', 'Organization Hub')}
+          </span>
+        </div>
+
         {/* Status Header Banner */}
         <section
           className={`relative overflow-hidden rounded-2xl border p-6 sm:p-10 shadow-lg text-[#F7F4EB] ${
@@ -424,7 +456,34 @@ export const FoundationDashboard: React.FC<FoundationDashboardProps> = ({
   );
 
   return (
-    <div className="space-y-8 pb-16 animate-in fade-in duration-200">
+    <div className="max-w-7xl mx-auto space-y-8 pb-16 animate-in fade-in duration-200">
+      {/* Top Navigation Return Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            type="button"
+            onClick={() => (onBack ? onBack() : navigate('/'))}
+            className="gap-1.5"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>{t('nav.backToHome', 'Back to Home')}</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            type="button"
+            onClick={() => navigate('/discover')}
+          >
+            {t('nav.backToExplore', 'Back to Explore')}
+          </Button>
+        </div>
+        <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+          {t('nav.orgDashboard', 'Organization Hub')}
+        </span>
+      </div>
+
       {/* Top Banknote-Style Foundation Banner */}
       <section className="relative overflow-hidden rounded-2xl border border-[#B08A45]/40 bg-gradient-to-br from-[#173C32] via-[#102B23] to-[#0A1A15] text-[#F7F4EB] p-6 sm:p-10 shadow-lg">
         <div

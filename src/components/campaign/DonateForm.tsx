@@ -3,8 +3,9 @@ import { Button } from '../ui/Button.tsx';
 import { Input } from '../ui/Input.tsx';
 import { Select } from '../ui/Select.tsx';
 import { ContributionCertificate, PaymentRail } from '../../types/index.ts';
-import { ShieldCheck, Heart, Award, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Heart, Award, ArrowRight, Link2, CheckCircle2 } from 'lucide-react';
 import { toGeezNumber } from '../../services/utils/currencyUtils.ts';
+import { linksetService, isValidReceiptUrl } from '../../services/payment/linksetService.ts';
 
 export interface DonateFormProps {
   campaignId: string;
@@ -16,10 +17,13 @@ export interface DonateFormProps {
     donorName: string;
     message?: string;
     paymentRail: PaymentRail;
+    receiptUrl?: string;
+    transactionReference?: string;
   }) => Promise<any>;
 }
 
 export const DonateForm: React.FC<DonateFormProps> = ({
+  campaignId,
   campaignTitle,
   impactMetric,
   onSubmit,
@@ -33,10 +37,17 @@ export const DonateForm: React.FC<DonateFormProps> = ({
   const [isAnonymous, setIsAnonymous] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('');
   const [paymentRail, setPaymentRail] = useState<PaymentRail>('telebirr');
+  const [receiptUrl, setReceiptUrl] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const effectiveAmount = customAmount ? parseFloat(customAmount) || 0 : selectedAmount;
+
+  const PRESET_RECEIPT_LINKS = [
+    { label: 'Telebirr Receipt', rail: 'telebirr' as PaymentRail, url: `https://telebirr.et/receipt/TB-${Date.now().toString().slice(-6)}` },
+    { label: 'CBE Birr Receipt', rail: 'cbe_birr' as PaymentRail, url: `https://receipt.cbe.com.et/tx/FT${Math.floor(1000000000 + Math.random() * 9000000000)}` },
+    { label: 'Chapa Receipt', rail: 'chapa' as PaymentRail, url: `https://checkout.chapa.co/receipt/CHP-${Date.now().toString().slice(-6)}` },
+  ];
 
   const handleSelectPreset = (amount: number) => {
     setSelectedAmount(amount);
@@ -56,15 +67,36 @@ export const DonateForm: React.FC<DonateFormProps> = ({
       return;
     }
 
+    const cleanReceiptUrl = receiptUrl.trim();
+    if (!cleanReceiptUrl || !isValidReceiptUrl(cleanReceiptUrl)) {
+      setError('Please paste a valid payment receipt link (e.g. https://telebirr.et/receipt/... or https://receipt.cbe.com.et/tx/...)');
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
     try {
+      const verification = await linksetService.verifyReceipt({
+        receiptUrl: cleanReceiptUrl,
+        expectedAmount: effectiveAmount,
+        campaignId,
+        donorName: isAnonymous ? 'Anonymous Patron' : donorName || 'Anonymous Patron',
+      });
+
+      if (!verification.verified) {
+        setError(verification.failureReason || 'Could not verify the payment receipt link.');
+        setIsSubmitting(false);
+        return;
+      }
+
       const res = await onSubmit({
         amount: effectiveAmount,
         donorName: isAnonymous ? 'Anonymous Patron' : donorName || 'Anonymous Patron',
         message: message.trim() || undefined,
-        paymentRail,
+        paymentRail: verification.paymentRail || paymentRail,
+        receiptUrl: cleanReceiptUrl,
+        transactionReference: verification.railReference,
       });
 
       if (res && res.certificate) {
@@ -74,8 +106,9 @@ export const DonateForm: React.FC<DonateFormProps> = ({
       // Reset
       setMessage('');
       setCustomAmount('');
+      setReceiptUrl('');
     } catch (err: any) {
-      setError(err.message || 'Payment processing failed. Please try again.');
+      setError(err.message || 'Payment verification failed. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -158,6 +191,38 @@ export const DonateForm: React.FC<DonateFormProps> = ({
           value={paymentRail}
           onChange={(e) => setPaymentRail(e.target.value as PaymentRail)}
         />
+      </div>
+
+      {/* Payment Receipt Link Input */}
+      <div className="space-y-1.5">
+        <Input
+          label="Payment Receipt Link *"
+          type="url"
+          required
+          placeholder="https://telebirr.et/receipt/... or https://receipt.cbe.com.et/tx/..."
+          value={receiptUrl}
+          onChange={(e) => {
+            setReceiptUrl(e.target.value);
+            setError(null);
+          }}
+        />
+        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+          <span className="text-[10px] text-zinc-500 font-medium">Quick-fill receipt format:</span>
+          {PRESET_RECEIPT_LINKS.map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              onClick={() => {
+                setPaymentRail(item.rail);
+                setReceiptUrl(item.url);
+                setError(null);
+              }}
+              className="px-2 py-0.5 rounded border border-[#B08A45]/40 bg-surface text-[10px] font-medium text-accent hover:bg-surface-alt transition-colors cursor-pointer"
+            >
+              + {item.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Donor Name & Anonymous Toggle */}

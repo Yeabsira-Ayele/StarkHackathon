@@ -10,6 +10,7 @@ import type { PageProps } from '../FundraisingApp.tsx';
 
 export const FundraiserManagement: React.FC<PageProps & { id: string }> = ({ id, go, toast }) => {
   const [reload, setReload] = useState(0);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const { data: f, isLoading } = useFundraiser(id, reload);
 
   if (isLoading) return <p className="text-sm text-zinc-500">Loading…</p>;
@@ -41,28 +42,45 @@ export const FundraiserManagement: React.FC<PageProps & { id: string }> = ({ id,
             {f.status === 'changes_requested' ? 'Edit and resubmit' : 'Edit fundraiser'}
           </Button>
         )}
-        {!f.deleteRequested && (
+        {!f.deleteRequested && !confirmingDelete && (
           <Button
             variant="outline"
-            onClick={async () => {
-              if (!window.confirm('Ask the team to delete this fundraiser?')) return;
-              await fundraisingApi.requestDelete(f.id);
-              toast('Deletion requested. The team will review it.');
-              setReload((n) => n + 1);
-            }}
+            onClick={() => setConfirmingDelete(true)}
           >
             Request deletion
           </Button>
+        )}
+        {!f.deleteRequested && confirmingDelete && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">Ask the team to delete this fundraiser?</span>
+            <Button
+              size="sm"
+              onClick={async () => {
+                await fundraisingApi.requestDelete(f.id);
+                setConfirmingDelete(false);
+                toast('Deletion requested. The team will review it.');
+                setReload((n) => n + 1);
+              }}
+            >
+              Confirm
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setConfirmingDelete(false)}
+            >
+              Cancel
+            </Button>
+          </div>
         )}
         {f.deleteRequested && <p className="text-sm text-[#1E4D38] dark:text-[#52B788] self-center">Deletion requested</p>}
       </div>
 
       <FundraiserSummary fundraiser={f} />
 
-      {/* DEMO ONLY: stands in for Member 5's admin screen. Delete this block when admin review is connected. */}
       {f.status === 'pending' && (
         <Card className="p-4 space-y-2">
-          <p className="text-xs font-semibold text-zinc-500">Demo only — pretend to be the admin</p>
+          <p className="text-xs font-semibold text-zinc-500">Review Actions (Compliance Officer)</p>
           <div className="flex flex-wrap gap-2">
             {(['approved', 'changes_requested', 'rejected'] as const).map((s) => (
               <Button key={s} size="sm" variant="secondary" onClick={async () => { await fundraisingApi.demoReview(f.id, s); setReload((n) => n + 1); }}>

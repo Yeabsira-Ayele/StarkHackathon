@@ -47,38 +47,42 @@ const PHONE = /^(\+251|0)[79]\d{8}$/;
 export function validate(v: FundraiserFormValues, mode: 'draft' | 'submit'): FormErrors {
   const e: FormErrors = {};
   if (v.title.trim().length < (mode === 'draft' ? 1 : 5)) {
-    e.title = mode === 'draft' ? 'Add a title so you can find this draft later.' : 'Title must be at least 5 characters.';
+    e.title = mode === 'draft'
+      ? 'fundraiser.form.validation.draftTitleRequired'
+      : 'fundraiser.form.validation.titleTooShort';
   }
   if (mode === 'draft') return e;
 
-  if (!v.category) e.category = 'Choose a category.';
-  if (!v.location || !v.location.trim()) e.location = 'Choose a location.';
-  if (v.story.trim().length < 50) e.story = 'Tell the story in at least 50 characters.';
-  if (v.images.length === 0) e.images = 'Add at least one image.';
+  if (!v.category) e.category = 'fundraiser.form.validation.chooseCategory';
+  if (!v.location || !v.location.trim()) e.location = 'fundraiser.form.validation.chooseLocation';
+  if (v.story.trim().length < 50) e.story = 'fundraiser.form.validation.storyTooShort';
+  if (v.images.length === 0) e.images = 'fundraiser.form.validation.addImage';
 
   const goal = Number(v.goalAmount);
-  if (!goal || goal <= 0) e.goalAmount = 'Enter a goal amount in ETB.';
+  if (!goal || goal <= 0) e.goalAmount = 'fundraiser.form.validation.goalRequired';
 
   // Deadline: OPTIONAL. Only validate date in the future if a deadline was specified.
   if (v.deadline && v.deadline.trim()) {
     const today = new Date().toISOString().slice(0, 10);
     if (v.deadline <= today) {
-      e.deadline = 'The deadline must be in the future.';
+      e.deadline = 'fundraiser.form.validation.deadlineFuture';
     }
   }
 
   // Beneficiary details validation
   if (v.beneficiaryType === 'friend_family' || v.beneficiaryType === 'other') {
-    if (!v.beneficiary.name.trim()) e['beneficiary.name'] = 'Enter the beneficiary name.';
-    if (!PHONE.test(v.beneficiary.phone.replace(/\s/g, ''))) e['beneficiary.phone'] = 'Use an Ethiopian number like 0911223344.';
-    if (!v.beneficiary.info.trim()) e['beneficiary.info'] = 'Explain who the beneficiary is.';
+    if (!v.beneficiary.name.trim()) e['beneficiary.name'] = 'fundraiser.form.validation.beneficiaryNameRequired';
+    if (!PHONE.test(v.beneficiary.phone.replace(/\s/g, ''))) {
+      e['beneficiary.phone'] = 'fundraiser.form.validation.phoneInvalid';
+    }
+    if (!v.beneficiary.info.trim()) e['beneficiary.info'] = 'fundraiser.form.validation.beneficiaryInfoRequired';
   }
 
   // Community Beneficiary Rule:
   // When community_org: organizationId is required, but bank accounts are completely hidden and ignored.
   if (v.beneficiaryType === 'community_org') {
     if (!v.organizationId) {
-      e.organizationId = 'Choose the community or organization.';
+      e.organizationId = 'fundraiser.form.validation.organizationRequired';
     }
   } else {
     // Other beneficiary types: require at least one bank account
@@ -90,21 +94,21 @@ export function validate(v: FundraiserFormValues, mode: 'draft' | 'submit'): For
           : [];
 
     if (selectedBanks.length === 0) {
-      e['banks'] = 'Choose at least one bank account.';
-      e['bank.bankId'] = 'Choose a bank.';
+      e['banks'] = 'fundraiser.form.validation.bankRequired';
+      e['bank.bankId'] = 'fundraiser.form.validation.chooseBank';
     } else {
       selectedBanks.forEach((account, idx) => {
         if (!account.bankId) {
-          e[`banks.${idx}.bankId`] = 'Choose a bank.';
-          if (idx === 0) e['bank.bankId'] = 'Choose a bank.';
+          e[`banks.${idx}.bankId`] = 'fundraiser.form.validation.chooseBank';
+          if (idx === 0) e['bank.bankId'] = 'fundraiser.form.validation.chooseBank';
         }
         if (!/^\d{8,16}$/.test(account.accountNumber.trim())) {
-          e[`banks.${idx}.accountNumber`] = 'Account number must be 8–16 digits.';
-          if (idx === 0) e['bank.accountNumber'] = 'Account number must be 8–16 digits.';
+          e[`banks.${idx}.accountNumber`] = 'fundraiser.form.validation.accountNumberInvalid';
+          if (idx === 0) e['bank.accountNumber'] = 'fundraiser.form.validation.accountNumberInvalid';
         }
         if (!account.accountName.trim()) {
-          e[`banks.${idx}.accountName`] = 'Enter the account holder name.';
-          if (idx === 0) e['bank.accountName'] = 'Enter the account holder name.';
+          e[`banks.${idx}.accountName`] = 'fundraiser.form.validation.accountNameRequired';
+          if (idx === 0) e['bank.accountName'] = 'fundraiser.form.validation.accountNameRequired';
         }
       });
     }
@@ -112,7 +116,7 @@ export function validate(v: FundraiserFormValues, mode: 'draft' | 'submit'): For
 
   // Verification documents: OPTIONAL. Maximum 3 files.
   if (v.documents && v.documents.length > 3) {
-    e.documents = 'You can upload a maximum of 3 supporting documents.';
+    e.documents = 'fundraiser.form.validation.documentsLimit';
   }
 
   return e;

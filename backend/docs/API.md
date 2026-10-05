@@ -22,10 +22,9 @@ Admin-only routes expect the `x-admin-key` header, compared to `ADMIN_KEY`.
 
 ### User authentication
 
-- `POST /api/auth/signup/request-otp` with `{ phone }` requests a signup code. The response includes `data.devOtp` only when `OTP_DEV_ECHO=true`.
-- `POST /api/auth/signup` with `{ name, phone, otp, password, email? }` verifies the code and creates a donor account. Email is optional.
-- `POST /api/auth/login` with `{ identifier, password }` accepts a phone number or the email saved on the account.
+- `POST /api/auth/google` with `{ credential }` verifies a Google Identity Services ID token and signs in or creates a user from its verified email. The server requires `GOOGLE_CLIENT_ID`; sign-in creates the account automatically if the email is new.
 - `GET /api/auth/me` returns the current user and, for organization accounts, its organization details. Send the JWT in `Authorization: Bearer <token>`.
+- `POST /api/organizations/signup` requires that Google-authenticated bearer token and creates an organization application for the signed-in account. Organization contact details are separate from the account's verified Google email.
 
 ## Rate limits
 

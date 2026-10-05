@@ -30,6 +30,7 @@ import { FoundationRegister } from './pages/FoundationRegister.tsx';
 import { FoundationDashboard } from './pages/FoundationDashboard.tsx';
 import { OrganizationProfile } from './pages/OrganizationProfile.tsx';
 import { organizationService } from './services/organizationService.ts';
+import { localizeErrorMessage } from './i18n/errorMessage.ts';
 
 export type AppView =
   | 'campaigns'
@@ -47,6 +48,7 @@ export type AppView =
 
 type ToastMessage =
   | { key: string; values?: Record<string, string | number> }
+  | { error: unknown; fallbackKey: string }
   | { text: string };
 
 interface PlatformAppProps {
@@ -168,7 +170,7 @@ function PlatformApp({
         setSelectedCampaign(approvedList[0]);
       }
     } catch (err: any) {
-      setError(err.message || t('notifications.campaignLoadFailed'));
+      setError(localizeErrorMessage(t, err, 'notifications.campaignLoadFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -242,7 +244,7 @@ function PlatformApp({
       setCurrentView('detail');
     } catch (err: any) {
       showToast(
-        err.message ? { text: err.message } : { key: 'notifications.paymentFailed' },
+        { error: err, fallbackKey: 'notifications.paymentFailed' },
         'info'
       );
     } finally {
@@ -316,7 +318,7 @@ function PlatformApp({
       setCurrentView('detail');
     } catch (err: any) {
       showToast(
-        err.message ? { text: err.message } : { key: 'notifications.creationFailed' },
+        { error: err, fallbackKey: 'notifications.creationFailed' },
         'info'
       );
     } finally {
@@ -501,7 +503,9 @@ function PlatformApp({
             <p className="text-zinc-600 dark:text-zinc-400 mt-0.5 leading-relaxed">
               {'key' in toast.message
                 ? t(toast.message.key, toast.message.values)
-                : toast.message.text}
+                : 'error' in toast.message
+                  ? localizeErrorMessage(t, toast.message.error, toast.message.fallbackKey)
+                  : toast.message.text}
             </p>
           </div>
           <button

@@ -12,12 +12,12 @@ install steps.
 4. Open `http://localhost:3000`.
 
 The frontend uses `http://localhost:5000/api` for local API requests by default.
-Set `VITE_API_BASE_URL` to override it. Local donor signup uses the backend's
-phone OTP endpoint; set `OTP_DEV_ECHO=true` in `backend/.env` to display the OTP
-in the local frontend during development only. Phone/password login and donor
-signup use the backend. Campaigns, fundraiser drafts/submissions, verified
-donations, organization listing, profile identity, and supported admin
-moderation operations use the MongoDB API.
+Set `VITE_API_BASE_URL` to override it. Donor signup and sign-in use Google
+Identity Services; see [`backend/SETUP.txt`](./backend/SETUP.txt) to configure
+the Google OAuth web client ID in both frontend and backend environments.
+Campaigns, fundraiser drafts/submissions, verified donations, organization
+listing, profile identity, and supported admin moderation operations use the
+MongoDB API.
 
 Some workflows are not yet implemented by the backend: foundation registration
 does not submit the complete organization application, transparency reports

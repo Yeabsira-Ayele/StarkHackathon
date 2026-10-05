@@ -30,57 +30,6 @@ const checkPassword = (fields, value, key = 'password') => {
   }
 };
 
-const checkOtp = (fields, value) => {
-  if (!isText(value) || !/^\d{6}$/.test(value.trim())) fields.otp = 'The code must be 6 digits';
-};
-
-/* ---------- Individuals ---------- */
-
-const validateRequestOtp = (body = {}) => {
-  const fields = {};
-  checkPhone(fields, body.phone);
-  fail(fields);
-};
-
-const validateSignup = (body = {}) => {
-  const fields = {};
-  if (!isText(body.name) || body.name.trim().length < 2) fields.name = 'Please enter your full name';
-  if (body.email !== undefined && body.email !== '') checkEmail(fields, body.email);
-  checkPhone(fields, body.phone);
-  checkOtp(fields, body.otp);
-  checkPassword(fields, body.password);
-  fail(fields);
-};
-
-// Login accepts a phone number (or the email saved on the account) in "identifier".
-const validateLogin = (body = {}) => {
-  const fields = {};
-  const identifier = body.identifier ?? body.phone ?? body.email;
-  if (!isText(identifier)) {
-    fields.identifier = 'Phone number is required';
-  } else if (identifier.includes('@')) {
-    if (!EMAIL_RE.test(identifier.trim())) fields.identifier = 'Enter a valid phone number or email';
-  } else if (!isValidPhone(identifier)) {
-    fields.identifier = PHONE_MESSAGE;
-  }
-  if (!isText(body.password)) fields.password = 'Password is required';
-  fail(fields);
-};
-
-const validateForgotPassword = (body = {}) => {
-  const fields = {};
-  checkPhone(fields, body.phone);
-  fail(fields);
-};
-
-const validateResetPassword = (body = {}) => {
-  const fields = {};
-  checkPhone(fields, body.phone);
-  checkOtp(fields, body.otp);
-  checkPassword(fields, body.newPassword, 'newPassword');
-  fail(fields);
-};
-
 const validateChangePassword = (body = {}) => {
   const fields = {};
   checkPassword(fields, body.newPassword, 'newPassword');
@@ -141,7 +90,6 @@ const validateOrganizationSignup = (body = {}) => {
   const fields = {};
   if (!isText(body.name)) fields.name = 'Organization name is required';
   checkEmail(fields, body.officialEmail, 'officialEmail');
-  checkPassword(fields, body.password);
   checkPhone(fields, body.phone);
   if (!ORG_TYPES.includes(body.organizationType)) {
     fields.organizationType = `Organization type must be one of: ${ORG_TYPES.join(', ')}`;
@@ -171,11 +119,6 @@ const validateOrganizationUpdate = (body = {}) => {
 
 module.exports = {
   ORG_TYPES,
-  validateRequestOtp,
-  validateSignup,
-  validateLogin,
-  validateForgotPassword,
-  validateResetPassword,
   validateChangePassword,
   validateProfileUpdate,
   validateOrganizationSignup,

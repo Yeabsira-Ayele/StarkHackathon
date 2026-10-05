@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ShieldAlert, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useAdmin } from '../hooks/useAdmin';
 import { VerificationBadgeQueue } from '../components/VerificationBadgeQueue';
 import { EmptyState } from '../../../components/EmptyState';
@@ -27,10 +27,10 @@ export const AdminAuditPage: React.FC<AdminAuditPageProps> = ({ onBack }) => {
 
       <div>
         <h1 className="text-2xl font-serif font-bold text-[#14110E] dark:text-[#FAF6EE]">
-          የመድረኩ ኦፊሴላዊ የኦዲት መዝገብ
+          {t('adminAudit.title')}
         </h1>
         <p className="text-xs text-[#73685B] dark:text-[#A89E90] mt-1">
-          በአስተዳዳሪዎችና በሲቪል ማኅበራት ባለስልጣን ተቆጣጣሪዎች የተሰጡ ውሳኔዎች ታሪካዊ ሰነድ
+          {t('adminAudit.description')}
         </p>
       </div>
 
@@ -38,8 +38,8 @@ export const AdminAuditPage: React.FC<AdminAuditPageProps> = ({ onBack }) => {
         <VerificationBadgeQueue logs={auditLogs} />
       ) : (
         <EmptyState
-          title="ምንም የኦዲት መዝገብ አልተገኘም"
-          description="የተመዘገቡ ውሳኔዎች እዚህ ይዘረዘራሉ"
+          title={t('adminAudit.empty')}
+          description={t('adminAudit.emptyHint')}
         />
       )}
     </div>

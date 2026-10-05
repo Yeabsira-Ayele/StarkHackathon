@@ -15,12 +15,13 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
+  loadingLabel?: string;
   icon?: React.ReactNode;
   iconPosition?: 'left' | 'right';
 }
 
 export const Button: React.FC<ButtonProps> = ({
-  variant = 'primary', size = 'md', isLoading, icon, iconPosition = 'left', className, children, disabled, type = 'button', ...rest
+  variant = 'primary', size = 'md', isLoading, loadingLabel = 'Working…', icon, iconPosition = 'left', className, children, disabled, type = 'button', ...rest
 }) => {
   const look = {
     primary: 'border-2 border-[#1E4D38] bg-[#1E4D38] text-white dark:border-[#52B788] dark:bg-[#52B788] dark:text-[#080706] hover:bg-[#163E2C] dark:hover:bg-[#6CCB9F] shadow-md',
@@ -36,7 +37,7 @@ export const Button: React.FC<ButtonProps> = ({
       {...rest}
     >
       {icon && iconPosition === 'left' && !isLoading && icon}
-      {isLoading ? 'Working…' : children}
+      {isLoading ? loadingLabel : children}
       {icon && iconPosition === 'right' && !isLoading && icon}
     </button>
   );

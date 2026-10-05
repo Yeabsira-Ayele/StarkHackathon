@@ -57,6 +57,8 @@ import { toGeezNumber } from '../../services/utils/currencyUtils.ts';
 import { adminApi } from '../../features/admin/api/admin.api.ts';
 import { useAuthStore } from '../../features/auth/store/auth.store.ts';
 import { DISCOVER_LOCATIONS } from '../../services/lookupService.ts';
+import { CAMPAIGN_CATEGORIES } from '../../mock-data/categories/categories.data.ts';
+import { localizeErrorMessage } from '../../i18n/errorMessage.ts';
 
 const ETHIOPIAN_REGIONS = DISCOVER_LOCATIONS;
 
@@ -433,7 +435,9 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
   const [isReportFormOpen, setIsReportFormOpen] = useState<boolean>(false);
   const [reportReason, setReportReason] = useState<string>('');
   const [reportDetails, setReportDetails] = useState<string>('');
-  const [reportFeedback, setReportFeedback] = useState<string>('');
+  const [reportFeedback, setReportFeedback] = useState<
+    { key: string } | { error: unknown; fallbackKey: string } | null
+  >(null);
   const [savedCauseIds, setSavedCauseIds] = useState<string[]>(() => {
     try {
       const saved: unknown = JSON.parse(localStorage.getItem('lewegene_saved_causes') || '[]');
@@ -580,22 +584,25 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
   const totalProjects = (campaigns || []).length;
 
   const categories = [
-    { id: 'all', num: '፩', label: 'ALL CAUSES' },
-    { id: 'medical', num: '፪', label: 'MEDICAL' },
-    { id: 'education', num: '፫', label: 'EDUCATION' },
-    { id: 'emergency', num: '፬', label: 'EMERGENCY' },
-    { id: 'water', num: '፭', label: 'CLEAN WATER' },
-    { id: 'environment', num: '፮', label: 'ENVIRONMENT' },
-    { id: 'community', num: '፯', label: 'COMMUNITY' },
-    { id: 'other', num: '፰', label: 'OTHER' },
-  ];
+    { id: 'all', num: '፩' },
+    { id: 'medical', num: '፪' },
+    { id: 'education', num: '፫' },
+    { id: 'emergency', num: '፬' },
+    { id: 'water', num: '፭' },
+    { id: 'environment', num: '፮' },
+    { id: 'community', num: '፯' },
+    { id: 'other', num: '፰' },
+  ].map((category) => ({
+    ...category,
+    label: CAMPAIGN_CATEGORIES.find((item) => item.id === category.id)?.labels[language] || category.id,
+  }));
   // Navigation Handlers
   const handleOpenDetail = (campaign: Campaign) => {
     setSelectedCampaign(campaign);
     setIsReportFormOpen(false);
     setReportReason('');
     setReportDetails('');
-    setReportFeedback('');
+    setReportFeedback(null);
     navigateToMode('detail', `/causes/${campaign.id}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -621,12 +628,12 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
         details: reportDetails.trim() || `Reported for ${reportReason.replaceAll('_', ' ')}.`,
         evidence: [],
       });
-      setReportFeedback('Report submitted to the ACSO moderation queue for administrative review.');
+      setReportFeedback({ key: 'explore.reportSubmitted' });
       setReportReason('');
       setReportDetails('');
     } catch (error) {
       console.error('Failed to save cause report', error);
-      setReportFeedback(error instanceof Error ? error.message : 'Could not submit this report. Please try again.');
+      setReportFeedback({ error, fallbackKey: 'errors.reportFailed' });
     }
   };
 
@@ -639,7 +646,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
       setSavedCauseIds(next);
     } catch (error) {
       console.error('Failed to update saved causes', error);
-      setReportFeedback('Could not update saved causes in this browser.');
+      setReportFeedback({ error, fallbackKey: 'errors.savedCauseFailed' });
     }
   };
 
@@ -1070,9 +1077,9 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               <div className="relative space-y-6">
               
               <div className="inline-flex items-center gap-2 px-3 py-1 border border-[#9A7432]/40 bg-[#F2EADA]/90 dark:bg-[#0E0D0B]/90 text-[10px] font-mono font-bold tracking-[0.25em] text-[#9A7432] uppercase">
-                <span>የኢትዮጵያ የሕዝብ ትብብር ሰነድ</span>
+                <span>{t('home.tenderBadgeLine1')}</span>
                 <span>·</span>
-                <span>NATIONAL CITIZEN SOLIDARITY TENDER</span>
+                <span>{t('home.tenderBadgeLine2')}</span>
               </div>
 
               <div className="space-y-3">
@@ -1081,11 +1088,11 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 </h1>
                 
                 <p className="font-serif font-bold text-2xl sm:text-4xl text-[#1E4D38] dark:text-[#52B788] tracking-wide">
-                  SUPPORTING ETHIOPIA’S PEOPLE &amp; PURPOSE
+                  {t('home.tagline')}
                 </p>
 
                 <p className="font-ethiopic text-lg sm:text-xl text-[#201C18]/80 dark:text-[#E8DEC8]/80 italic">
-                  « ለወገን ደራሽ ወገን ነው። »
+                  {t('home.motto')}
                 </p>
               </div>
 
@@ -1096,7 +1103,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   onClick={() => navigateToMode('discover')}
                   className="py-3.5 px-8 border-2 border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-sm font-black tracking-widest uppercase hover:bg-[#163E2C] transition-all cursor-pointer shadow-md flex items-center gap-3 active:translate-y-px"
                 >
-                  <span>EXPLORE CAUSES</span>
+                  <span>{t('home.exploreCauses')}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
@@ -1105,7 +1112,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   onClick={openFoundationDesk}
                   className="py-3.5 px-6 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#F2EADA]/90 dark:bg-[#0E0D0B]/90 text-[#201C18] dark:text-[#F4EFE6] font-mono text-sm font-black tracking-wider uppercase hover:bg-[#DFD3BC] transition-all cursor-pointer"
                 >
-                  <span>FOR FOUNDATIONS</span>
+                  <span>{t('home.forFoundations')}</span>
                 </button>
               </div>
               </div>
@@ -1116,9 +1123,9 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               <div className="absolute inset-1 border border-[#9A7432]/25 pointer-events-none" />
               <CentralMonumentEngraving />
               <div className="mt-3 flex items-center justify-between text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
-                <span>INTAGLIO STEEL PLATE № 001</span>
-                <span>MONUMENT OF SOLIDARITY &amp; MUTUAL AID</span>
-                <span>ADDIS ABABA · ፳፻፲፰</span>
+                <span>{t('home.plateSerial')}</span>
+                <span>{t('home.plateCaption')}</span>
+                <span>{t('home.plateLocation')}</span>
               </div>
             </div>
 
@@ -1294,20 +1301,20 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 className="px-4 py-2 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#F2EADA] dark:bg-[#0E0D0B] font-mono text-xs font-bold uppercase flex items-center gap-2 hover:bg-[#DFD3BC] transition-colors cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>← BACK TO HOME</span>
+                <span>← {t('explore.backHome')}</span>
               </button>
 
               <div className="text-center">
                 <h2 className="font-serif font-black text-2xl sm:text-3xl text-[#201C18] dark:text-[#F4EFE6] leading-tight">
-                  DISCOVER CAUSES
+                  {t('explore.title')}
                 </h2>
                 <p className="font-mono text-xs text-zinc-600 dark:text-zinc-400">
-                  Accredited Ethiopian civil society projects ready for direct citizen underwriting
+                  {t('explore.subtitle')}
                 </p>
               </div>
 
               <span className="font-mono text-xs font-black text-[#1E4D38] dark:text-[#52B788]">
-                {filteredCampaigns.length} CAUSES AVAILABLE
+                {t('explore.count', { count: filteredCampaigns.length })}
               </span>
             </div>
 
@@ -1321,7 +1328,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search causes by title, organization, location, or serial number..."
+                  placeholder={t('explore.searchPlaceholder')}
                   className="w-full pl-10 pr-4 py-2.5 border border-[#26211C]/30 dark:border-[#4A3E33] bg-[#EAE1CF] dark:bg-[#161411] font-mono text-xs text-[#201C18] dark:text-[#F4EFE6] placeholder:text-zinc-500 focus:outline-none focus:border-[#1E4D38]"
                 />
               </div>
@@ -1331,7 +1338,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 {/* Sector Categories */}
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase mr-1">
-                    SECTOR:
+                    {t('explore.sectorLabel')}
                   </span>
                   {categories.map((cat) => (
                     <button
@@ -1352,13 +1359,13 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 {/* Funding Status Tabs */}
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase mr-1">
-                    STATUS &amp; LOCATION:
+                    {t('explore.statusLabel')}
                   </span>
                   {[
-                    { id: 'all', label: 'ALL' },
-                    { id: 'ending_soon', label: 'ENDING SOON' },
-                    { id: 'started_now', label: 'STARTED NOW' },
-                    { id: 'ongoing', label: 'ONGOING' },
+                    { id: 'all', label: t('explore.statusAll') },
+                    { id: 'ending_soon', label: t('explore.statusEndingSoon') },
+                    { id: 'started_now', label: t('explore.statusStartedNow') },
+                    { id: 'ongoing', label: t('explore.statusOngoing') },
                   ].map((status) => (
                     <button
                       key={status.id}
@@ -1374,13 +1381,13 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                     </button>
                   ))}
                   <label className="flex items-center gap-1.5">
-                    <span className="sr-only">Filter by location</span>
+                    <span className="sr-only">{t('explore.filterByLocation')}</span>
                     <select
                       value={selectedLocation}
                       onChange={(event) => setSelectedLocation(event.target.value)}
                       className="px-2.5 py-1.5 border border-[#26211C]/25 bg-[#EAE1CF] dark:bg-[#161411] text-[10px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300 cursor-pointer"
                     >
-                      <option value="all">ALL LOCATIONS</option>
+                      <option value="all">{t('explore.allLocations')}</option>
                       {ETHIOPIAN_REGIONS.map((location) => <option key={location} value={location}>{location}</option>)}
                     </select>
                   </label>
@@ -1404,10 +1411,10 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
             {filteredCampaigns.length === 0 && (
               <div className="p-16 text-center border border-dashed border-[#26211C]/30 bg-[#F2EADA]/80 dark:bg-[#0E0D0B]/80 font-mono space-y-4">
                 <p className="text-base font-bold text-[#1E4D38] dark:text-[#52B788]">
-                  NO CAUSE PLATES MATCH YOUR CRITERIA
+                  {t('explore.emptyTitle')}
                 </p>
                 <p className="text-xs text-zinc-500 max-w-md mx-auto">
-                  Try adjusting your search terms, changing the sector filter, or clearing all active filters.
+                  {t('explore.emptyHint')}
                 </p>
                 <button
                   type="button"
@@ -1419,7 +1426,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   }}
                   className="px-5 py-2.5 border border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-xs font-black uppercase cursor-pointer hover:bg-[#163E2C]"
                 >
-                  RESET ALL FILTERS
+                  {t('explore.resetFilters')}
                 </button>
               </div>
             )}
@@ -1589,9 +1596,9 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
             <section className="border-t border-[#26211C]/20 pt-6 dark:border-[#9A7432]/30">
               <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h3 className="font-serif text-lg font-bold text-[#201C18] dark:text-[#F4EFE6]">Keep this cause close</h3>
+                  <h3 className="font-serif text-lg font-bold text-[#201C18] dark:text-[#F4EFE6]">{t('explore.keepCauseClose')}</h3>
                   <p className="mt-1 font-mono text-[10px] text-zinc-600 dark:text-zinc-400">
-                    Saved causes appear in your Donor Profile for easy tracking.
+                    {t('explore.savedCausesHint')}
                   </p>
                 </div>
                 <button
@@ -1601,34 +1608,34 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   className="inline-flex items-center gap-2 border border-[#9A7432]/50 bg-[#F2EADA] px-4 py-2 font-mono text-xs font-bold uppercase text-[#201C18] transition hover:bg-[#E6D9C1] dark:bg-[#161411] dark:text-[#F4EFE6] dark:hover:bg-[#201B16]"
                 >
                   <Bookmark className={`h-3.5 w-3.5 ${savedCauseIds.includes(selectedCampaign.id) ? 'fill-current' : ''}`} />
-                  {savedCauseIds.includes(selectedCampaign.id) ? 'Saved cause' : 'Save cause'}
+                  {savedCauseIds.includes(selectedCampaign.id) ? t('explore.savedCause') : t('explore.saveCause')}
                 </button>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h3 className="font-serif text-lg font-bold text-[#201C18] dark:text-[#F4EFE6]">Report a cause</h3>
+                  <h3 className="font-serif text-lg font-bold text-[#201C18] dark:text-[#F4EFE6]">{t('explore.reportCause')}</h3>
                   <p className="mt-1 font-mono text-[10px] text-zinc-600 dark:text-zinc-400">
-                    Think something is wrong with this cause? Let us know.
+                    {t('explore.reportCauseHint')}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => {
                     setIsReportFormOpen(true);
-                    setReportFeedback('');
+                    setReportFeedback(null);
                   }}
                   className="inline-flex items-center gap-2 border border-[#9A7432]/50 bg-[#F2EADA] px-4 py-2 font-mono text-xs font-bold uppercase text-[#201C18] transition hover:bg-[#E6D9C1] dark:bg-[#161411] dark:text-[#F4EFE6] dark:hover:bg-[#201B16]"
                   aria-haspopup="dialog"
                 >
                   <Flag className="h-3.5 w-3.5" />
-                  Report this cause
+                  {t('explore.reportThisCause')}
                 </button>
               </div>
               {isReportFormOpen && createPortal(
                 <div className="fixed inset-0 z-[1000] flex items-center justify-center overflow-y-auto p-4">
                   <button
                     type="button"
-                    aria-label="Close report dialog"
+                    aria-label={t('explore.closeReport')}
                     onClick={() => setIsReportFormOpen(false)}
                     className="absolute inset-0 cursor-default bg-black/60 backdrop-blur-[2px]"
                   />
@@ -1642,14 +1649,14 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                     <div className="relative">
                       <div className="mb-5 flex items-start justify-between gap-4 border-b border-[#26211C]/15 pb-4 dark:border-[#9A7432]/25">
                         <div>
-                          <p className="font-mono text-[9px] font-black uppercase tracking-[.18em] text-[#9A7432]">Cause safety</p>
-                          <h3 id="report-cause-title" className="mt-1 font-serif text-xl font-black text-[#201C18] dark:text-[#F4EFE6]">Report a cause</h3>
+                          <p className="font-mono text-[9px] font-black uppercase tracking-[.18em] text-[#9A7432]">{t('explore.causeSafety')}</p>
+                          <h3 id="report-cause-title" className="mt-1 font-serif text-xl font-black text-[#201C18] dark:text-[#F4EFE6]">{t('explore.reportCause')}</h3>
                           <p className="mt-1 font-mono text-[10px] text-zinc-600 dark:text-zinc-400">{selectedCampaign.title}</p>
                         </div>
                         <button
                           type="button"
                           onClick={() => setIsReportFormOpen(false)}
-                          aria-label="Close report dialog"
+                          aria-label={t('explore.closeReport')}
                           className="border border-[#9A7432]/40 p-2 text-[#201C18] hover:bg-[#E6D9C1] dark:text-[#F4EFE6] dark:hover:bg-[#201B16]"
                         >
                           <X className="h-4 w-4" />
@@ -1657,45 +1664,47 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                       </div>
                       <form onSubmit={handleReportSubmit} className="grid gap-4">
                   <label className="grid gap-1.5 font-mono text-xs font-bold text-[#201C18] dark:text-[#F4EFE6]">
-                    Reason for reporting
+                    {t('explore.reportReason')}
                     <select
                       required
                       value={reportReason}
                       onChange={(event) => setReportReason(event.target.value)}
                       className="w-full border border-[#26211C]/25 bg-[#FFFDF9] px-3 py-2.5 font-mono text-xs dark:border-[#9A7432]/30 dark:bg-[#0E0D0B]"
                     >
-                      <option value="">Choose a reason</option>
-                      <option value="misleading_information">Misleading information</option>
-                      <option value="suspected_fraud">Suspected fraud</option>
-                      <option value="duplicate">Duplicate cause</option>
-                      <option value="inappropriate_content">Inappropriate content</option>
-                      <option value="other">Other concern</option>
+                      <option value="">{t('explore.chooseReason')}</option>
+                      <option value="misleading_information">{t('explore.misleadingInformation')}</option>
+                      <option value="suspected_fraud">{t('explore.suspectedFraud')}</option>
+                      <option value="duplicate">{t('explore.duplicateCause')}</option>
+                      <option value="inappropriate_content">{t('explore.inappropriateContent')}</option>
+                      <option value="other">{t('explore.otherConcern')}</option>
                     </select>
                   </label>
                   <label className="grid gap-1.5 font-mono text-xs font-bold text-[#201C18] dark:text-[#F4EFE6]">
-                    Additional details <span className="font-normal text-zinc-500">(optional)</span>
+                    {t('explore.additionalDetails')} <span className="font-normal text-zinc-500">{t('explore.optional')}</span>
                     <textarea
                       rows={3}
                       value={reportDetails}
                       onChange={(event) => setReportDetails(event.target.value)}
-                      placeholder="Share any details that may help explain your concern."
+                      placeholder={t('explore.searchReportDetails')}
                       className="w-full resize-y border border-[#26211C]/25 bg-[#FFFDF9] px-3 py-2.5 font-sans text-sm font-normal dark:border-[#9A7432]/30 dark:bg-[#0E0D0B]"
                     />
                   </label>
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <p className="max-w-xl font-mono text-[10px] text-zinc-500">
-                      Your report will be reviewed by our platform moderation team.
+                      {t('explore.reportReviewHint')}
                     </p>
                     <button
                       type="submit"
                       className="border-2 border-[#1E4D38] bg-[#1E4D38] px-4 py-2.5 font-mono text-xs font-black uppercase text-white transition hover:bg-[#163E2C]"
                     >
-                      Submit report
+                      {t('explore.submitReport')}
                     </button>
                   </div>
                   {reportFeedback && (
                     <p role="status" className="font-mono text-xs text-[#1E4D38] dark:text-[#52B788]">
-                      {reportFeedback}
+                      {'key' in reportFeedback
+                        ? t(reportFeedback.key)
+                        : localizeErrorMessage(t, reportFeedback.error, reportFeedback.fallbackKey)}
                     </p>
                   )}
                       </form>

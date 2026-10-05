@@ -8,17 +8,23 @@ Requirements
 Backend
 1. From the repository root, run: cd backend
 2. Install backend dependencies: npm ci
-3. Copy .env.example to .env and set MONGO_URI and a private JWT_SECRET
-4. For local OTP testing only, add OTP_DEV_ECHO=true to backend/.env.
-   The signup code is returned to the frontend only when this setting is enabled.
-5. Start the API: npm run dev
+3. In Google Cloud Console, create a project and configure the OAuth consent screen.
+4. Create an OAuth Client ID of type "Web application". Add
+   http://localhost:3000 as an authorized JavaScript origin (and your deployed
+   website origin when deploying). A redirect URI is not required.
+5. Copy backend/.env.example to backend/.env. Set MONGO_URI, a private JWT_SECRET,
+   and GOOGLE_CLIENT_ID to the OAuth Client ID from Google.
+6. Start the API: npm run dev
 
 Frontend
 1. In a second terminal, return to the repository root.
 2. Install frontend dependencies if needed: npm ci
-3. Start Vite: npm run dev
-4. Open http://localhost:3000
+3. Set VITE_GOOGLE_CLIENT_ID in the root .env to the same Google OAuth Client ID.
+4. Start Vite: npm run dev
+5. Open http://localhost:3000
 
 The frontend calls the API at http://localhost:5000/api by default.
 For other deployments, set VITE_API_BASE_URL in the frontend environment.
-Do not enable OTP_DEV_ECHO or DISABLE_RATE_LIMIT in production.
+Google sign-in is used for both account creation and sign-in. On first sign-in,
+the backend creates a user account using the verified Google email. An existing
+account with the same email is connected to that Google identity.

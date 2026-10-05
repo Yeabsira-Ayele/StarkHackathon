@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Activity, Plus, ShieldOff, ShieldCheck } from 'lucide-react';
 import { Modal } from '../../../components/ui/Modal.tsx';
 import { Avatar } from '../../../components/ui/Avatar.tsx';
@@ -10,11 +11,13 @@ import {
 } from '../components/AdminUI.tsx';
 import { ActivityList } from './AdminActivity.tsx';
 
-const PERM_LABEL: Record<AdminPermission, string> = {
-  fundraisers: 'Fundraisers', reports: 'Reports', donations: 'Donations', users: 'Users', organizations: 'Organizations', admins: 'Admins',
+const PERM_KEY: Record<AdminPermission, string> = {
+  fundraisers: 'adminUi.fundraisers', reports: 'adminUi.reports', donations: 'adminUi.donations',
+  users: 'adminUi.users', organizations: 'adminUi.organizations', admins: 'adminAdmins.admins',
 };
 
 export const AdminAdmins: React.FC = () => {
+  const { t } = useTranslation();
   const { store } = useAdmin();
   const { notify } = useAdminToast();
   const s = store.snapshot!;
@@ -29,27 +32,27 @@ export const AdminAdmins: React.FC = () => {
 
   const save = async (fn: () => Promise<void>, ok: string) => {
     setBusy(true);
-    try { await fn(); notify(ok); } catch (e: any) { notify(e?.message || 'Action failed', 'err'); } finally { setBusy(false); }
+    try { await fn(); notify(ok); } catch (e: any) { notify(e?.message || t('adminUi.actionFailed'), 'err'); } finally { setBusy(false); }
   };
 
   return (
     <div>
-      <SectionHeader title="Admins" subtitle="View admins, add new ones, and manage access and roles." actions={<AdminButton tone="red" icon={<Plus className="w-3.5 h-3.5" />} onClick={() => setAdding(true)}>Add admin</AdminButton>} />
+      <SectionHeader title={t('adminAdmins.title')} subtitle={t('adminAdmins.description')} actions={<AdminButton tone="red" icon={<Plus className="w-3.5 h-3.5" />} onClick={() => setAdding(true)}>{t('adminAdmins.add')}</AdminButton>} />
 
-      <DataTable head={['Admin', 'Role', 'Access', 'Last active', 'Status', '']}>
+      <DataTable head={[t('adminAdmins.admin'), t('adminAdmins.role'), t('adminAdmins.access'), t('adminAdmins.lastActive'), t('adminUi.statusLabel'), '']}>
         {s.admins.map((a) => (
           <Tr key={a.id}>
             <Td>
               <div className="flex items-center gap-3">
                 <Avatar name={a.name} src={a.photo} size="sm" />
-                <div><div className="text-sm font-semibold">{a.name}{isMe(a) && <span className="ml-2 font-mono text-[10px] text-[#8B2626]">(you)</span>}</div><div className="font-mono text-[10px] text-zinc-500">{a.email}</div></div>
+                <div><div className="text-sm font-semibold">{a.name}{isMe(a) && <span className="ml-2 font-mono text-[10px] text-[#8B2626]">({t('adminAdmins.you')})</span>}</div><div className="font-mono text-[10px] text-zinc-500">{a.email}</div></div>
               </div>
             </Td>
             <Td className="font-mono text-xs">{ADMIN_ROLE_LABELS[a.role]}</Td>
-            <Td className="font-mono text-[11px] max-w-[220px]">{a.permissions.length === ADMIN_ALL_PERMISSIONS.length ? 'Full access' : a.permissions.map((p) => PERM_LABEL[p]).join(', ') || 'None'}</Td>
+            <Td className="font-mono text-[11px] max-w-[220px]">{a.permissions.length === ADMIN_ALL_PERMISSIONS.length ? t('adminAdmins.fullAccess') : a.permissions.map((p) => t(PERM_KEY[p])).join(', ') || t('adminAdmins.none')}</Td>
             <Td className="font-mono text-xs whitespace-nowrap">{fmtDateTime(a.lastActive)}</Td>
             <Td><StatusBadge status={a.status} /></Td>
-            <Td className="text-right"><AdminButton onClick={() => setOpenId(a.id)}>Manage</AdminButton></Td>
+            <Td className="text-right"><AdminButton onClick={() => setOpenId(a.id)}>{t('adminAdmins.manage')}</AdminButton></Td>
           </Tr>
         ))}
       </DataTable>
@@ -64,30 +67,30 @@ export const AdminAdmins: React.FC = () => {
             tone={open.status === 'active' ? 'red' : 'gold'}
             busy={busy}
             icon={open.status === 'active' ? <ShieldOff className="w-3.5 h-3.5" /> : <ShieldCheck className="w-3.5 h-3.5" />}
-            onClick={() => save(async () => { await store.actions.updateAdmin(open.id, { status: open.status === 'active' ? 'disabled' : 'active' }, `Admin {name} ${open.status === 'active' ? 'disabled' : 're-enabled'}`); }, open.status === 'active' ? 'Admin disabled.' : 'Admin re-enabled.')}
+            onClick={() => save(async () => { await store.actions.updateAdmin(open.id, { status: open.status === 'active' ? 'disabled' : 'active' }, `Admin {name} ${open.status === 'active' ? 'disabled' : 're-enabled'}`); }, t(open.status === 'active' ? 'adminAdmins.disabled' : 'adminAdmins.enabled'))}
           >
-            {open.status === 'active' ? 'Disable admin' : 'Re-enable admin'}
+            {t(open.status === 'active' ? 'adminAdmins.disable' : 'adminAdmins.reEnable')}
           </AdminButton>
         )}
       >
         {open && (
           <>
-            <Panel title="Role">
-              <label className={labelCls}>Role</label>
+            <Panel title={t('adminAdmins.role')}>
+              <label className={labelCls}>{t('adminAdmins.role')}</label>
               <select
                 className={inputCls}
                 value={open.role}
                 disabled={isMe(open) || busy}
                 onChange={(e) => {
                   const role = e.target.value as AdminRoleName;
-                  save(async () => { await store.actions.updateAdmin(open.id, { role, permissions: ADMIN_ROLE_DEFAULT_PERMISSIONS[role] }, `Role for {name} changed to ${ADMIN_ROLE_LABELS[role]}`); }, 'Role updated.');
+                  save(async () => { await store.actions.updateAdmin(open.id, { role, permissions: ADMIN_ROLE_DEFAULT_PERMISSIONS[role] }, `Role for {name} changed to ${ADMIN_ROLE_LABELS[role]}`); }, t('adminAdmins.roleUpdated'));
                 }}
               >
                 {(Object.keys(ADMIN_ROLE_LABELS) as AdminRoleName[]).map((r) => <option key={r} value={r}>{ADMIN_ROLE_LABELS[r]}</option>)}
               </select>
-              {isMe(open) && <p className="font-mono text-[10px] text-zinc-500 mt-2">You cannot change your own role or access.</p>}
+              {isMe(open) && <p className="font-mono text-[10px] text-zinc-500 mt-2">{t('adminAdmins.cannotChangeSelf')}</p>}
             </Panel>
-            <Panel title="Access">
+            <Panel title={t('adminAdmins.access')}>
               <div className="grid sm:grid-cols-2 gap-2">
                 {ADMIN_ALL_PERMISSIONS.map((p) => {
                   const on = open.permissions.includes(p);
@@ -97,15 +100,15 @@ export const AdminAdmins: React.FC = () => {
                         type="checkbox"
                         checked={on}
                         disabled={isMe(open) || busy}
-                        onChange={() => save(async () => { await store.actions.updateAdmin(open.id, { permissions: on ? open.permissions.filter((x) => x !== p) : [...open.permissions, p] }, `Access to ${PERM_LABEL[p]} ${on ? 'removed from' : 'granted to'} {name}`); }, 'Access updated.')}
+                        onChange={() => save(async () => { await store.actions.updateAdmin(open.id, { permissions: on ? open.permissions.filter((x) => x !== p) : [...open.permissions, p] }, `Access to ${p} ${on ? 'removed from' : 'granted to'} {name}`); }, t('adminAdmins.accessUpdated'))}
                       />
-                      {PERM_LABEL[p]}
+                      {t(PERM_KEY[p])}
                     </label>
                   );
                 })}
               </div>
             </Panel>
-            <Panel title="Admin activity" flush actions={<Activity className="w-4 h-4 text-[#9A7432]" />}>
+            <Panel title={t('adminAdmins.activity')} flush actions={<Activity className="w-4 h-4 text-[#9A7432]" />}>
               <ActivityList events={s.activity.filter((e) => e.actorIsAdmin && e.actor === open.name)} />
             </Panel>
           </>
@@ -115,24 +118,24 @@ export const AdminAdmins: React.FC = () => {
       <Modal
         isOpen={adding}
         onClose={() => setAdding(false)}
-        title="Add admin"
-        subtitle="The new admin is notified by email."
+        title={t('adminAdmins.add')}
+        subtitle={t('adminAdmins.addNotice')}
         maxWidth="md"
         footer={
           <div className="flex justify-end gap-2">
-            <AdminButton onClick={() => setAdding(false)}>Cancel</AdminButton>
+            <AdminButton onClick={() => setAdding(false)}>{t('adminUi.cancel')}</AdminButton>
             <AdminButton tone="red" busy={busy} disabled={!valid} onClick={() => save(async () => {
               await store.actions.addAdmin({ name: form.name.trim(), email: form.email.trim(), role: form.role, permissions: ADMIN_ROLE_DEFAULT_PERMISSIONS[form.role] });
               setAdding(false); setForm({ name: '', email: '', role: 'moderator' });
-            }, 'Admin added.')}>Add admin</AdminButton>
+            }, t('adminAdmins.added'))}>{t('adminAdmins.add')}</AdminButton>
           </div>
         }
       >
         <div className="space-y-3">
-          <div><label className={labelCls}>Full name</label><input className={inputCls} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-          <div><label className={labelCls}>Email</label><input type="email" className={inputCls} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-            {form.email && !valid && <p className="font-mono text-[10px] text-[#8B2626] mt-1">Enter a valid email that is not already an admin.</p>}</div>
-          <div><label className={labelCls}>Role</label>
+          <div><label className={labelCls}>{t('adminAdmins.fullName')}</label><input className={inputCls} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+          <div><label className={labelCls}>{t('adminProfile.email')}</label><input type="email" className={inputCls} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+            {form.email && !valid && <p className="font-mono text-[10px] text-[#8B2626] mt-1">{t('adminAdmins.invalidEmail')}</p>}</div>
+          <div><label className={labelCls}>{t('adminAdmins.role')}</label>
             <select className={inputCls} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as AdminRoleName })}>
               {(Object.keys(ADMIN_ROLE_LABELS) as AdminRoleName[]).map((r) => <option key={r} value={r}>{ADMIN_ROLE_LABELS[r]}</option>)}
             </select></div>

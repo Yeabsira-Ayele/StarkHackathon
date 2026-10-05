@@ -22,6 +22,7 @@ const updateProfile = async (userId, { name, email, profilePhoto }) => {
 
   const user = await User.findById(userId);
   if (!user) throw new AppError('Account not found', 404, 'USER_NOT_FOUND');
+  if (email !== undefined && changes.email !== user.email) user.emailVerified = false;
   user.set(changes);
   await user.save();
   return user;

@@ -1,7 +1,6 @@
 export * from './campaignService.ts';
 export * from './organizationService.ts';
 export * from './userService.ts';
-export * from './authService.ts';
 export * from './donationService.ts';
 export * from './lookupService.ts';
 export * from './api/campaignApi.ts';

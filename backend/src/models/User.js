@@ -1,18 +1,15 @@
 const mongoose = require('mongoose');
 
 // One document in the "users" collection = one person (or one organization account).
-// The PHONE number is the main identity. Email is optional.
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true, maxlength: 100 },
 
-    // Saved in one standard form, for example +251912345678.
-    // "unique" means no two accounts share a phone.
-    // "sparse" lets deleted accounts (which have no phone) exist side by side.
-    phone: { type: String, required: true, unique: true, sparse: true, trim: true },
+    phone: { type: String, unique: true, sparse: true, trim: true },
 
-    // Optional. Organizations use their official email here.
     email: { type: String, unique: true, sparse: true, lowercase: true, trim: true },
+    emailVerified: { type: Boolean, default: false },
+    googleId: { type: String, unique: true, sparse: true, select: false },
 
     // The scrambled (hashed) password. Never the real password.
     // select:false means queries do NOT return it unless we ask for it.
@@ -45,10 +42,10 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// A NEW user must have a password.
-// (Only checked for new users, because passwordHash is hidden when we load an existing user.)
+// Google-authenticated users do not need a local password. Organization and
+// administrative accounts still use the existing password-based workflows.
 userSchema.pre('validate', function () {
-  if (this.isNew && !this.passwordHash) {
+  if (this.isNew && this.role !== 'USER' && !this.passwordHash) {
     this.invalidate('passwordHash', 'A password is required');
   }
 });
@@ -57,6 +54,7 @@ userSchema.pre('validate', function () {
 userSchema.set('toJSON', {
   transform: (doc, ret) => {
     delete ret.passwordHash;
+    delete ret.googleId;
     delete ret.tokenVersion;
     delete ret.__v;
     return ret;

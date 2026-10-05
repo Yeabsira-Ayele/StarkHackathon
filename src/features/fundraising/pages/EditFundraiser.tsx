@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { FundraiserForm } from '../components/FundraiserForm.tsx';
 import { EDITABLE } from '../components/format.ts';
 import { fundraiserToValues } from '../schemas/fundraiser.schema.ts';
@@ -7,12 +8,13 @@ import { fundraisingApi } from '../api/fundraising.api.ts';
 import type { PageProps } from '../FundraisingApp.tsx';
 
 export const EditFundraiser: React.FC<PageProps & { id: string }> = ({ id, go, toast }) => {
+  const { t } = useTranslation();
   const { data: f, isLoading } = useFundraiser(id);
 
-  if (isLoading) return <p className="text-sm text-zinc-500">Loading…</p>;
-  if (!f) return <p className="text-sm text-[#1E4D38] dark:text-[#52B788]">This fundraiser could not be found.</p>;
+  if (isLoading) return <p className="text-sm text-zinc-500">{t('fundraiser.manage.loading')}</p>;
+  if (!f) return <p className="text-sm text-[#1E4D38] dark:text-[#52B788]">{t('fundraiser.manage.notFound')}</p>;
   if (!EDITABLE.includes(f.status)) {
-    return <p className="text-sm text-zinc-500">This fundraiser can no longer be edited.</p>;
+    return <p className="text-sm text-zinc-500">{t('fundraiser.form.cannotEdit')}</p>;
   }
 
   // Drafts and "changes requested" go on to the preview (to be submitted). Others save and return.
@@ -20,7 +22,7 @@ export const EditFundraiser: React.FC<PageProps & { id: string }> = ({ id, go, t
 
   return (
     <div className="space-y-5">
-      <h1 className="text-3xl font-serif font-black uppercase text-[#14110E] dark:text-[#F4EFE6]">Edit fundraiser</h1>
+      <h1 className="text-3xl font-serif font-black uppercase text-[#14110E] dark:text-[#F4EFE6]">{t('fundraiser.form.editTitle')}</h1>
       <FundraiserForm
         initial={fundraiserToValues(f)}
         lockSensitive={f.status === 'approved'}
@@ -29,17 +31,17 @@ export const EditFundraiser: React.FC<PageProps & { id: string }> = ({ id, go, t
           f.status === 'draft'
             ? async (values) => {
                 await fundraisingApi.save(values, f.id);
-                toast('Draft saved.');
+                toast(t('fundraiser.form.draftSaved'));
                 go({ name: 'drafts' });
               }
             : undefined
         }
-        continueLabel={goesToPreview ? 'Continue' : 'Save changes'}
+        continueLabel={goesToPreview ? 'fundraiser.form.continue' : 'fundraiser.form.saveChanges'}
         onContinue={async (values) => {
           await fundraisingApi.save(values, f.id);
           if (goesToPreview) go({ name: 'preview', id: f.id });
           else {
-            toast('Changes saved.');
+            toast(t('fundraiser.form.changesSaved'));
             go({ name: 'manage', id: f.id });
           }
         }}

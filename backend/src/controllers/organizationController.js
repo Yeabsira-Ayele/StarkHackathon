@@ -4,7 +4,7 @@ const { sendSuccess } = require('../utils/response');
 
 const signup = async (req, res) => {
   v.validateOrganizationSignup(req.body);
-  const data = await orgService.signupOrganization(req.body);
+  const data = await orgService.signupOrganization(req.user._id, req.body);
   sendSuccess(res, 'Application submitted. An admin will review it.', data, 201);
 };
 

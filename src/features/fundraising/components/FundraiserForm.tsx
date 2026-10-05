@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, Card, FieldError, Input, Label, Select, fieldClass } from './bn.tsx';
 import { ArrowLeft, ArrowRight, Save, Trash2, Upload, Plus, Building2 } from 'lucide-react';
 import type { BeneficiaryType, DocumentKind, FormErrors, FundraiserFormValues, BankAccount } from '../types/fundraiser.types.ts';
@@ -7,30 +8,48 @@ import { useBanks } from '../hooks/useBanks.ts';
 import { useCategories } from '../hooks/useCategories.ts';
 import { useOrganizations } from '../hooks/useOrganizations.ts';
 import { DISCOVER_LOCATIONS } from '../../../services/lookupService.ts';
+import type { DiscoverLocation } from '../../../services/lookupService.ts';
 
 const MAX_IMAGES = 4;
 const MAX_IMAGE_KB = 700;
 const MAX_DOCUMENTS = 3;
 
 const PRESET_IMAGES = [
-  { label: 'Education', url: '/src/assets/images/ethiopia_school_stem_1790266427111.jpg' },
-  { label: 'Medical', url: '/src/assets/images/ethiopia_medical_care_1790266416218.jpg' },
-  { label: 'Water', url: '/src/assets/images/ethiopia_clean_water_1790266442202.jpg' },
-  { label: 'Craft', url: '/src/assets/images/ethiopia_artisan_craft_1790266455378.jpg' },
+  { labelKey: 'education', url: '/src/assets/images/ethiopia_school_stem_1790266427111.jpg' },
+  { labelKey: 'medical', url: '/src/assets/images/ethiopia_medical_care_1790266416218.jpg' },
+  { labelKey: 'water', url: '/src/assets/images/ethiopia_clean_water_1790266442202.jpg' },
+  { labelKey: 'craft', url: '/src/assets/images/ethiopia_artisan_craft_1790266455378.jpg' },
 ];
 
-const BENEFICIARY_OPTIONS: { id: BeneficiaryType; label: string; hint: string }[] = [
-  { id: 'myself', label: 'Myself', hint: 'You receive the money.' },
-  { id: 'friend_family', label: 'Friend or family', hint: 'Someone close to you.' },
-  { id: 'community_org', label: 'Community or organization', hint: 'A registered community initiative.' },
-  { id: 'other', label: 'Another person', hint: 'Someone you are helping.' },
+const BENEFICIARY_OPTIONS: { id: BeneficiaryType; labelKey: string; hintKey: string }[] = [
+  { id: 'myself', labelKey: 'myself', hintKey: 'myselfHint' },
+  { id: 'friend_family', labelKey: 'friendFamily', hintKey: 'friendFamilyHint' },
+  { id: 'community_org', labelKey: 'community', hintKey: 'communityHint' },
+  { id: 'other', labelKey: 'other', hintKey: 'otherHint' },
 ];
 
-const DOC_KINDS: { value: DocumentKind; label: string }[] = [
-  { value: 'supporting_letter', label: 'Supporting letter' },
-  { value: 'verification', label: 'Verification document' },
-  { value: 'other', label: 'Other evidence' },
+const DOC_KINDS: { value: DocumentKind; labelKey: string }[] = [
+  { value: 'supporting_letter', labelKey: 'letter' },
+  { value: 'verification', labelKey: 'verification' },
+  { value: 'other', labelKey: 'other' },
 ];
+
+const LOCATION_KEYS: Record<DiscoverLocation, string> = {
+  'Addis Ababa': 'addisAbaba',
+  Afar: 'afar',
+  Amhara: 'amhara',
+  'Benishangul-Gumuz': 'benishangulGumuz',
+  'Central Ethiopia': 'centralEthiopia',
+  'Dire Dawa': 'direDawa',
+  Gambela: 'gambela',
+  Harari: 'harari',
+  Oromia: 'oromia',
+  Sidama: 'sidama',
+  Somali: 'somali',
+  'South Ethiopia': 'southEthiopia',
+  "South West Ethiopia Peoples'": 'southWestEthiopiaPeoples',
+  Tigray: 'tigray',
+};
 
 interface Props {
   initial: FundraiserFormValues;
@@ -39,7 +58,7 @@ interface Props {
   /** Leave undefined to hide the "Save draft" button. */
   onSaveDraft?: (values: FundraiserFormValues) => Promise<void>;
   onContinue: (values: FundraiserFormValues) => Promise<void>;
-  continueLabel?: string;
+  continueLabel?: 'fundraiser.form.continue' | 'fundraiser.form.saveChanges';
   onBack: () => void;
 }
 
@@ -58,9 +77,10 @@ export const FundraiserForm: React.FC<Props> = ({
   lockSensitive = false,
   onSaveDraft,
   onContinue,
-  continueLabel = 'Continue',
+  continueLabel = 'fundraiser.form.continue',
   onBack,
 }) => {
+  const { t } = useTranslation();
   const [values, setValues] = useState<FundraiserFormValues>(() => {
     const initialBanks =
       initial.banks && initial.banks.length > 0
@@ -137,7 +157,7 @@ export const FundraiserForm: React.FC<Props> = ({
     setNotice(null);
     Array.from(files).forEach((file) => {
       if (file.size > MAX_IMAGE_KB * 1024) {
-        setNotice(`${file.name} is larger than ${MAX_IMAGE_KB} KB. Choose a smaller image.`);
+        setNotice(t('fundraiser.form.imageTooLarge', { name: file.name, size: MAX_IMAGE_KB }));
         return;
       }
       const reader = new FileReader();
@@ -151,7 +171,7 @@ export const FundraiserForm: React.FC<Props> = ({
     const file = files?.[0];
     if (!file) return;
     if (values.documents.length >= MAX_DOCUMENTS) {
-      setNotice(`You can upload a maximum of ${MAX_DOCUMENTS} supporting documents.`);
+      setNotice(t('fundraiser.form.documentLimitError', { count: MAX_DOCUMENTS }));
       return;
     }
     setNotice(null);
@@ -173,7 +193,7 @@ export const FundraiserForm: React.FC<Props> = ({
     try {
       await action(values);
     } catch (err: any) {
-      setNotice(err.message || 'Something went wrong. Try again.');
+      setNotice(err.message || t('fundraiser.form.genericError'));
     } finally {
       setBusy(false);
     }
@@ -184,89 +204,95 @@ export const FundraiserForm: React.FC<Props> = ({
 
   return (
     <div className="space-y-5">
-      <Section title="Basic information">
+      <Section title={t('fundraiser.form.basic')}>
         <Input
           id="field-title"
-          label="Title"
+          label={t('fundraiser.form.title')}
           value={values.title}
-          error={errors.title}
-          placeholder="Help Abebe pay for medical expenses"
+          error={errors.title ? t(errors.title) : undefined}
+          placeholder={t('fundraiser.form.titlePlaceholder')}
           onChange={(e) => set('title', e.target.value)}
         />
         <div className="grid sm:grid-cols-2 gap-4">
           <Select
             id="field-category"
-            label="Category"
+            label={t('fundraiser.form.category')}
             value={values.category}
-            error={errors.category}
+            error={errors.category ? t(errors.category) : undefined}
             onChange={(e) => set('category', e.target.value as FundraiserFormValues['category'])}
             options={[
-              { value: '', label: 'Choose a category' },
-              ...categories.map((c) => ({ value: c.id, label: c.name })),
+              { value: '', label: t('fundraiser.form.chooseCategory') },
+              ...categories.map((c) => ({
+                value: c.id,
+                label: t(`fundraiser.form.categories.${c.id}`, { defaultValue: c.name }),
+              })),
             ]}
           />
           <Select
             id="field-location"
-            label="Location"
+            label={t('fundraiser.form.location')}
             value={values.location}
-            error={errors.location}
+            error={errors.location ? t(errors.location) : undefined}
             onChange={(e) => set('location', e.target.value)}
             options={[
-              { value: '', label: 'Choose a location' },
-              ...DISCOVER_LOCATIONS.map((loc) => ({ value: loc, label: loc })),
+              { value: '', label: t('fundraiser.form.chooseLocation') },
+              ...DISCOVER_LOCATIONS.map((loc) => ({
+                value: loc,
+                label: t(`fundraiser.form.locations.${LOCATION_KEYS[loc]}`),
+              })),
             ]}
           />
         </div>
         <div id="field-story">
-          <Label htmlFor="story">Story:</Label>
+          <Label htmlFor="story">{t('fundraiser.form.story')}:</Label>
           <textarea
             id="story"
             rows={6}
             value={values.story}
             onChange={(e) => set('story', e.target.value)}
-            placeholder="Who needs help, what happened, and how the money will be used."
+            placeholder={t('fundraiser.form.storyPlaceholder')}
             className={fieldClass(!!errors.story)}
           />
-          <FieldError>{errors.story}</FieldError>
+          <FieldError>{errors.story ? t(errors.story) : undefined}</FieldError>
         </div>
         <div className="grid sm:grid-cols-2 gap-4">
           <Input
             id="field-goalAmount"
-            label="Goal"
+            label={t('fundraiser.form.goal')}
             type="number"
             min={1}
             suffix="ETB"
             value={values.goalAmount}
-            error={errors.goalAmount}
+            error={errors.goalAmount ? t(errors.goalAmount) : undefined}
             disabled={lockSensitive}
-            helperText={lockSensitive ? 'The goal cannot change after approval.' : undefined}
+            helperText={lockSensitive ? t('fundraiser.form.goalLocked') : undefined}
             onChange={(e) => set('goalAmount', e.target.value)}
           />
           <Input
             id="field-deadline"
-            label="Deadline (optional)"
+            label={t('fundraiser.form.deadline')}
             type="date"
             value={values.deadline}
-            error={errors.deadline}
+            error={errors.deadline ? t(errors.deadline) : undefined}
             disabled={lockSensitive}
-            helperText="Leave empty if this cause is ongoing without a fixed cutoff date."
+            helperText={t('fundraiser.form.deadlineHint')}
             onChange={(e) => set('deadline', e.target.value)}
           />
         </div>
       </Section>
 
-      <Section title="Images" hint={`Up to ${MAX_IMAGES} images, ${MAX_IMAGE_KB} KB each.`}>
+      <Section title={t('fundraiser.form.images')} hint={t('fundraiser.form.imageLimit', { count: MAX_IMAGES, size: MAX_IMAGE_KB })}>
         <div id="field-images" className="flex flex-wrap gap-3">
           {values.images.map((src, i) => (
             <div key={i} className="relative">
               <img
                 src={src}
-                alt={`Image ${i + 1}`}
+                alt={t('fundraiser.form.imageAlt', { count: i + 1 })}
                 className="w-24 h-24 object-cover border border-[#26211C]/20 dark:border-[#9A7432]/30"
               />
               <button
                 type="button"
-                aria-label={`Remove image ${i + 1}`}
+                aria-label={t('fundraiser.form.removeImage', { count: i + 1 })}
                 onClick={() => set('images', values.images.filter((_, n) => n !== i))}
                 className="absolute -top-2 -right-2 bg-[#FFFDF9] dark:bg-[#12100E] border border-[#26211C]/40 dark:border-[#9A7432]/50 p-1 cursor-pointer"
               >
@@ -278,10 +304,10 @@ export const FundraiserForm: React.FC<Props> = ({
         {values.images.length < MAX_IMAGES && (
           <div className="flex flex-wrap items-center gap-2">
             <label className="inline-flex items-center gap-2 font-mono text-[10px] font-black uppercase tracking-wider px-3 py-1.5 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#FFFDF9] dark:bg-[#12100E] cursor-pointer hover:bg-[#F2ECE1] dark:hover:bg-[#1B1814]">
-              <Upload className="w-3.5 h-3.5" /> Upload image
+              <Upload className="w-3.5 h-3.5" /> {t('fundraiser.form.uploadImage')}
               <input type="file" accept="image/*" multiple className="sr-only" onChange={(e) => addImages(e.target.files)} />
             </label>
-            <span className="text-xs text-zinc-500">or choose a cover photo:</span>
+            <span className="text-xs text-zinc-500">{t('fundraiser.form.chooseCover')}</span>
             {PRESET_IMAGES.map((p) => (
               <button
                 key={p.url}
@@ -289,16 +315,16 @@ export const FundraiserForm: React.FC<Props> = ({
                 onClick={() => set('images', [...values.images, p.url])}
                 className="text-xs px-2.5 py-1 border border-[#26211C]/20 dark:border-[#9A7432]/30 hover:border-[#1E4D38] dark:hover:border-[#52B788] cursor-pointer"
               >
-                {p.label}
+                {t(`fundraiser.form.preset.${p.labelKey}`)}
               </button>
             ))}
           </div>
         )}
-        {errors.images && <p className="text-xs text-[#1E4D38] dark:text-[#52B788] font-medium">{errors.images}</p>}
+        {errors.images && <p className="text-xs text-[#1E4D38] dark:text-[#52B788] font-medium">{t(errors.images)}</p>}
       </Section>
 
-      <Section title="Who is this fundraiser for?">
-        <div className="grid sm:grid-cols-2 gap-3" role="radiogroup" aria-label="Who is this fundraiser for">
+      <Section title={t('fundraiser.form.beneficiarySection')}>
+        <div className="grid sm:grid-cols-2 gap-3" role="radiogroup" aria-label={t('fundraiser.form.beneficiaryGroup')}>
           {BENEFICIARY_OPTIONS.map((o) => (
             <button
               key={o.id}
@@ -312,8 +338,8 @@ export const FundraiserForm: React.FC<Props> = ({
                   : 'border-[#26211C]/20 dark:border-[#9A7432]/30 hover:border-[#1E4D38] dark:hover:border-[#52B788]'
               }`}
             >
-              <span className="block text-sm font-semibold text-[#14110E] dark:text-[#F4EFE6]">{o.label}</span>
-              <span className="block text-xs text-zinc-500">{o.hint}</span>
+              <span className="block text-sm font-semibold text-[#14110E] dark:text-[#F4EFE6]">{t(`fundraiser.form.beneficiary.${o.labelKey}`)}</span>
+              <span className="block text-xs text-zinc-500">{t(`fundraiser.form.beneficiary.${o.hintKey}`)}</span>
             </button>
           ))}
         </div>
@@ -322,21 +348,21 @@ export const FundraiserForm: React.FC<Props> = ({
           <div className="grid sm:grid-cols-2 gap-4">
             <Input
               id="field-beneficiary.name"
-              label="Beneficiary name"
+              label={t('fundraiser.form.beneficiaryName')}
               value={values.beneficiary.name}
-              error={errors['beneficiary.name']}
+              error={errors['beneficiary.name'] ? t(errors['beneficiary.name']) : undefined}
               onChange={(e) => set('beneficiary', { ...values.beneficiary, name: e.target.value })}
             />
             <Input
               id="field-beneficiary.phone"
-              label="Beneficiary phone"
+              label={t('fundraiser.form.beneficiaryPhone')}
               value={values.beneficiary.phone}
-              error={errors['beneficiary.phone']}
-              placeholder="0911223344"
+              error={errors['beneficiary.phone'] ? t(errors['beneficiary.phone']) : undefined}
+              placeholder={t('fundraiser.form.beneficiaryPhonePlaceholder')}
               onChange={(e) => set('beneficiary', { ...values.beneficiary, phone: e.target.value })}
             />
             <div className="sm:col-span-2" id="field-beneficiary.info">
-              <Label htmlFor="beneficiary-info">About the beneficiary:</Label>
+              <Label htmlFor="beneficiary-info">{t('fundraiser.form.beneficiaryInfo')}:</Label>
               <textarea
                 id="beneficiary-info"
                 rows={3}
@@ -344,7 +370,7 @@ export const FundraiserForm: React.FC<Props> = ({
                 onChange={(e) => set('beneficiary', { ...values.beneficiary, info: e.target.value })}
                 className={fieldClass(!!errors['beneficiary.info'])}
               />
-              <FieldError>{errors['beneficiary.info']}</FieldError>
+              <FieldError>{errors['beneficiary.info'] ? t(errors['beneficiary.info']) : undefined}</FieldError>
             </div>
           </div>
         )}
@@ -352,12 +378,12 @@ export const FundraiserForm: React.FC<Props> = ({
         {isCommunity && (
           <Select
             id="field-organizationId"
-            label="Community or organization"
+            label={t('fundraiser.form.communityOrganization')}
             value={values.organizationId}
-            error={errors.organizationId}
+            error={errors.organizationId ? t(errors.organizationId) : undefined}
             onChange={(e) => set('organizationId', e.target.value)}
             options={[
-              { value: '', label: 'Choose one' },
+              { value: '', label: t('fundraiser.form.chooseOne') },
               ...orgs.map((o) => ({ value: o.id, label: o.name })),
             ]}
           />
@@ -367,23 +393,25 @@ export const FundraiserForm: React.FC<Props> = ({
       {/* Where the money goes: completely hidden and bypassed for Community Beneficiary */}
       {!isCommunity && (
         <Section
-          title="Where the money goes"
-          hint="Select one or more receiving banks. All selected banks will be clearly displayed for contributors."
+          title={t('fundraiser.form.moneySection')}
+          hint={t('fundraiser.form.moneyHint')}
         >
           <div id="field-banks" className="space-y-4">
             {selectedBanks.length === 0 ? (
               <div className="space-y-2">
                 <Select
                   id="field-bank.bankId"
-                  label="Select a primary bank"
+                  label={t('fundraiser.form.primaryBank')}
                   value=""
-                  error={errors['bank.bankId'] || errors.banks}
+                  error={errors['bank.bankId'] || errors.banks
+                    ? t(errors['bank.bankId'] || errors.banks || '')
+                    : undefined}
                   disabled={lockSensitive}
                   onChange={(e) => {
                     if (e.target.value) handleAddBank(e.target.value);
                   }}
                   options={[
-                    { value: '', label: 'Choose a bank' },
+                    { value: '', label: t('fundraiser.form.chooseBank') },
                     ...banks.map((b) => ({ value: b.id, label: b.name })),
                   ]}
                 />
@@ -415,7 +443,7 @@ export const FundraiserForm: React.FC<Props> = ({
                             onClick={() => handleRemoveBank(index)}
                             className="text-xs text-red-600 dark:text-red-400 hover:underline cursor-pointer flex items-center gap-1 font-mono"
                           >
-                            <Trash2 className="w-3 h-3" /> Remove bank
+                            <Trash2 className="w-3 h-3" /> {t('fundraiser.form.removeBank')}
                           </button>
                         )}
                       </div>
@@ -423,21 +451,21 @@ export const FundraiserForm: React.FC<Props> = ({
                       <div className="grid sm:grid-cols-2 gap-4">
                         <Input
                           id={`field-banks-${index}-accountNumber`}
-                          label="Account number"
+                          label={t('fundraiser.form.accountNumber')}
                           inputMode="numeric"
                           value={item.accountNumber}
-                          error={accountNumError}
+                          error={accountNumError ? t(accountNumError) : undefined}
                           disabled={lockSensitive}
-                          placeholder="e.g. 1000284920194"
+                          placeholder={t('fundraiser.form.accountNumberPlaceholder')}
                           onChange={(e) => handleUpdateBank(index, { accountNumber: e.target.value })}
                         />
                         <Input
                           id={`field-banks-${index}-accountName`}
-                          label="Account holder name"
+                          label={t('fundraiser.form.accountName')}
                           value={item.accountName}
-                          error={accountNameError}
+                          error={accountNameError ? t(accountNameError) : undefined}
                           disabled={lockSensitive}
-                          placeholder="Full name as registered on account"
+                          placeholder={t('fundraiser.form.accountNamePlaceholder')}
                           onChange={(e) => handleUpdateBank(index, { accountName: e.target.value })}
                         />
                       </div>
@@ -450,13 +478,13 @@ export const FundraiserForm: React.FC<Props> = ({
                   <div className="pt-2">
                     <Select
                       id="field-add-bank"
-                      label="Add another receiving bank"
+                      label={t('fundraiser.form.addBank')}
                       value=""
                       onChange={(e) => {
                         if (e.target.value) handleAddBank(e.target.value);
                       }}
                       options={[
-                        { value: '', label: '+ Select additional bank to add...' },
+                        { value: '', label: t('fundraiser.form.addBankPlaceholder') },
                         ...availableUnselectedBanks.map((b) => ({ value: b.id, label: b.name })),
                       ]}
                     />
@@ -464,28 +492,31 @@ export const FundraiserForm: React.FC<Props> = ({
                 )}
               </div>
             )}
-            {errors.banks && <p className="text-xs text-[#1E4D38] dark:text-[#52B788] font-medium">{errors.banks}</p>}
-            {lockSensitive && <p className="text-xs text-zinc-500">Bank details cannot change after approval.</p>}
+            {errors.banks && <p className="text-xs text-[#1E4D38] dark:text-[#52B788] font-medium">{t(errors.banks)}</p>}
+            {lockSensitive && <p className="text-xs text-zinc-500">{t('fundraiser.form.bankLocked')}</p>}
           </div>
         </Section>
       )}
 
       <Section
-        title="Verification documents"
-        hint={`Optional: upload up to ${MAX_DOCUMENTS} supporting documents (official letter, medical evidence, or identification).`}
+        title={t('fundraiser.form.documents')}
+        hint={t('fundraiser.form.documentsHint', { count: MAX_DOCUMENTS })}
       >
         <div id="field-documents" className="flex flex-wrap items-end gap-3">
           <div className="w-52">
             <Select
-              label="Document type"
+              label={t('fundraiser.form.documentType')}
               value={docKind}
               onChange={(e) => setDocKind(e.target.value as DocumentKind)}
-              options={DOC_KINDS}
+              options={DOC_KINDS.map((kind) => ({
+                value: kind.value,
+                label: t(`fundraiser.form.documentKinds.${kind.labelKey}`),
+              }))}
             />
           </div>
           {values.documents.length < MAX_DOCUMENTS ? (
             <label className="inline-flex items-center gap-2 font-mono text-[10px] font-black uppercase tracking-wider px-3 py-2 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#FFFDF9] dark:bg-[#12100E] cursor-pointer hover:bg-[#F2ECE1] dark:hover:bg-[#1B1814]">
-              <Upload className="w-3.5 h-3.5" /> Choose file
+              <Upload className="w-3.5 h-3.5" /> {t('fundraiser.form.chooseFile')}
               <input
                 type="file"
                 className="sr-only"
@@ -496,7 +527,7 @@ export const FundraiserForm: React.FC<Props> = ({
               />
             </label>
           ) : (
-            <span className="font-mono text-xs text-zinc-500 py-2">Maximum {MAX_DOCUMENTS} documents reached</span>
+            <span className="font-mono text-xs text-zinc-500 py-2">{t('fundraiser.form.maximumDocumentsReached', { count: MAX_DOCUMENTS })}</span>
           )}
         </div>
 
@@ -510,12 +541,12 @@ export const FundraiserForm: React.FC<Props> = ({
                 <span className="truncate">
                   {d.fileName}{' '}
                   <span className="text-xs text-zinc-500">
-                    · {DOC_KINDS.find((k) => k.value === d.kind)?.label} · {d.sizeKb} KB
+                    · {t(`fundraiser.form.documentKinds.${DOC_KINDS.find((k) => k.value === d.kind)?.labelKey}`)} · {d.sizeKb} KB
                   </span>
                 </span>
                 <button
                   type="button"
-                  aria-label={`Remove ${d.fileName}`}
+                  aria-label={t('fundraiser.form.removeFile', { name: d.fileName })}
                   className="cursor-pointer p-1"
                   onClick={() => set('documents', values.documents.filter((x) => x.id !== d.id))}
                 >
@@ -525,34 +556,36 @@ export const FundraiserForm: React.FC<Props> = ({
             ))}
           </ul>
         )}
-        {errors.documents && <p className="text-xs text-[#1E4D38] dark:text-[#52B788] font-medium">{errors.documents}</p>}
+        {errors.documents && <p className="text-xs text-[#1E4D38] dark:text-[#52B788] font-medium">{t(errors.documents, { count: MAX_DOCUMENTS })}</p>}
       </Section>
 
       {notice && <p role="alert" className="text-sm text-[#1E4D38] dark:text-[#52B788] font-medium">{notice}</p>}
 
       <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
         <Button variant="outline" onClick={onBack} icon={<ArrowLeft className="w-4 h-4" />} disabled={busy}>
-          Back
+          {t('fundraiser.form.back')}
         </Button>
         <div className="flex gap-3">
           {onSaveDraft && (
             <Button
               variant="secondary"
               isLoading={busy}
+              loadingLabel={t('fundraiser.form.working')}
               onClick={() => run('draft', onSaveDraft)}
               icon={<Save className="w-4 h-4" />}
             >
-              Save draft
+              {t('fundraiser.form.saveDraft')}
             </Button>
           )}
           <Button
             variant="primary"
             isLoading={busy}
+            loadingLabel={t('fundraiser.form.working')}
             onClick={() => run('submit', onContinue)}
             icon={<ArrowRight className="w-4 h-4" />}
             iconPosition="right"
           >
-            {continueLabel}
+            {t(continueLabel)}
           </Button>
         </div>
       </div>

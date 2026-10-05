@@ -1,4 +1,3 @@
-const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const Organization = require('../models/Organization');
@@ -15,51 +14,41 @@ const cleanAccounts = (list) =>
 
 const cleanDocuments = (list) => list.map((d) => ({ name: d.name ? String(d.name).trim() : undefined, url: d.url.trim() }));
 
-// Creates the login (User with role ORGANIZATION) and the organization application (status: pending).
-// The organization logs in with its phone number (or its official email) and a password.
-// An admin reviews the application, so no one-time code is needed here.
-const signupOrganization = async (body) => {
+// Attach an organization application to the already authenticated Google user.
+const signupOrganization = async (userId, body) => {
   const email = String(body.officialEmail).trim().toLowerCase();
   const phone = normalizePhone(body.phone);
 
-  if (await User.findOne({ phone })) {
-    throw new AppError('This phone number is already registered', 409, 'PHONE_TAKEN', {
-      phone: 'This phone number is already registered',
-    });
+  const user = await User.findById(userId);
+  if (!user) throw new AppError('Account not found', 404, 'USER_NOT_FOUND');
+  if (user.role !== 'USER') {
+    throw new AppError('This account cannot submit an organization application.', 403, 'FORBIDDEN');
   }
-  if (await User.findOne({ email })) {
-    throw new AppError('This email is already registered', 409, 'EMAIL_TAKEN', {
-      officialEmail: 'This email is already registered',
-    });
+  if (await Organization.findOne({ userId })) {
+    throw new AppError('This account already has an organization application.', 409, 'ORGANIZATION_EXISTS');
   }
 
-  const user = await User.create({
+  const organization = await Organization.create({
+    userId: user._id,
     name: body.name.trim(),
-    email,
+    officialEmail: email,
     phone,
-    role: 'ORGANIZATION',
-    passwordHash: await bcrypt.hash(body.password, 12),
+    organizationType: body.organizationType,
+    location: body.location.trim(),
+    description: body.description.trim(),
+    logo: body.logo,
+    authorizedRepresentative: {
+      name: body.authorizedRepresentative.name.trim(),
+      phone: normalizePhone(body.authorizedRepresentative.phone),
+    },
+    verificationDocuments: cleanDocuments(body.verificationDocuments),
+    payoutAccounts: cleanAccounts(body.payoutAccounts),
   });
-
   try {
-    await Organization.create({
-      userId: user._id,
-      name: body.name.trim(),
-      officialEmail: email,
-      phone,
-      organizationType: body.organizationType,
-      location: body.location.trim(),
-      description: body.description.trim(),
-      logo: body.logo,
-      authorizedRepresentative: {
-        name: body.authorizedRepresentative.name.trim(),
-        phone: normalizePhone(body.authorizedRepresentative.phone),
-      },
-      verificationDocuments: cleanDocuments(body.verificationDocuments),
-      payoutAccounts: cleanAccounts(body.payoutAccounts),
-    });
+    user.role = 'ORGANIZATION';
+    await user.save();
   } catch (err) {
-    await User.deleteOne({ _id: user._id }); // do not leave a half-created account behind
+    await Organization.deleteOne({ _id: organization._id });
     throw err;
   }
 

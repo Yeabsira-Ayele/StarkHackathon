@@ -1,5 +1,16 @@
 import axios from 'axios';
 
+export class ApiRequestError extends Error {
+  constructor(
+    message: string,
+    public readonly code?: string,
+    public readonly status?: number,
+  ) {
+    super(message);
+    this.name = 'ApiRequestError';
+  }
+}
+
 /**
  * Shared Axios Instance for Lewegene
  * Rule 5: There must be ONE shared Axios instance in src/api/axios.ts.
@@ -32,13 +43,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const customMessage =
-      error.response?.data?.message ||
+    const responseMessage = error.response?.data?.message;
+    const message =
+      responseMessage ||
       (error.response
         ? error.message
         : 'Cannot reach the Lewegene API. Start the backend and check VITE_API_BASE_URL.') ||
       'An unexpected network error occurred';
-    return Promise.reject(new Error(customMessage));
+    const code = error.response?.data?.error?.code || (error.response ? undefined : 'NETWORK_ERROR');
+    return Promise.reject(new ApiRequestError(message, code, error.response?.status));
   }
 );
 

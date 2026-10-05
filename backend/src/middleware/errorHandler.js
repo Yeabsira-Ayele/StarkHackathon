@@ -39,7 +39,7 @@ const errorHandler = (err, req, res, next) => {
     message = 'Request body is not valid JSON';
   }
 
-  if (status >= 500) {
+  if (status >= 500 && !['SMS_NOT_CONFIGURED', 'GOOGLE_AUTH_NOT_CONFIGURED'].includes(code)) {
     console.error(err);
     message = 'Server error';
     code = 'SERVER_ERROR';

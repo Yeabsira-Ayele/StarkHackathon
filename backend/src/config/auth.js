@@ -16,12 +16,7 @@ module.exports = {
   get jwtExpiresIn() {
     return process.env.JWT_EXPIRES_IN || '7d';
   },
-  get otpExpiresMinutes() {
-    return Number(process.env.OTP_EXPIRES_MINUTES) || 5;
-  },
-  // When "true", the one-time code is also returned in the API response.
-  // Only for testing on your own computer. Never turn this on in production.
-  get otpDevEcho() {
-    return process.env.OTP_DEV_ECHO === 'true';
+  get googleClientId() {
+    return process.env.GOOGLE_CLIENT_ID || '';
   },
 };

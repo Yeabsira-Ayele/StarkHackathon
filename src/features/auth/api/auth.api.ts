@@ -1,5 +1,5 @@
 import { api } from '../../../api/axios';
-import type { AuthResponse, LoginCredentials, User, UserRole } from '../types/auth.types';
+import type { AuthResponse, User, UserRole } from '../types/auth.types';
 
 export interface BackendUser {
   _id: string;
@@ -7,6 +7,7 @@ export interface BackendUser {
   email?: string;
   phone?: string;
   role: 'USER' | 'ORGANIZATION' | 'ADMIN' | 'SUPER_ADMIN';
+  emailVerified?: boolean;
   phoneVerified?: boolean;
   profilePhoto?: string;
   createdAt: string;
@@ -48,7 +49,7 @@ export function mapBackendUser(user: BackendUser, organization?: BackendOrganiza
     verified: user.role === 'ORGANIZATION'
       ? organization?.verificationStatus === 'approved'
       : user.role === 'USER'
-        ? Boolean(user.phoneVerified)
+        ? Boolean(user.emailVerified || user.phoneVerified)
         : true,
     organizationId: organization?._id,
     organizationName: organization?.name,
@@ -61,11 +62,8 @@ export function mapBackendAuthResponse(data: BackendAuthResponse): AuthResponse 
 }
 
 export const authApi = {
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await api.post<BackendEnvelope<BackendAuthResponse>>('/auth/login', {
-      identifier: credentials.emailOrPhone,
-      password: credentials.passcode,
-    });
+  async loginWithGoogle(credential: string): Promise<AuthResponse> {
+    const response = await api.post<BackendEnvelope<BackendAuthResponse>>('/auth/google', { credential });
     return mapBackendAuthResponse(response.data.data);
   },
 

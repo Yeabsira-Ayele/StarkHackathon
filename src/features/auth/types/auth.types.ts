@@ -19,16 +19,3 @@ export interface AuthResponse {
   user: User;
   token: string;
 }
-
-export interface LoginCredentials {
-  emailOrPhone: string;
-  passcode: string;
-}
-
-export interface RegisterCredentials {
-  name: string;
-  emailOrPhone: string;
-  passcode: string;
-  role: UserRole;
-  organizationName?: string;
-}

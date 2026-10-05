@@ -25,14 +25,14 @@ export const AdminModerationPage: React.FC = () => {
           <div className="flex items-center gap-2 text-[#1E4D38] dark:text-[#52B788] mb-1">
             <ShieldCheck className="w-5 h-5" />
             <span className="text-[11px] font-bold uppercase tracking-wider">
-              የቁጥጥርና ማረጋገጫ ዴስክ (ACSO Compliance)
+              {t('adminModeration.complianceDesk')}
             </span>
           </div>
           <h1 className="text-2xl font-serif font-bold text-[#14110E] dark:text-[#FAF6EE]">
-            የህዝብ ልገሳ ፕሮጀክቶች ማረጋገጫ
+            {t('adminModeration.title')}
           </h1>
           <p className="text-xs text-[#73685B] dark:text-[#A89E90] mt-1">
-            በሲቪል ማኅበራት ህግ መሰረት የቀረቡ አዳዲስ የገንዘብ ማሰባሰቢያ ፕሮጀክቶችን መርምረው ያጽድቁ
+            {t('adminModeration.description')}
           </p>
         </div>
       </div>
@@ -43,15 +43,15 @@ export const AdminModerationPage: React.FC = () => {
       {/* Pending Reviews Section */}
       <div className="space-y-4">
         <h2 className="text-base font-serif font-bold text-[#14110E] dark:text-[#FAF6EE]">
-          ውሳኔ የሚጠባበቁ ፕሮጀክቶች ({pendingCampaigns.length})
+        {t('adminModeration.pendingTitle', { count: pendingCampaigns.length })}
         </h2>
 
         {isLoadingPending ? (
           <Loading variant="skeleton" count={2} />
         ) : pendingCampaigns.length === 0 ? (
           <EmptyState
-            title="በጥበቃ ላይ ያለ ፕሮጀክት የለም"
-            description="ሁሉም የቀረቡ ማመልከቻዎች ተመርምረው ውሳኔ አግኝተዋል።"
+            title={t('adminModeration.empty')}
+            description={t('adminModeration.emptyHint')}
           />
         ) : (
           <div className="grid grid-cols-1 gap-4">

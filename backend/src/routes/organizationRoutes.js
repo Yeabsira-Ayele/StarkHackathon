@@ -5,7 +5,7 @@ const { requireAuth } = require('../middleware/authMiddleware');
 const { requireAdmin, requireOrganization } = require('../middleware/roleMiddleware');
 const { authLimiter } = require('../middleware/authRateLimit');
 
-router.post('/organizations/signup', authLimiter, organizationController.signup);
+router.post('/organizations/signup', authLimiter, requireAuth, organizationController.signup);
 
 // Logged-in organization account ("/me" routes must come before "/:id")
 router.get('/organizations/me', requireAuth, requireOrganization, organizationController.getMine);

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, Card } from '../components/bn.tsx';
 import { ArrowRight, AlertCircle, ShieldAlert, Clock } from 'lucide-react';
 import { useMyFundraisers } from '../hooks/useMyFundraisers.ts';
@@ -9,14 +10,15 @@ import { organizationService } from '../../../services/organizationService.ts';
 import type { OrganizationVerificationStatus } from '../../../types/index.ts';
 
 const NEEDS = [
-  ['Your story and a goal', 'Who needs help, how much, and by when.'],
-  ['Where donations go', 'A bank account in the name of the person or group receiving the money.'],
-  ['Proof', 'A supporting letter or document so the team can verify your fundraiser.'],
+  ['fundraiser.start.needs.storyTitle', 'fundraiser.start.needs.storyDescription'],
+  ['fundraiser.start.needs.donationsTitle', 'fundraiser.start.needs.donationsDescription'],
+  ['fundraiser.start.needs.proofTitle', 'fundraiser.start.needs.proofDescription'],
 ];
 
 const ACTIVE_INCOMPLETE_STATUSES: FundraiserStatus[] = ['pending', 'changes_requested', 'approved', 'paused'];
 
 export const StartFundraising: React.FC<PageProps> = ({ go }) => {
+  const { t } = useTranslation();
   const { data } = useMyFundraisers();
   const drafts = data.filter((f) => f.status === 'draft').length;
   const activeFundraiser = data.find((f) => ACTIVE_INCOMPLETE_STATUSES.includes(f.status));
@@ -51,10 +53,10 @@ export const StartFundraising: React.FC<PageProps> = ({ go }) => {
     <div className="space-y-8">
       <div className="space-y-2">
         <h1 className="text-3xl font-serif font-black uppercase text-[#14110E] dark:text-[#F4EFE6]">
-          Start a fundraiser
+          {t('fundraiser.start.title')}
         </h1>
         <p className="text-sm text-zinc-500 max-w-xl">
-          Tell your story and raise support from people who want to help. We review every fundraiser before it goes live.
+          {t('fundraiser.start.description')}
         </p>
       </div>
 
@@ -64,19 +66,20 @@ export const StartFundraising: React.FC<PageProps> = ({ go }) => {
           <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
             {orgStatus === 'pending' ? <Clock className="w-4 h-4 animate-pulse" /> : <ShieldAlert className="w-4 h-4" />}
             <span className="font-serif font-bold text-sm text-[#14110E] dark:text-[#F4EFE6] uppercase">
-              Organization Verification Required
+              {t('fundraiser.start.organizationRequired')}
             </span>
           </div>
           <p className="text-xs text-zinc-600 dark:text-zinc-400">
-            Your organization (&ldquo;{orgName}&rdquo;) is currently{' '}
-            <span className="font-bold underline uppercase">
-              {orgStatus === 'pending'
-                ? 'pending administrative review'
-                : orgStatus === 'needs_changes'
-                ? 'awaiting requested changes'
-                : 'not approved'}
-            </span>
-            . Under platform governance, organizations cannot launch fundraisers or collect donor contributions until verified by an administrator.
+            {t('fundraiser.start.organizationRestriction', {
+              name: orgName,
+              status: t(
+                orgStatus === 'pending'
+                  ? 'fundraiser.start.organizationStatus.pending'
+                  : orgStatus === 'needs_changes'
+                  ? 'fundraiser.start.organizationStatus.needsChanges'
+                  : 'fundraiser.start.organizationStatus.notApproved'
+              ),
+            })}
           </p>
         </div>
       )}
@@ -87,27 +90,29 @@ export const StartFundraising: React.FC<PageProps> = ({ go }) => {
           <div className="flex items-center gap-2 text-[#9A7432]">
             <AlertCircle className="w-4 h-4" />
             <span className="font-serif font-bold text-sm text-[#14110E] dark:text-[#F4EFE6]">
-              Active fundraiser in progress
+              {t('fundraiser.start.activeTitle')}
             </span>
           </div>
           <p className="text-xs text-zinc-600 dark:text-zinc-400">
-            You currently have an active fundraiser (&ldquo;{activeFundraiser.title}&rdquo;). Lewegene policy permits only one active or incomplete fundraiser at a time.
+            {t('fundraiser.start.activeDescription', { title: activeFundraiser.title })}
           </p>
           <div className="pt-1 flex flex-wrap gap-2">
             <Button size="sm" onClick={() => go({ name: 'manage', id: activeFundraiser.id })}>
-              Manage active fundraiser
+              {t('fundraiser.start.manageActive')}
             </Button>
           </div>
         </div>
       )}
 
       <Card className="p-5">
-        <h2 className="font-serif font-black uppercase text-[#14110E] dark:text-[#F4EFE6] mb-3">Have these ready</h2>
+        <h2 className="font-serif font-black uppercase text-[#14110E] dark:text-[#F4EFE6] mb-3">
+          {t('fundraiser.start.readyTitle')}
+        </h2>
         <ul className="space-y-3">
-          {NEEDS.map(([title, text]) => (
-            <li key={title}>
-              <p className="text-sm font-semibold text-[#14110E] dark:text-[#F4EFE6]">{title}</p>
-              <p className="text-xs text-zinc-500">{text}</p>
+          {NEEDS.map(([titleKey, descriptionKey]) => (
+            <li key={titleKey}>
+              <p className="text-sm font-semibold text-[#14110E] dark:text-[#F4EFE6]">{t(titleKey)}</p>
+              <p className="text-xs text-zinc-500">{t(descriptionKey)}</p>
             </li>
           ))}
         </ul>
@@ -125,14 +130,14 @@ export const StartFundraising: React.FC<PageProps> = ({ go }) => {
           iconPosition="right"
         >
           {isOrgRestricted
-            ? 'Fundraising locked (Org Pending)'
+            ? t('fundraiser.start.locked')
             : activeFundraiser
-            ? 'Create draft fundraiser'
-            : 'Start a fundraiser'}
+            ? t('fundraiser.start.createDraft')
+            : t('fundraiser.start.startButton')}
         </Button>
         {drafts > 0 && !isOrgRestricted && (
           <Button size="lg" variant="outline" onClick={() => go({ name: 'drafts' })}>
-            Continue a draft ({drafts})
+            {t('fundraiser.start.continueDraft', { count: drafts })}
           </Button>
         )}
       </div>

@@ -520,38 +520,19 @@ Request body:
 
 #### Authentication endpoints
 
-##### `POST /api/auth/signup`
+##### `POST /api/auth/google`
 
 Purpose:
-- create a new individual or organization account
+- verify a Google Identity Services ID token and sign in, creating a user account on first sign-in
 
 Auth:
-- none
+- Google credential in the request body; backend verifies the token against `GOOGLE_CLIENT_ID`
 
 Request data:
-- name
-- email
-- password
-- accountType
-- phone (optional)
-- organization fields if organization
+- `credential` (Google ID token; email must be verified)
 
 Response:
-- user profile + token
-
-##### `POST /api/auth/login`
-
-Purpose:
-- log in user
-
-Auth:
-- none
-
-Request data:
-- email/password or Google token
-
-Response:
-- token + user profile
+- API token + user profile
 
 ##### `GET /api/auth/me`
 
@@ -909,23 +890,21 @@ This is the product workflow mapped to backend logic.
 ### Example flow: user signs up
 
 User action:
-- click Sign Up
+- click "Continue with Google"
 
 Frontend:
-- sends signup request with name/email/password/accountType
+- sends the Google Identity Services ID token
 
 API:
-- `POST /api/auth/signup`
+- `POST /api/auth/google`
 
 Backend logic:
-- validate required fields
-- hash password
-- create user record
-- save account type and profile details
-- create token
+- verify token signature, audience, and verified email
+- link an existing account with the same email or create a user record
+- create API token
 
 Database operation:
-- insert new `User` record
+- find or insert `User` record
 
 Response:
 - return token + user object
@@ -1480,13 +1459,10 @@ Recommended folder structure:
 
 ### Authentication
 
-- [ ] User registration
-- [ ] Login endpoint
-- [ ] Logout endpoint
-- [ ] Password hashing
-- [ ] JWT/session management
-- [ ] Current user profile endpoint
-- [ ] Google sign-in support (if required)
+- [x] Google sign-in and registration using verified Google email
+- [x] Logout endpoint
+- [x] JWT/session management
+- [x] Current user profile endpoint
 
 ### User roles
 

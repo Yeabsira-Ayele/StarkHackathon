@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../components/ui/Button.tsx';
 import { Card } from '../components/ui/Card.tsx';
 import { Organization } from '../types/index.ts';
 import { organizationService } from '../services/organizationService.ts';
 import { useAuth } from '../features/auth/hooks/useAuth.ts';
+import { GoogleAuthButton } from '../features/auth/components/GoogleAuthButton.tsx';
 import { mockBanks } from '../features/donations/data/banks.data.ts';
 import {
   ShieldCheck,
   Building2,
   FileCheck,
-  CheckCircle2,
   UploadCloud,
   ArrowRight,
   ArrowLeft,
@@ -20,9 +20,6 @@ import {
   Landmark,
   FileText,
   Trash2,
-  KeyRound,
-  RefreshCw,
-  Loader2,
   Clock,
   AlertCircle,
 } from 'lucide-react';
@@ -44,7 +41,7 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
   onCancel,
 }) => {
   const { t } = useTranslation();
-  const { user, isAuthenticated, requestOtp, verifyOtp } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
@@ -76,56 +73,16 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
   ]);
   const [docNameInput, setDocNameInput] = useState('');
 
-  // 5. Phase 3A Phone OTP Verification integration
-  const [isPhoneVerified, setIsPhoneVerified] = useState<boolean>(() => {
-    return !!(isAuthenticated && user?.phone && user?.verified);
-  });
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpCode, setOtpCode] = useState('');
-  const [simulatedDebugCode, setSimulatedDebugCode] = useState<string | null>(null);
-  const [isOtpLoading, setIsOtpLoading] = useState(false);
-  const [otpError, setOtpError] = useState<string | null>(null);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [submittedOrg, setSubmittedOrg] = useState<Organization | null>(null);
 
-  // OTP handlers reusing Phase 3A
-  const handleSendOtp = async () => {
-    if (!contactPhone.trim()) {
-      setOtpError('Please enter a phone number to verify.');
-      return;
-    }
-    setOtpError(null);
-    setIsOtpLoading(true);
-    try {
-      const res = await requestOtp({ phone: contactPhone, purpose: 'signup', role: 'foundation' });
-      setOtpSent(true);
-      setSimulatedDebugCode(res.debugCode || null);
-    } catch (err) {
-      setOtpError(err instanceof Error ? err.message : 'Could not send the verification code.');
-    } finally {
-      setIsOtpLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    if (!otpCode.trim() || otpCode.trim().length !== 6) {
-      setOtpError('Verification code must be 6 digits.');
-      return;
-    }
-    setOtpError(null);
-    setIsOtpLoading(true);
-    try {
-      await verifyOtp({ phone: contactPhone, otp: otpCode, purpose: 'signup', role: 'foundation' });
-      setIsPhoneVerified(true);
-      setOtpSent(false);
-    } catch (err) {
-      setOtpError(err instanceof Error ? err.message : 'Could not verify the code.');
-    } finally {
-      setIsOtpLoading(false);
-    }
-  };
+  useEffect(() => {
+    if (!user) return;
+    setRepName((current) => current || user.name);
+    setRepEmail((current) => current || user.email);
+    setContactEmail((current) => current || user.email);
+  }, [user]);
 
   const handleAddDocument = () => {
     if (!docNameInput.trim()) return;
@@ -162,8 +119,8 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
       setErrorMsg('Authorized representative name and phone are required.');
       return;
     }
-    if (!isPhoneVerified) {
-      setErrorMsg('Please verify your mobile phone number with the 6-digit OTP code before proceeding.');
+    if (!isAuthenticated || !user?.email) {
+      setErrorMsg('Sign in with Google before submitting an organization application.');
       return;
     }
     setErrorMsg(null);
@@ -219,6 +176,26 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
       setIsSubmitting(false);
     }
   };
+
+  if (!isAuthenticated || !user?.email) {
+    return (
+      <div className="max-w-xl mx-auto py-10 space-y-6">
+        <Button variant="outline" size="sm" type="button" onClick={onCancel} className="gap-1.5">
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>{t('nav.backToHome', 'Back to Home')}</span>
+        </Button>
+        <Card className="p-6 sm:p-8 border-border bg-surface shadow-xs space-y-4">
+          <h1 className="text-xl font-display font-bold text-primary">
+            Sign in with Google to register your organization
+          </h1>
+          <p className="text-sm text-zinc-500">
+            Your verified Google email will be used for your account. Organization contact details are collected separately.
+          </p>
+          <GoogleAuthButton />
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto py-6 sm:py-10 space-y-8 animate-in fade-in duration-200 font-sans">
@@ -402,11 +379,11 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
               </div>
             </div>
 
-            {/* Representative & Verified Phone Section */}
+            {/* Representative Contact Section */}
             <div className="pt-4 border-t border-border space-y-4">
               <div>
                 <h2 className="text-sm font-bold text-primary font-display uppercase tracking-wider">
-                  2. Authorized Representative &amp; Mobile Verification
+                  2. Authorized Representative &amp; Contact Details
                 </h2>
                 <p className="text-[11px] text-zinc-500 mt-0.5">
                   The primary contact person authorized by board resolution or power of attorney.
@@ -469,109 +446,28 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
 
                 <div>
                   <label className="block font-semibold text-primary mb-1">
-                    Verified Mobile Phone *
+                    Contact Phone *
                   </label>
                   <div className="relative">
                     <input
                       type="tel"
                       required
-                      disabled={isPhoneVerified}
                       placeholder="+251 9XX XXX XXX"
                       value={contactPhone}
                       onChange={(e) => {
                         setContactPhone(e.target.value);
                         setRepPhone(e.target.value);
                       }}
-                      className="w-full px-3.5 py-2.5 pl-10 rounded-lg border border-border bg-surface text-primary font-mono focus:ring-1 focus:ring-accent disabled:opacity-75"
+                      className="w-full px-3.5 py-2.5 pl-10 rounded-lg border border-border bg-surface text-primary font-mono focus:ring-1 focus:ring-accent"
                     />
                     <Phone className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   </div>
                 </div>
               </div>
 
-              {/* Integrated Phase 3A Phone OTP Flow */}
-              {!isPhoneVerified ? (
-                <div className="p-4 rounded-xl border border-[#9A7432]/40 bg-[#FAF6EE] dark:bg-[#14110E] space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-bold text-primary flex items-center gap-1.5">
-                        <KeyRound className="w-4 h-4 text-accent" />
-                        Phone Verification (Phase 3A Integrated OTP)
-                      </p>
-                      <p className="text-[11px] text-zinc-500">
-                        Verify your mobile phone with a 6-digit confirmation code.
-                      </p>
-                    </div>
-                    {!otpSent && (
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        isLoading={isOtpLoading}
-                        onClick={handleSendOtp}
-                      >
-                        Send Code
-                      </Button>
-                    )}
-                  </div>
-
-                  {otpSent && (
-                    <div className="space-y-2 pt-2 border-t border-border">
-                      {simulatedDebugCode && (
-                        <div className="p-2 rounded bg-accent/10 border border-accent/30 font-mono text-[11px] text-accent">
-                          Verification Code: <span className="font-bold">{simulatedDebugCode}</span>
-                        </div>
-                      )}
-
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          maxLength={6}
-                          placeholder="123456"
-                          value={otpCode}
-                          onChange={(e) => setOtpCode(e.target.value)}
-                          className="flex-1 px-3 py-2 rounded-lg border border-border bg-surface text-sm font-mono tracking-widest text-center"
-                        />
-                        <Button
-                          type="button"
-                          variant="accent"
-                          size="sm"
-                          isLoading={isOtpLoading}
-                          onClick={handleVerifyOtp}
-                        >
-                          Verify OTP
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={handleSendOtp}
-                        >
-                          <RefreshCw className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-
-                      {otpError && (
-                        <p className="text-[11px] text-red-500">{otpError}</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-300">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>Representative phone verified via OTP ({contactPhone})</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsPhoneVerified(false)}
-                    className="text-[11px] underline text-zinc-500 hover:text-primary cursor-pointer"
-                  >
-                    Change Phone
-                  </button>
-                </div>
-              )}
+              <p className="text-[11px] text-emerald-700 dark:text-emerald-300">
+                Signed in with verified Google email: {user.email}
+              </p>
             </div>
 
             <div className="pt-4 flex items-center justify-between border-t border-border">

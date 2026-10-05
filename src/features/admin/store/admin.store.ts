@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { AuditLog, AdminStats } from '../types/admin.types';
-import { INITIAL_ADMIN_STATS, INITIAL_AUDIT_LOGS } from '../data/admin.data';
 
 interface AdminState {
   stats: AdminStats;
@@ -12,8 +11,14 @@ interface AdminState {
 }
 
 export const useAdminStore = create<AdminState>((set) => ({
-  stats: INITIAL_ADMIN_STATS,
-  auditLogs: INITIAL_AUDIT_LOGS,
+  stats: {
+    pendingCount: 0,
+    approvedCount: 0,
+    rejectedCount: 0,
+    totalVolumeETB: 0,
+    activeFoundations: 0,
+  },
+  auditLogs: [],
   selectedCampaignId: null,
   setStats: (stats) => set({ stats }),
   addAuditLog: (log) =>

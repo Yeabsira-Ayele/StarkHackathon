@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Eye, UserX, UserCheck } from 'lucide-react';
 import { useAdmin } from '../hooks/AdminContext.ts';
 import {
@@ -7,6 +8,7 @@ import {
 } from '../components/AdminUI.tsx';
 
 export const AdminUsers: React.FC = () => {
+  const { t } = useTranslation();
   const { store, go } = useAdmin();
   const { notify } = useAdminToast();
   const [tab, setTab] = useState('all');
@@ -32,15 +34,15 @@ export const AdminUsers: React.FC = () => {
 
   return (
     <div>
-      <SectionHeader title="Users" subtitle="Individual users and organization accounts, with their activity." actions={<SearchBox value={q} onChange={setQ} placeholder="Search name or email…" />} />
+      <SectionHeader title={t('adminUsers.title')} subtitle={t('adminUsers.description')} actions={<SearchBox value={q} onChange={setQ} placeholder={t('adminUsers.search')} />} />
       <FilterTabs value={tab} onChange={setTab} tabs={[
-        { id: 'all', label: 'All', count: s.users.length },
-        { id: 'individual', label: 'Individuals', count: s.users.filter((u) => u.accountType === 'individual').length },
-        { id: 'organization', label: 'Organizations', count: s.users.filter((u) => u.accountType === 'organization').length },
+        { id: 'all', label: t('adminUsers.all'), count: s.users.length },
+        { id: 'individual', label: t('adminUsers.individuals'), count: s.users.filter((u) => u.accountType === 'individual').length },
+        { id: 'organization', label: t('adminUsers.organizations'), count: s.users.filter((u) => u.accountType === 'organization').length },
       ]} />
 
-      {rows.length === 0 ? <Panel><EmptyState title="No users found" /></Panel> : (
-        <DataTable head={['User', 'Account type', 'Joined', 'Donations', 'Fundraisers', 'Reports', 'Status', '']}>
+      {rows.length === 0 ? <Panel><EmptyState title={t('adminUsers.empty')} /></Panel> : (
+        <DataTable head={[t('adminUsers.user'), t('adminUsers.accountType'), t('adminUsers.joined'), t('adminUsers.donations'), t('adminUsers.fundraisers'), t('adminUsers.reports'), t('adminUsers.status'), '']}>
           {rows.map((u) => {
             const st = stats(u.id, u.email);
             return (
@@ -52,7 +54,7 @@ export const AdminUsers: React.FC = () => {
                 <Td className="font-mono text-xs">{u.fundraisers.length}</Td>
                 <Td className="font-mono text-xs">{st.reports.length}</Td>
                 <Td><StatusBadge status={u.status} /></Td>
-                <Td className="text-right"><AdminButton onClick={() => setOpenId(u.id)} icon={<Eye className="w-3.5 h-3.5" />}>Open</AdminButton></Td>
+                <Td className="text-right"><AdminButton onClick={() => setOpenId(u.id)} icon={<Eye className="w-3.5 h-3.5" />}>{t('adminUsers.open')}</AdminButton></Td>
               </Tr>
             );
           })}
@@ -63,7 +65,7 @@ export const AdminUsers: React.FC = () => {
         open={!!open}
         onClose={() => setOpenId(null)}
         title={open?.name || ''}
-        subtitle={open && <div className="flex gap-2 items-center"><StatusBadge status={open.status} /><span className="font-mono text-[10px] text-zinc-500 capitalize">{open.accountType} account</span></div>}
+        subtitle={open && <div className="flex gap-2 items-center"><StatusBadge status={open.status} /><span className="font-mono text-[10px] text-zinc-500 capitalize">{t('adminUsers.account', { type: open.accountType })}</span></div>}
         footer={open && (
           <AdminButton
             tone={open.status === 'active' ? 'red' : 'gold'}
@@ -73,19 +75,19 @@ export const AdminUsers: React.FC = () => {
               setBusy(true);
               try {
                 await store.actions.setUserStatus(open.id, open.status === 'active' ? 'suspended' : 'active');
-                notify(open.status === 'active' ? 'User suspended.' : 'User reactivated.');
+                notify(t(open.status === 'active' ? 'adminUsers.suspended' : 'adminUsers.reactivated'));
               } finally { setBusy(false); }
             }}
           >
-            {open.status === 'active' ? 'Suspend user' : 'Reactivate user'}
+            {open.status === 'active' ? t('adminUsers.suspend') : t('adminUsers.reactivate')}
           </AdminButton>
         )}
       >
         {open && os && (
           <>
-            <Panel title="Profile"><DetailGrid items={[['Email', open.email], ['Phone', open.phone], ['Joined', fmtDate(open.joinedAt)], ['Account type', <span className="capitalize">{open.accountType}</span>]]} /></Panel>
-            <Panel title={`Donations (${os.dons.length}) · ${fmtETB(os.total)} confirmed`} flush>
-              {os.dons.length === 0 ? <EmptyState title="No donations" /> : (
+            <Panel title={t('adminUsers.profile')}><DetailGrid items={[[t('adminUsers.email'), open.email], [t('adminUsers.phone'), open.phone], [t('adminUsers.joined'), fmtDate(open.joinedAt)], [t('adminUsers.accountType'), <span className="capitalize">{open.accountType}</span>]]} /></Panel>
+            <Panel title={t('adminUsers.donationsTotal', { count: os.dons.length, amount: fmtETB(os.total) })} flush>
+              {os.dons.length === 0 ? <EmptyState title={t('adminUsers.noDonations')} /> : (
                 <ul className="divide-y divide-[#26211C]/10 dark:divide-[#9A7432]/15">
                   {os.dons.map((d) => (
                     <li key={d.id} className="px-5 py-3 flex items-center justify-between gap-3">
@@ -96,8 +98,8 @@ export const AdminUsers: React.FC = () => {
                 </ul>
               )}
             </Panel>
-            <Panel title={`Fundraisers (${open.fundraisers.length})`} flush>
-              {open.fundraisers.length === 0 ? <EmptyState title="No fundraisers" /> : (
+            <Panel title={t('adminUsers.fundraisers') + ` (${open.fundraisers.length})`} flush>
+              {open.fundraisers.length === 0 ? <EmptyState title={t('adminUsers.noFundraisers')} /> : (
                 <ul className="divide-y divide-[#26211C]/10 dark:divide-[#9A7432]/15">
                   {open.fundraisers.map((f) => (
                     <li key={f.id} className="px-5 py-3 flex items-center justify-between gap-3">
@@ -108,8 +110,8 @@ export const AdminUsers: React.FC = () => {
                 </ul>
               )}
             </Panel>
-            <Panel title={`Reports filed (${os.reports.length})`} flush>
-              {os.reports.length === 0 ? <EmptyState title="No reports" /> : (
+            <Panel title={t('adminUsers.reportsFiled', { count: os.reports.length })} flush>
+              {os.reports.length === 0 ? <EmptyState title={t('adminUsers.noReports')} /> : (
                 <ul className="divide-y divide-[#26211C]/10 dark:divide-[#9A7432]/15">
                   {os.reports.map((r) => (
                     <li key={r.id} className="px-5 py-3 flex items-center justify-between gap-3">

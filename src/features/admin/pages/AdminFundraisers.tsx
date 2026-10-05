@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle, MessageSquareWarning, XCircle, FileText, Eye } from 'lucide-react';
 import { Campaign } from '../../../types/index.ts';
 import { useAdmin } from '../hooks/AdminContext.ts';
@@ -9,15 +10,16 @@ import {
 } from '../components/AdminUI.tsx';
 
 const TABS = [
-  { id: 'all', label: 'All', match: () => true },
-  { id: 'pending', label: 'Pending Review', match: (c: Campaign) => c.status === 'pending' },
-  { id: 'approved', label: 'Active', match: (c: Campaign) => c.status === 'approved' },
-  { id: 'needs_changes', label: 'Needs Changes', match: (c: Campaign) => c.status === 'needs_changes' },
-  { id: 'rejected', label: 'Rejected', match: (c: Campaign) => c.status === 'rejected' },
-  { id: 'completed', label: 'Completed', match: (c: Campaign) => c.status === 'completed' },
+  { id: 'all', match: () => true },
+  { id: 'pending', match: (c: Campaign) => c.status === 'pending' },
+  { id: 'approved', match: (c: Campaign) => c.status === 'approved' },
+  { id: 'needs_changes', match: (c: Campaign) => c.status === 'needs_changes' },
+  { id: 'rejected', match: (c: Campaign) => c.status === 'rejected' },
+  { id: 'completed', match: (c: Campaign) => c.status === 'completed' },
 ];
 
 export const AdminFundraisers: React.FC = () => {
+  const { t } = useTranslation();
   const { store, focusId } = useAdmin();
   const { notify } = useAdminToast();
   const [tab, setTab] = useState('all');
@@ -41,7 +43,7 @@ export const AdminFundraisers: React.FC = () => {
   const history = open
     ? [
         ...store.snapshot!.activity.filter((e) => e.refId === open.id).map((e) => ({ at: e.at, text: e.message, by: e.actor })),
-        { at: open.createdAt, text: 'Fundraiser created', by: open.creatorName },
+        { at: open.createdAt, text: t('adminFundraisers.createdEvent'), by: open.creatorName },
       ].sort((a, b) => +new Date(b.at) - +new Date(a.at))
     : [];
 
@@ -52,13 +54,13 @@ export const AdminFundraisers: React.FC = () => {
 
   return (
     <div>
-      <SectionHeader title="Fundraisers" subtitle="Nothing goes public until an admin approves it. Open a fundraiser to review it." actions={<SearchBox value={q} onChange={setQ} placeholder="Search title, creator, location…" />} />
-      <FilterTabs value={tab} onChange={setTab} tabs={TABS.map((t) => ({ id: t.id, label: t.label, count: all.filter(t.match).length }))} />
+      <SectionHeader title={t('adminFundraisers.title')} subtitle={t('adminFundraisers.description')} actions={<SearchBox value={q} onChange={setQ} placeholder={t('adminFundraisers.search')} />} />
+      <FilterTabs value={tab} onChange={setTab} tabs={TABS.map((filter) => ({ id: filter.id, label: t(filter.id === 'all' ? 'adminUi.all' : `adminUi.status.${filter.id}`), count: all.filter(filter.match).length }))} />
 
       {rows.length === 0 ? (
-        <Panel><EmptyState title="No fundraisers here" text="Nothing matches this filter." /></Panel>
+        <Panel><EmptyState title={t('adminFundraisers.empty')} text={t('adminUi.noMatches')} /></Panel>
       ) : (
-        <DataTable head={['Fundraiser', 'Category', 'Goal', 'Raised', 'Status', 'Creator', '']}>
+        <DataTable head={[t('adminFundraisers.fundraiser'), t('adminUi.category'), t('adminUi.goal'), t('adminUi.raised'), t('adminUi.statusLabel'), t('adminUi.creator'), '']}>
           {rows.map((c) => (
             <Tr key={c.id}>
               <Td className="max-w-xs">
@@ -70,7 +72,7 @@ export const AdminFundraisers: React.FC = () => {
               <Td className="font-mono text-xs tabular-nums whitespace-nowrap">{fmtETB(c.raisedAmount)}</Td>
               <Td><StatusBadge status={c.status} fundraiser /></Td>
               <Td className="text-xs max-w-[180px]"><span className="line-clamp-2">{c.creatorName}</span></Td>
-              <Td className="text-right"><AdminButton onClick={() => setOpenId(c.id)} icon={<Eye className="w-3.5 h-3.5" />}>Open</AdminButton></Td>
+              <Td className="text-right"><AdminButton onClick={() => setOpenId(c.id)} icon={<Eye className="w-3.5 h-3.5" />}>{t('adminUi.open')}</AdminButton></Td>
             </Tr>
           ))}
         </DataTable>
@@ -84,46 +86,46 @@ export const AdminFundraisers: React.FC = () => {
         footer={
           open?.status === 'pending' ? (
             <>
-              <AdminButton tone="gold" busy={busy} icon={<CheckCircle className="w-3.5 h-3.5" />} onClick={() => act(async () => { await store.actions.approveFundraiser(open); }, 'Fundraiser approved and published.')}>Approve</AdminButton>
-              <AdminButton busy={busy} icon={<MessageSquareWarning className="w-3.5 h-3.5" />} onClick={() => setModal('changes')}>Request changes</AdminButton>
-              <AdminButton tone="red" busy={busy} icon={<XCircle className="w-3.5 h-3.5" />} onClick={() => setModal('reject')}>Reject</AdminButton>
+              <AdminButton tone="gold" busy={busy} icon={<CheckCircle className="w-3.5 h-3.5" />} onClick={() => act(async () => { await store.actions.approveFundraiser(open); }, t('adminFundraisers.approvedToast'))}>{t('adminUi.approve')}</AdminButton>
+              <AdminButton busy={busy} icon={<MessageSquareWarning className="w-3.5 h-3.5" />} onClick={() => setModal('changes')}>{t('adminUi.requestChanges')}</AdminButton>
+              <AdminButton tone="red" busy={busy} icon={<XCircle className="w-3.5 h-3.5" />} onClick={() => setModal('reject')}>{t('adminUi.reject')}</AdminButton>
             </>
           ) : open ? (
-            <span className="font-mono text-[11px] text-zinc-500">Review actions are available while a fundraiser is Pending Review.</span>
+            <span className="font-mono text-[11px] text-zinc-500">{t('adminFundraisers.pendingActionsHint')}</span>
           ) : null
         }
       >
         {open && !info && (
-          <Panel title="Additional review details unavailable">
+          <Panel title={t('adminFundraisers.detailsUnavailable')}>
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              This fundraiser has no additional beneficiary, receiver, or document metadata attached.
+              {t('adminFundraisers.metadataUnavailable')}
             </p>
           </Panel>
         )}
         {open && info && (
           <>
-            <Panel title="Fundraiser">
+            <Panel title={t('adminFundraisers.fundraiser')}>
               <DetailGrid items={[
-                ['Category', <span className="capitalize">{open.category}</span>],
-                ['Location', open.location],
-                ['Goal', fmtETB(open.goalAmount)],
-                ['Raised', fmtETB(open.raisedAmount)],
-                ['Deadline', 'Not set'],
-                ['Submitted', fmtDate(open.createdAt)],
+                [t('adminUi.category'), <span className="capitalize">{open.category}</span>],
+                [t('adminUi.location'), open.location],
+                [t('adminUi.goal'), fmtETB(open.goalAmount)],
+                [t('adminUi.raised'), fmtETB(open.raisedAmount)],
+                [t('adminFundraisers.deadline'), t('adminFundraisers.notSet')],
+                [t('adminUi.submitted'), fmtDate(open.createdAt)],
               ]} />
-              <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mt-4 mb-1">Story</p>
+              <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mt-4 mb-1">{t('adminFundraisers.story')}</p>
               <p className="text-sm leading-relaxed text-[#201C18] dark:text-[#F4EFE6]">{open.story}</p>
             </Panel>
 
-            <Panel title="Creator · Beneficiary · Receiver">
+            <Panel title={t('adminFundraisers.peopleAndReceiver')}>
               <div className="grid sm:grid-cols-3 gap-5">
-                <div><p className="font-mono text-[10px] font-black uppercase text-[#8B2626] mb-1">Creator</p><p className="text-sm">{open.creatorName}</p>{open.organizationName && <p className="font-mono text-[10px] text-zinc-500">{open.organizationName}</p>}</div>
-                <div><p className="font-mono text-[10px] font-black uppercase text-[#8B2626] mb-1">Beneficiary</p><p className="text-sm">{info.beneficiary.name}</p><p className="font-mono text-[10px] text-zinc-500">{info.beneficiary.relation} · {info.beneficiary.phone}</p></div>
-                <div><p className="font-mono text-[10px] font-black uppercase text-[#8B2626] mb-1">Receiving account</p><p className="text-sm">{info.receiving.accountName}</p><p className="font-mono text-[10px] text-zinc-500">{info.receiving.bank}<br />{info.receiving.accountNumber}</p></div>
+                <div><p className="font-mono text-[10px] font-black uppercase text-[#8B2626] mb-1">{t('adminUi.creator')}</p><p className="text-sm">{open.creatorName}</p>{open.organizationName && <p className="font-mono text-[10px] text-zinc-500">{open.organizationName}</p>}</div>
+                <div><p className="font-mono text-[10px] font-black uppercase text-[#8B2626] mb-1">{t('adminFundraisers.beneficiary')}</p><p className="text-sm">{info.beneficiary.name}</p><p className="font-mono text-[10px] text-zinc-500">{info.beneficiary.relation} · {info.beneficiary.phone}</p></div>
+                <div><p className="font-mono text-[10px] font-black uppercase text-[#8B2626] mb-1">{t('adminFundraisers.receivingAccount')}</p><p className="text-sm">{info.receiving.accountName}</p><p className="font-mono text-[10px] text-zinc-500">{info.receiving.bank}<br />{info.receiving.accountNumber}</p></div>
               </div>
             </Panel>
 
-            <Panel title="Supporting & verification information">
+            <Panel title={t('adminFundraisers.supportingInfo')}>
               <ul className="space-y-2 mb-3">
                 {info.documents.map((d) => (
                   <li key={d.name} className="flex items-center gap-2 font-mono text-xs"><FileText className="w-4 h-4 text-[#9A7432]" /><span>{d.name}</span><span className="text-zinc-500">· {d.kind}</span></li>
@@ -132,7 +134,7 @@ export const AdminFundraisers: React.FC = () => {
               <p className="text-sm text-zinc-600 dark:text-zinc-400">{info.verificationNotes}</p>
             </Panel>
 
-            <Panel title="History" flush>
+            <Panel title={t('adminFundraisers.history')} flush>
               <ul className="divide-y divide-[#26211C]/10 dark:divide-[#9A7432]/15">
                 {history.map((h, i) => (
                   <li key={i} className="px-5 py-3"><p className="text-sm">{h.text}</p><p className="font-mono text-[10px] text-zinc-500">{h.by} · {fmtDateTime(h.at)}</p></li>
@@ -145,20 +147,20 @@ export const AdminFundraisers: React.FC = () => {
 
       <ReasonModal
         open={modal === 'changes'}
-        title="Request changes"
-        description="The creator can edit and resubmit."
-        confirmLabel="Send request"
+        title={t('adminUi.requestChanges')}
+        description={t('adminFundraisers.requestDescription')}
+        confirmLabel={t('adminOrganizations.sendRequest')}
         tone="gold"
         onClose={() => setModal(null)}
-        onConfirm={(r) => act(async () => { await store.actions.requestFundraiserChanges(open!, r); setModal(null); }, 'Changes requested. The creator will be notified.')}
+        onConfirm={(r) => act(async () => { await store.actions.requestFundraiserChanges(open!, r); setModal(null); }, t('adminFundraisers.changesRequested'))}
       />
       <ReasonModal
         open={modal === 'reject'}
-        title="Reject fundraiser"
-        description="Explain why this fundraiser cannot be published."
-        confirmLabel="Reject fundraiser"
+        title={t('adminFundraisers.rejectTitle')}
+        description={t('adminFundraisers.rejectDescription')}
+        confirmLabel={t('adminFundraisers.rejectTitle')}
         onClose={() => setModal(null)}
-        onConfirm={(r) => act(async () => { await store.actions.rejectFundraiser(open!, r); setModal(null); }, 'Fundraiser rejected.')}
+        onConfirm={(r) => act(async () => { await store.actions.rejectFundraiser(open!, r); setModal(null); }, t('adminFundraisers.rejected'))}
       />
     </div>
   );

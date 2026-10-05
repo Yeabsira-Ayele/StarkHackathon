@@ -2,12 +2,13 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { voxideClient } from '../api/voxide.client';
 import { useCampaignStore } from '../../campaigns/store/campaign.store';
+import { changeLanguage } from '../../../i18n/index.ts';
 
 /**
  * Registers application-specific voice capabilities into VoxideClient:
  * 1. goToPage: Navigate to routes/views
  * 2. filterCampaigns: Filter causes by category (medical, education, emergency, community)
- * 3. changeLanguage: Switch language between am, en, om
+ * 3. changeLanguage: Switch language between Amharic and English
  * 4. startDonation: Initiate pledge flow with dangerous: true (requires user confirmation)
  */
 export function useVoxideCapabilities() {
@@ -85,25 +86,20 @@ export function useVoxideCapabilities() {
       changeLanguage: {
         description: t(
           'voxide.capabilities.changeLanguage.description',
-          'Change application language (am, en, om).'
+          'Change application language between Amharic (am) and English (en).'
         ),
         params: {
           language: {
             type: 'string',
             required: true,
-            enum: ['am', 'en', 'om'],
-            description: 'Language code: am for Amharic, en for English, om for Afaan Oromoo',
+            enum: ['am', 'en'],
+            description: 'Language code: am for Amharic or en for English',
           },
         },
         handler: async ({ language }: { language?: string }) => {
           const lang = language?.toLowerCase();
-          if (lang === 'am' || lang === 'en' || lang === 'om') {
-            await i18n.changeLanguage(lang);
-            try {
-              localStorage.setItem('lewegene_language', lang);
-            } catch {
-              // ignore
-            }
+          if (lang === 'am' || lang === 'en') {
+            await changeLanguage(lang);
             window.dispatchEvent(
               new CustomEvent('voxide:language', { detail: { language: lang } })
             );
@@ -117,7 +113,7 @@ export function useVoxideCapabilities() {
             status: 'error',
             message: t(
               'voxide.messages.invalidLanguage',
-              'Invalid language. Please select am, en, or om.'
+              'Invalid language. Please select am or en.'
             ),
           };
         },

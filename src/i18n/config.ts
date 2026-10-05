@@ -23,7 +23,7 @@ function readSavedLanguage(): AppLanguage {
   if (typeof window === 'undefined') return 'am';
   try {
     const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-    return stored === 'en' || stored === 'om' || stored === 'am' ? stored : 'am';
+    return stored === 'en' || stored === 'am' ? stored : 'am';
   } catch {
     return 'am';
   }
@@ -70,4 +70,3 @@ if (typeof document !== 'undefined') {
 }
 
 export default i18n;
-

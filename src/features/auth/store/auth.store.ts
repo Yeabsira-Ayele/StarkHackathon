@@ -10,7 +10,7 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set) => {
-  const initialUser: User | null = (() => {
+  let initialUser: User | null = (() => {
     try {
       const saved = localStorage.getItem('lewegene_user');
       return saved ? JSON.parse(saved) as User : null;
@@ -19,9 +19,16 @@ export const useAuthStore = create<AuthState>((set) => {
     }
   })();
 
-  const initialToken = typeof window !== 'undefined'
+  let initialToken = typeof window !== 'undefined'
     ? localStorage.getItem('lewegene_auth_token')
     : null;
+
+  if (initialToken === 'lewegene-local-demo-session') {
+    localStorage.removeItem('lewegene_user');
+    localStorage.removeItem('lewegene_auth_token');
+    initialUser = null;
+    initialToken = null;
+  }
 
   return {
     user: initialUser,

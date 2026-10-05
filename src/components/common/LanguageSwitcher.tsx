@@ -11,7 +11,6 @@ export interface LanguageSwitcherProps {
 
 /**
  * Reusable language switcher for English / Amharic.
- * For this MVP, Afaan Oromoo is retained in the architecture but hidden from the UI switcher.
  * Changing the language is persisted centrally in `i18n/config.ts`, so the
  * selection survives navigation and page reloads on every route.
  */

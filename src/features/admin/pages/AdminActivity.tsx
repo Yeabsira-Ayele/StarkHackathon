@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   UserPlus, Building2, FilePlus2, FileCheck2, FilePen, FileX2, Trash2, HandCoins, Flag, ShieldCheck, Phone, Settings2, CircleCheck, CircleX, Eye,
 } from 'lucide-react';
@@ -29,9 +30,10 @@ const ICONS: Record<ActivityType, React.ReactNode> = {
   admin_action: <Settings2 className="w-4 h-4" />,
 };
 
-export const ActivityList: React.FC<{ events: ActivityEvent[] }> = ({ events }) =>
-  events.length === 0 ? (
-    <EmptyState title="No activity yet" text="Approvals, report reviews, and other changes will appear here." />
+export const ActivityList: React.FC<{ events: ActivityEvent[] }> = ({ events }) => {
+  const { t } = useTranslation();
+  return events.length === 0 ? (
+    <EmptyState title={t('adminActivity.empty')} text={t('adminActivity.emptyHint')} />
   ) : (
     <ul className="divide-y divide-[#26211C]/10 dark:divide-[#9A7432]/15">
       {events.map((e) => (
@@ -40,13 +42,14 @@ export const ActivityList: React.FC<{ events: ActivityEvent[] }> = ({ events }) 
           <div className="min-w-0 flex-1">
             <p className="text-sm text-[#201C18] dark:text-[#F4EFE6]">{e.message}</p>
             <p className="font-mono text-[10px] text-zinc-500 mt-0.5">
-              {e.actor}{e.actorIsAdmin ? ' (admin)' : ''} · {fmtDateTime(e.at)}
+              {e.actor}{e.actorIsAdmin ? ` (${t('adminUi.adminRole')})` : ''} · {fmtDateTime(e.at)}
             </p>
           </div>
         </li>
       ))}
     </ul>
   );
+};
 
 const GROUPS: Record<string, (t: ActivityType) => boolean> = {
   all: () => true,
@@ -59,6 +62,7 @@ const GROUPS: Record<string, (t: ActivityType) => boolean> = {
 };
 
 export const AdminActivity: React.FC = () => {
+  const { t } = useTranslation();
   const { store } = useAdmin();
   const [tab, setTab] = useState('all');
   const [q, setQ] = useState('');
@@ -74,18 +78,18 @@ export const AdminActivity: React.FC = () => {
   );
   return (
     <div>
-      <SectionHeader title="Activity" subtitle="Complete platform activity log, including admin actions." actions={<SearchBox value={q} onChange={setQ} placeholder="Search activity…" />} />
+      <SectionHeader title={t('adminActivity.title')} subtitle={t('adminActivity.description')} actions={<SearchBox value={q} onChange={setQ} placeholder={t('adminActivity.search')} />} />
       <FilterTabs
         value={tab}
         onChange={setTab}
         tabs={[
-          { id: 'all', label: 'All', count: events.length },
-          { id: 'users', label: 'Users' },
-          { id: 'fundraisers', label: 'Fundraisers' },
-          { id: 'donations', label: 'Donations' },
-          { id: 'reports', label: 'Reports' },
-          { id: 'organizations', label: 'Organizations' },
-          { id: 'admin', label: 'Admin actions' },
+          { id: 'all', label: t('adminUi.all'), count: events.length },
+          { id: 'users', label: t('adminUi.users') },
+          { id: 'fundraisers', label: t('adminUi.fundraisers') },
+          { id: 'donations', label: t('adminUi.donations') },
+          { id: 'reports', label: t('adminUi.reports') },
+          { id: 'organizations', label: t('adminUi.organizations') },
+          { id: 'admin', label: t('adminActivity.adminActions') },
         ]}
       />
       <div className="border border-[#26211C]/30 dark:border-[#9A7432]/30 bg-[#FCF9F2] dark:bg-[#1E1A17]">

@@ -99,13 +99,11 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
     setOtpError(null);
     setIsOtpLoading(true);
     try {
-      const res = await requestOtp({ phone: contactPhone, purpose: 'signup' });
+      const res = await requestOtp({ phone: contactPhone, purpose: 'signup', role: 'foundation' });
       setOtpSent(true);
-      setSimulatedDebugCode(res.debugCode || '123456');
-    } catch (err: any) {
-      // If account exists or demo, test verification code
-      setOtpSent(true);
-      setSimulatedDebugCode('123456');
+      setSimulatedDebugCode(res.debugCode || null);
+    } catch (err) {
+      setOtpError(err instanceof Error ? err.message : 'Could not send the verification code.');
     } finally {
       setIsOtpLoading(false);
     }
@@ -119,16 +117,11 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
     setOtpError(null);
     setIsOtpLoading(true);
     try {
-      await verifyOtp({ phone: contactPhone, otp: otpCode, purpose: 'signup' });
+      await verifyOtp({ phone: contactPhone, otp: otpCode, purpose: 'signup', role: 'foundation' });
       setIsPhoneVerified(true);
       setOtpSent(false);
-    } catch (err: any) {
-      if (otpCode.trim() === '123456') {
-        setIsPhoneVerified(true);
-        setOtpSent(false);
-      } else {
-        setOtpError(err.message || 'Incorrect verification code. Please check and try again.');
-      }
+    } catch (err) {
+      setOtpError(err instanceof Error ? err.message : 'Could not verify the code.');
     } finally {
       setIsOtpLoading(false);
     }

@@ -2,12 +2,13 @@ export type CampaignCategory =
   | 'medical'
   | 'education'
   | 'emergency'
+  | 'business'
   | 'water'
   | 'environment'
   | 'community'
   | 'other';
 
-export type CampaignStatus = 'pending' | 'approved' | 'rejected' | 'completed' | 'paused';
+export type CampaignStatus = 'pending' | 'approved' | 'needs_changes' | 'rejected' | 'completed' | 'paused';
 
 export interface BudgetItem {
   item: string;

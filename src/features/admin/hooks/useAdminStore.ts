@@ -10,7 +10,7 @@ export interface AdminStoreOptions {
   onRejectCampaign?: (id: string) => void | Promise<void>;
 }
 
-// NOW: reads mock data. LATER: swap internals for TanStack Query + axios (same return shape).
+// Admin records are loaded from the API; unsupported backend resources are left empty or report errors.
 export function useAdminStore({ onApproveCampaign, onRejectCampaign }: AdminStoreOptions) {
   const [snapshot, setSnapshot] = useState<AdminSnapshot | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -53,19 +53,16 @@ export function useAdminStore({ onApproveCampaign, onRejectCampaign }: AdminStor
       approveFundraiser: (c: Campaign) =>
         run(async () => {
           if (onApproveCampaign) await onApproveCampaign(c.id);
-          else await campaignApi.updateCampaignStatus(c.id, 'approved');
-          return adminApi.logEvent('fundraiser_approved', `Fundraiser approved: ${c.title}`, c.id);
+          else await adminApi.moderateCampaign(c.id, 'approve');
         }),
       requestFundraiserChanges: (c: Campaign, reason: string) =>
         run(async () => {
-          await campaignApi.updateCampaignStatus(c.id, 'needs_changes');
-          return adminApi.logEvent('fundraiser_changes_requested', `Changes requested on ${c.title}: ${reason}`, c.id);
+          await adminApi.moderateCampaign(c.id, 'request_changes', reason);
         }),
       rejectFundraiser: (c: Campaign, reason: string) =>
         run(async () => {
           if (onRejectCampaign) await onRejectCampaign(c.id);
-          else await campaignApi.updateCampaignStatus(c.id, 'rejected');
-          return adminApi.logEvent('fundraiser_rejected', `Fundraiser rejected: ${c.title} (${reason})`, c.id);
+          else await adminApi.moderateCampaign(c.id, 'reject', reason);
         }),
       // Donations
       confirmDonation: (id: string) => run(() => adminApi.decideDonation(id, 'confirmed')),

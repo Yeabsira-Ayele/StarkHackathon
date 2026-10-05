@@ -5,10 +5,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Route, Routes, useNavigate, useParams } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { Campaign, CampaignCategory, ContributionCertificate, Organization, PaymentRail } from './types/index.ts';
 import { campaignApi } from './services/api/campaignApi.ts';
-import { INITIAL_CAMPAIGNS } from './data/mockCampaigns.ts';
-import { INITIAL_ORGANIZATIONS } from './data/mockOrganizations.ts';
 import { BanknoteMasterCanvas } from './components/banknote/BanknoteMasterCanvas.tsx';
 import { VoxideBar } from './components/voice/VoxideBar.tsx';
 import { VoiceCampaignModal } from './components/voice/VoiceCampaignModal.tsx';
@@ -25,8 +24,6 @@ import { AdminPortal } from './features/admin/pages/AdminPortal.tsx';
 import FundraisingApp from './features/fundraising/FundraisingApp.tsx';
 import ProfilePage from './features/profile/ProfilePage.tsx';
 import MyReportsPage from './features/profile/MyReportsPage.tsx';
-import { DemoRoleSwitcher } from './features/auth/components/DemoRoleSwitcher.tsx';
-import { DEMO_ACCOUNTS, DEMO_SESSION_TOKEN, type DemoRole } from './features/auth/data/demoAccounts.ts';
 import { useAuthStore } from './features/auth/store/auth.store.ts';
 import { LANGUAGE_CHANGED_EVENT } from './i18n/config.ts';
 import { FoundationRegister } from './pages/FoundationRegister.tsx';
@@ -48,6 +45,10 @@ export type AppView =
   | 'foundation_impact'
   | 'organization_profile';
 
+type ToastMessage =
+  | { key: string; values?: Record<string, string | number> }
+  | { text: string };
+
 interface PlatformAppProps {
   initialMode?: 'overview' | 'discover' | 'detail' | 'pledge' | 'vault' | 'impact' | 'treasury' | 'engrave' | 'audit';
   initialCampaignId?: string;
@@ -62,18 +63,15 @@ function PlatformApp({
   openVoice = false,
 }: PlatformAppProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user, isAuthenticated } = useAuth();
   const [currentView, setCurrentView] = useState<AppView>('campaigns');
   const [userRole, setUserRole] = useState<'donor' | 'foundation'>('donor');
   
-  const [campaigns, setCampaigns] = useState<Campaign[]>(() => {
-    return INITIAL_CAMPAIGNS.filter((c) => c.status === 'approved');
-  });
-  const [pendingCampaigns, setPendingCampaigns] = useState<Campaign[]>(() => {
-    return INITIAL_CAMPAIGNS.filter((c) => c.status === 'pending');
-  });
-  const [organizations, setOrganizations] = useState<Organization[]>(INITIAL_ORGANIZATIONS);
-  const [currentOrganization, setCurrentOrganization] = useState<Organization | null>(INITIAL_ORGANIZATIONS[0] || null);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [pendingCampaigns, setPendingCampaigns] = useState<Campaign[]>([]);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [currentOrganization, setCurrentOrganization] = useState<Organization | null>(null);
 
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [activeCertificate, setActiveCertificate] = useState<ContributionCertificate | null>(null);
@@ -138,9 +136,9 @@ function PlatformApp({
   };
 
   // Toast notification
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
+  const [toast, setToast] = useState<{ message: ToastMessage; type: 'success' | 'info' } | null>(null);
 
-  const showToast = (message: string, type: 'success' | 'info' = 'success') => {
+  const showToast = (message: ToastMessage, type: 'success' | 'info' = 'success') => {
     setToast({ message, type });
     setTimeout(() => {
       setToast(null);
@@ -151,19 +149,26 @@ function PlatformApp({
     setIsLoading(true);
     setError(null);
     try {
-      const [approvedList, pendingList, orgList] = await Promise.all([
+      const [approvedList, orgList] = await Promise.all([
         campaignApi.getCampaigns({ status: 'approved' }),
-        campaignApi.getAdminCampaigns(),
         campaignApi.getOrganizations(),
       ]);
+      const pendingList = user?.role === 'admin'
+        ? await campaignApi.getAdminCampaigns()
+        : [];
       setCampaigns(approvedList);
       setPendingCampaigns(pendingList);
       setOrganizations(orgList);
-      if (orgList.length > 0 && !currentOrganization) {
-        setCurrentOrganization(orgList[0]);
+      if (user?.role === 'foundation') {
+        setCurrentOrganization(await organizationService.getByUserId(user.id, user.email));
+      } else {
+        setCurrentOrganization(null);
+      }
+      if (initialMode === 'pledge' && !initialCampaignId && approvedList.length > 0) {
+        setSelectedCampaign(approvedList[0]);
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to load campaign data');
+      setError(err.message || t('notifications.campaignLoadFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -196,9 +201,13 @@ function PlatformApp({
     const res = await campaignApi.submitDonation(selectedCampaign.id, payload);
     setSelectedCampaign(res.campaign);
     setActiveCertificate(res.certificate);
-    showToast(
-      `Received ${payload.amount.toLocaleString()} ETB via ${payload.paymentRail.toUpperCase()}. Official certificate generated!`
-    );
+    showToast({
+      key: 'notifications.donationReceived',
+      values: {
+        amount: payload.amount.toLocaleString(),
+        rail: payload.paymentRail.toUpperCase(),
+      },
+    });
     await loadData();
     return res;
   };
@@ -223,15 +232,19 @@ function PlatformApp({
       setVoiceDonationData(null);
       await loadData();
       setActiveCertificate(res.certificate);
-      showToast(
-        `Voice-authorized ${payload.amount.toLocaleString()} ETB donation verified! Archival certificate ready.`
-      );
+      showToast({
+        key: 'notifications.voiceDonationReceived',
+        values: { amount: payload.amount.toLocaleString() },
+      });
 
       const updated = await campaignApi.getCampaignById(payload.campaignId);
       setSelectedCampaign(updated);
       setCurrentView('detail');
     } catch (err: any) {
-      showToast(err.message || 'Payment failed', 'info');
+      showToast(
+        err.message ? { text: err.message } : { key: 'notifications.paymentFailed' },
+        'info'
+      );
     } finally {
       setIsProcessingVoice(false);
     }
@@ -253,7 +266,7 @@ function PlatformApp({
     autoApprove: boolean
   ) => {
     if (currentOrganization && currentOrganization.verificationStatus !== 'approved') {
-      showToast('Cannot publish cause: Organization is pending review or unapproved.', 'info');
+      showToast({ key: 'notifications.organizationPending' }, 'info');
       throw new Error('Organization must be verified before publishing a cause.');
     }
 
@@ -268,7 +281,7 @@ function PlatformApp({
 
     await loadData();
 
-    showToast(`Cause "${created.title}" published immediately to the public discovery feed!`);
+    showToast({ key: 'notifications.causePublished', values: { title: created.title } });
     setSelectedCampaign(created);
     setCurrentView('detail');
   };
@@ -298,46 +311,31 @@ function PlatformApp({
 
       setVoiceCampaignData(null);
       await loadData();
-      showToast(`Voice cause "${created.title}" successfully confirmed & published!`);
+      showToast({ key: 'notifications.voiceCausePublished', values: { title: created.title } });
       setSelectedCampaign(created);
       setCurrentView('detail');
     } catch (err: any) {
-      showToast(err.message || 'Creation failed', 'info');
+      showToast(
+        err.message ? { text: err.message } : { key: 'notifications.creationFailed' },
+        'info'
+      );
     } finally {
       setIsProcessingVoice(false);
     }
   };
 
   // Quick Demo Tour Switcher for Judges / Reviewers
-  const handleTriggerDemoTour = (tourType: 'donor' | 'foundation' | 'connected') => {
-    if (tourType === 'donor') {
-      setUserRole('donor');
-      if (campaigns.length > 0) {
-        handleSelectCampaign(campaigns[0]);
-        showToast('Demo Tour: Opened Bethlehem Cardiac Surgery cause. Click "Make a Contribution" to see the archival certificate flow!');
-      }
-    } else if (tourType === 'foundation') {
-      setUserRole('foundation');
-      setCurrentView('foundation_dashboard');
-      showToast('Demo Tour: Entered Foundation Console. Manage active projects, inspect recent donations, and view impact.');
-    } else if (tourType === 'connected') {
-      setUserRole('foundation');
-      setCurrentView('create');
-      showToast('Demo Tour: Create a cause in Foundation view → watch it appear instantly in Donor view!');
-    }
-  };
-
   // Admin moderation handlers
   const handleAdminApprove = async (id: string) => {
     await campaignApi.updateCampaignStatus(id, 'approved');
     await loadData();
-    showToast('Cause approved and published to the public feed.');
+    showToast({ key: 'notifications.causeApproved' });
   };
 
   const handleAdminReject = async (id: string) => {
     await campaignApi.updateCampaignStatus(id, 'rejected');
     await loadData();
-    showToast('Cause rejected and archived.');
+    showToast({ key: 'notifications.causeRejected' });
   };
 
   // Voxide Voice Assistant Capabilities Event Listeners
@@ -499,11 +497,16 @@ function PlatformApp({
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="flex-1 text-xs">
-            <p className="font-semibold text-primary">Lewegene Platform Update</p>
-            <p className="text-zinc-600 dark:text-zinc-400 mt-0.5 leading-relaxed">{toast.message}</p>
+            <p className="font-semibold text-primary">{t('notifications.platformUpdate')}</p>
+            <p className="text-zinc-600 dark:text-zinc-400 mt-0.5 leading-relaxed">
+              {'key' in toast.message
+                ? t(toast.message.key, toast.message.values)
+                : toast.message.text}
+            </p>
           </div>
           <button
             onClick={() => setToast(null)}
+            aria-label={t('common.dismiss', 'Dismiss notification')}
             className="text-zinc-400 hover:text-primary text-xs p-1 cursor-pointer"
           >
             &times;
@@ -537,25 +540,6 @@ function AdminRoute() {
   );
 }
 
-function DemoEntryRoute() {
-  const { role: roleParam } = useParams();
-  const navigate = useNavigate();
-  const setUser = useAuthStore((state) => state.setUser);
-
-  useEffect(() => {
-    const role = roleParam?.toLowerCase() as DemoRole | undefined;
-    if (!role || !Object.prototype.hasOwnProperty.call(DEMO_ACCOUNTS, role)) {
-      navigate('/profile', { replace: true });
-      return;
-    }
-    setUser(DEMO_ACCOUNTS[role], DEMO_SESSION_TOKEN);
-    const destination = role === 'admin' ? '/admin' : role === 'fundraiser' ? '/fundraising' : '/profile';
-    navigate(destination, { replace: true });
-  }, [navigate, roleParam, setUser]);
-
-  return <div className="grid min-h-screen place-items-center bg-[#F7F2E7] font-mono text-xs uppercase tracking-widest text-[#1E4D38] dark:bg-[#12100E] dark:text-[#52B788]">Opening workspace…</div>;
-}
-
 function OrganizationRegisterRoute() {
   const navigate = useNavigate();
   return (
@@ -571,6 +555,7 @@ function OrganizationRegisterRoute() {
 function OrganizationProfileRoute() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [org, setOrg] = useState<Organization | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
@@ -587,14 +572,14 @@ function OrganizationProfileRoute() {
   }, [id]);
 
   if (loading) {
-    return <div className="p-12 text-center font-mono text-xs">Loading organization profile...</div>;
+    return <div className="p-12 text-center font-mono text-xs">{t('notifications.loadingOrganization')}</div>;
   }
 
   if (!org) {
     return (
       <div className="p-12 text-center font-mono text-xs space-y-4">
-        <p>Organization not found.</p>
-        <button onClick={() => navigate('/')} className="underline cursor-pointer">Back to home</button>
+        <p>{t('notifications.organizationNotFound')}</p>
+        <button onClick={() => navigate('/')} className="underline cursor-pointer">{t('notifications.backHome')}</button>
       </div>
     );
   }
@@ -613,6 +598,7 @@ function OrganizationProfileRoute() {
 
 function FoundationDeskRoute() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
   const [org, setOrg] = useState<Organization | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -635,19 +621,19 @@ function FoundationDeskRoute() {
   }, [user]);
 
   if (loading) {
-    return <div className="p-12 text-center font-mono text-xs">Loading foundation workspace...</div>;
+    return <div className="p-12 text-center font-mono text-xs">{t('notifications.loadingFoundation')}</div>;
   }
 
   if (!org) {
     return (
       <div className="min-h-screen bg-[#F2ECE1] dark:bg-[#080706] text-[#201C18] dark:text-[#F4EFE6] px-4 sm:px-6 py-8 text-center font-mono text-xs space-y-4">
-        <p>No organization found.</p>
+        <p>{t('notifications.noOrganization')}</p>
         <div className="flex items-center justify-center gap-4">
           <button onClick={() => navigate('/')} className="underline cursor-pointer">
-            ← Back to Home
+            ← {t('nav.backToHome')}
           </button>
           <button onClick={() => navigate('/organizations/register')} className="underline cursor-pointer">
-            Register an organization
+            {t('notifications.registerOrganization')}
           </button>
         </div>
       </div>
@@ -673,8 +659,6 @@ function FoundationDeskRoute() {
 }
 
 export default function App() {
-  const firstCampaign = INITIAL_CAMPAIGNS.find((campaign) => campaign.status === 'approved');
-
   return (
     <BrowserRouter>
       <>
@@ -695,7 +679,7 @@ export default function App() {
           <Route path="/fundraising" element={<FundraisingApp />} />
           <Route
             path="/donations"
-            element={<PlatformApp initialMode="pledge" initialCampaignId={firstCampaign?.id} />}
+            element={<PlatformApp initialMode="pledge" />}
           />
           <Route path="/donations/:id" element={<CauseRoute mode="pledge" />} />
           <Route path="/contributions" element={<PlatformApp initialMode="vault" />} />
@@ -703,13 +687,10 @@ export default function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/reports" element={<MyReportsPage />} />
           <Route path="/my-reports" element={<MyReportsPage />} />
-          <Route path="/demo" element={<ProfilePage />} />
-          <Route path="/demo/:role" element={<DemoEntryRoute />} />
           <Route path="/impact" element={<PlatformApp initialMode="impact" />} />
           <Route path="/voxide" element={<PlatformApp openVoice />} />
           <Route path="*" element={<PlatformApp />} />
         </Routes>
-        <DemoRoleSwitcher />
       </>
     </BrowserRouter>
   );

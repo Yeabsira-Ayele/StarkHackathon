@@ -42,6 +42,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   const [step, setStep] = useState<RegisterStep>('phone_entry');
   const [phone, setPhone] = useState('');
   const [verificationToken, setVerificationToken] = useState<string | null>(null);
+  const [signupOtp, setSignupOtp] = useState<string | null>(null);
   const [simulatedCode, setSimulatedCode] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -89,9 +90,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   const onSendOtp = async (data: PhoneFormData) => {
     setErrorMsg(null);
     try {
-      const res = await requestOtp({ phone: data.phone, purpose: 'signup' });
+      const res = await requestOtp({ phone: data.phone, purpose: 'signup', role: selectedRole });
       setPhone(res.phone || data.phone);
-      setSimulatedCode(res.debugCode || '123456');
+      setSimulatedCode(res.debugCode || null);
       setStep('otp_entry');
     } catch (err: any) {
       setErrorMsg(err.message || t('errors.generic', 'Something went wrong'));
@@ -101,22 +102,31 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   const onVerifyOtp = async (data: OtpFormData) => {
     setErrorMsg(null);
     try {
-      const res = await verifyOtp({ phone, otp: data.otp, purpose: 'signup' });
-      if (res.verified && res.verificationToken) {
+      if (selectedRole === 'foundation') {
+        const res = await verifyOtp({ phone, otp: data.otp, purpose: 'signup', role: selectedRole });
+        if (!res.verified || !res.verificationToken) {
+          setErrorMsg(t('auth.validation.otpMismatch', 'Incorrect verification code. Please check and try again.'));
+          return;
+        }
         setVerificationToken(res.verificationToken);
-        setStep('details_entry');
       } else {
-        setErrorMsg(t('auth.validation.otpMismatch', 'Incorrect verification code. Please check and try again.'));
+        setSignupOtp(data.otp);
       }
+      setStep('details_entry');
     } catch (err: any) {
       setErrorMsg(err.message || t('auth.validation.otpMismatch', 'Incorrect verification code. Please check and try again.'));
     }
   };
 
   const onCompleteRegistration = async (data: RegisterDetailsFormData) => {
-    if (!verificationToken) {
+    if (selectedRole === 'foundation' && !verificationToken) {
       setErrorMsg('Phone verification expired. Please verify your phone number again.');
       setStep('phone_entry');
+      return;
+    }
+    if (selectedRole === 'donor' && !signupOtp) {
+      setErrorMsg('Enter the 6-digit verification code before creating your account.');
+      setStep('otp_entry');
       return;
     }
     setErrorMsg(null);
@@ -128,7 +138,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         passcode: data.passcode,
         role: data.role,
         organizationName: data.organizationName,
-        verificationToken,
+        verificationToken: verificationToken || undefined,
+        otp: signupOtp || undefined,
       });
       setStep('completed');
       onSuccess?.();
@@ -140,8 +151,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   const handleResend = async () => {
     setErrorMsg(null);
     try {
-      const res = await requestOtp({ phone, purpose: 'signup' });
-      setSimulatedCode(res.debugCode || '123456');
+      const res = await requestOtp({ phone, purpose: 'signup', role: selectedRole });
+      setSimulatedCode(res.debugCode || null);
       setOtpValue('otp', '');
     } catch (err: any) {
       setErrorMsg(err.message || t('errors.generic', 'Something went wrong'));
@@ -204,6 +215,31 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
               {t('auth.phoneHint', 'We will verify your mobile number with a 6-digit code.')}
             </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 p-1 bg-[#EBE3D3]/70 dark:bg-[#1A1714] rounded-xl border border-[#D5C8B2]/50 dark:border-[#2E2822]">
+            <label
+              className={`flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
+                selectedRole === 'donor'
+                  ? 'bg-[#FAF6EE] dark:bg-[#26211C] text-[#14110E] dark:text-[#FAF6EE] shadow-sm'
+                  : 'text-[#73685B] dark:text-[#A89E90]'
+              }`}
+            >
+              <input type="radio" value="donor" {...registerDetailsField('role')} className="sr-only" />
+              <UserIcon className="w-3.5 h-3.5" />
+              {t('auth.donorRole', 'Donor citizen')}
+            </label>
+            <label
+              className={`flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
+                selectedRole === 'foundation'
+                  ? 'bg-[#FAF6EE] dark:bg-[#26211C] text-[#14110E] dark:text-[#FAF6EE] shadow-sm'
+                  : 'text-[#73685B] dark:text-[#A89E90]'
+              }`}
+            >
+              <input type="radio" value="foundation" {...registerDetailsField('role')} className="sr-only" />
+              <Building2 className="w-3.5 h-3.5" />
+              {t('auth.ngoRole', 'Civil society org (NGO)')}
+            </label>
           </div>
 
           <button
@@ -303,11 +339,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  {t('auth.verifyingOtp', 'Verifying code...')}
+                  {selectedRole === 'foundation'
+                    ? t('auth.verifyingOtp', 'Verifying code...')
+                    : t('common.continue', 'Continuing...')}
                 </>
               ) : (
                 <>
-                  {t('auth.verifyOtp', 'Verify code')}
+                  {selectedRole === 'foundation'
+                    ? t('auth.verifyOtp', 'Verify code')
+                    : t('common.continue', 'Continue')}
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -322,35 +362,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-300">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <div>
-              <span className="font-semibold">{t('auth.phoneVerified', 'Phone verified')}:</span>{' '}
+              <span className="font-semibold">
+                {selectedRole === 'foundation'
+                  ? t('auth.phoneVerified', 'Phone verified')
+                  : t('auth.otpReady', 'Verification code entered; it will be checked when you create the account')}
+              </span>{' '}
               <span className="font-mono">{phone}</span>
             </div>
-          </div>
-
-          {/* Role Picker */}
-          <div className="grid grid-cols-2 gap-2 p-1 bg-[#EBE3D3]/70 dark:bg-[#1A1714] rounded-xl border border-[#D5C8B2]/50 dark:border-[#2E2822]">
-            <label
-              className={`flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
-                selectedRole === 'donor'
-                  ? 'bg-[#FAF6EE] dark:bg-[#26211C] text-[#14110E] dark:text-[#FAF6EE] shadow-sm'
-                  : 'text-[#73685B] dark:text-[#A89E90]'
-              }`}
-            >
-              <input type="radio" value="donor" {...registerDetailsField('role')} className="sr-only" />
-              <UserIcon className="w-3.5 h-3.5" />
-              {t('auth.donorRole', 'Donor citizen')}
-            </label>
-            <label
-              className={`flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
-                selectedRole === 'foundation'
-                  ? 'bg-[#FAF6EE] dark:bg-[#26211C] text-[#14110E] dark:text-[#FAF6EE] shadow-sm'
-                  : 'text-[#73685B] dark:text-[#A89E90]'
-              }`}
-            >
-              <input type="radio" value="foundation" {...registerDetailsField('role')} className="sr-only" />
-              <Building2 className="w-3.5 h-3.5" />
-              {t('auth.ngoRole', 'Civil society org (NGO)')}
-            </label>
           </div>
 
           <div>

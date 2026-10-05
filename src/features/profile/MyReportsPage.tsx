@@ -3,16 +3,15 @@ import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ExternalLink, Flag, FlaskConical, Moon, Sun } from 'lucide-react';
 import { LanguageSwitcher } from '../../components/common/LanguageSwitcher.tsx';
-import { adminApi } from '../admin/api/admin.api.ts';
 import type { AdminReport } from '../admin/types/admin.types.ts';
 import { useAuthStore } from '../auth/store/auth.store.ts';
 
 const MyReportsPage = () => {
   const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
-  const [reports, setReports] = useState<AdminReport[]>([]);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
+  const reports: AdminReport[] = [];
+  const error = 'Report history is not available from the backend yet.';
+  const loading = false;
   const [isDark, setIsDark] = useState<boolean>(() => {
     try {
       return localStorage.getItem('lewegene_theme') === 'dark';
@@ -29,31 +28,6 @@ const MyReportsPage = () => {
       // ignore
     }
   }, [isDark]);
-
-  useEffect(() => {
-    let active = true;
-    const loadReports = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const snapshot = await adminApi.getSnapshot();
-        if (active) {
-          setReports(snapshot.reports.filter(
-            (report) => report.reporterId === user?.id && report.id !== 'demo-report-001',
-          ));
-        }
-      } catch (loadError) {
-        console.error('Could not load your demo reports.', loadError);
-        if (active) setError('Your reports could not be loaded from this browser.');
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-    void loadReports();
-    return () => {
-      active = false;
-    };
-  }, [user?.id]);
 
   return (
     <main className="min-h-screen bg-[#F7F2E7] px-4 py-8 text-[#201C18] dark:bg-[#12100E] dark:text-[#F4EFE6] sm:px-6 sm:py-10">
@@ -111,7 +85,7 @@ const MyReportsPage = () => {
 
         {!user && (
           <p className="mt-6 border border-[#9A7432]/30 bg-white/60 p-5 text-sm dark:bg-white/[.03]">
-            Sign in or select an account perspective to view your submitted cause reports.
+            Sign in to view your submitted cause reports.
           </p>
         )}
         {loading && <p className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">Loading your reports…</p>}

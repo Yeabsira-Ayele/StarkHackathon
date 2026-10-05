@@ -60,26 +60,6 @@ import { DISCOVER_LOCATIONS } from '../../services/lookupService.ts';
 
 const ETHIOPIAN_REGIONS = DISCOVER_LOCATIONS;
 
-function hasPersonalReports(userId: string): boolean {
-  try {
-    const snapshot = JSON.parse(localStorage.getItem('lewegene_admin_snapshot_v1') || '{}') as {
-      reports?: Array<{ reporterId?: string; id?: string }>;
-    };
-    return Boolean(snapshot.reports?.some((report) => report.reporterId === userId && report.id !== 'demo-report-001'));
-  } catch {
-    return false;
-  }
-}
-
-function hasPersonalFundraisers(userId: string): boolean {
-  try {
-    const fundraisers = JSON.parse(localStorage.getItem('lewegene_fundraisers_v1') || '[]') as Array<{ creatorId?: string }>;
-    return Array.isArray(fundraisers) && fundraisers.some((fundraiser) => fundraiser.creatorId === userId);
-  } catch {
-    return false;
-  }
-}
-
 export type BanknoteZoomMode =
   | 'overview'
   | 'discover'
@@ -418,18 +398,6 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
   const [profileEmail, setProfileEmail] = useState(authUser?.email || '');
   const [profilePhone, setProfilePhone] = useState(authUser?.phone || '');
   const profileMenuRef = useRef<HTMLDivElement>(null);
-  const [personalDataRevision, setPersonalDataRevision] = useState(0);
-
-  useEffect(() => {
-    const refreshPersonalLinks = () => setPersonalDataRevision((revision) => revision + 1);
-    window.addEventListener('lewegene:personal-data-changed', refreshPersonalLinks);
-    window.addEventListener('storage', refreshPersonalLinks);
-    return () => {
-      window.removeEventListener('lewegene:personal-data-changed', refreshPersonalLinks);
-      window.removeEventListener('storage', refreshPersonalLinks);
-    };
-  }, []);
-
   useEffect(() => {
     if (!isProfileMenuOpen) return;
     const closeOnOutsideClick = (event: MouseEvent) => {
@@ -455,14 +423,8 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
     setProfilePhone(authUser.phone || '');
   }, [isProfileEditorOpen, authUser]);
 
-  const hasReports = useMemo(
-    () => Boolean(authUser && hasPersonalReports(authUser.id)),
-    [authUser?.id, personalDataRevision],
-  );
-  const hasFundraisers = useMemo(
-    () => Boolean(authUser && hasPersonalFundraisers(authUser.id)),
-    [authUser?.id, personalDataRevision],
-  );
+  const hasReports = false;
+  const hasFundraisers = false;
 
   // Navigation State
   const [zoomMode, setZoomMode] = useState<BanknoteZoomMode>(initialMode);
@@ -643,26 +605,6 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
     if (!selectedCampaign || !reportReason) return;
 
     try {
-      const storedReports = localStorage.getItem('lewegene_cause_reports');
-      const reports: Array<{
-        id: string;
-        campaignId: string;
-        reason: string;
-        details: string;
-        createdAt: string;
-      }> = storedReports ? JSON.parse(storedReports) : [];
-      if (!Array.isArray(reports)) {
-        throw new Error('Saved cause reports are not in the expected format.');
-      }
-
-      reports.push({
-        id: `report-${Date.now()}`,
-        campaignId: selectedCampaign.id,
-        reason: reportReason,
-        details: reportDetails.trim(),
-        createdAt: new Date().toISOString(),
-      });
-      localStorage.setItem('lewegene_cause_reports', JSON.stringify(reports));
       const reportCategories = {
         misleading_information: 'Misleading Content',
         suspected_fraud: 'Fraud / Scam',
@@ -670,7 +612,8 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
         inappropriate_content: 'Other',
         other: 'Other',
       } as const;
-      const reporterId = useAuthStore.getState().user?.id || 'demo-guest';
+      const reporterId = useAuthStore.getState().user?.id;
+      if (!reporterId) throw new Error('Sign in before submitting a cause report.');
       await adminApi.submitReport({
         reporterId,
         campaignId: selectedCampaign.id,
@@ -678,13 +621,12 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
         details: reportDetails.trim() || `Reported for ${reportReason.replaceAll('_', ' ')}.`,
         evidence: [],
       });
-      window.dispatchEvent(new Event('lewegene:personal-data-changed'));
       setReportFeedback('Report submitted to the ACSO moderation queue for administrative review.');
       setReportReason('');
       setReportDetails('');
     } catch (error) {
       console.error('Failed to save cause report', error);
-      setReportFeedback('Could not save this report in the browser. Please try again.');
+      setReportFeedback(error instanceof Error ? error.message : 'Could not submit this report. Please try again.');
     }
   };
 

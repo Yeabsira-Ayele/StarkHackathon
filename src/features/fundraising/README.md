@@ -15,18 +15,14 @@ and a view that renders <FundraisingApp />.)
 ## What it reads from teammates (by id, nothing copied)
 - Member 1: `CampaignCategory` type (features/campaigns/types) — category list in `data/categories.data.ts`.
 - Member 3: logged-in user from `useAuthStore` — see `data/currentUser.ts`.
-- Member 4: `mockBanks` (ids like `bank_cbe`) — see `hooks/useBanks.ts`.
-- Organizations: shared `data/mockOrganizations.ts`.
+- Bank choices are static lookup configuration in `hooks/useBanks.ts`.
+- Approved organizations are loaded from the backend.
 
 ## Data / drafts
-Saved in the browser (localStorage key `lewegene_fundraisers_v1`) by `api/fundraising.api.ts`.
-Backend later: only that file and the `hooks/` change.
-Demo-only code to delete later: `demoReview` in the api, and the "Demo only" card in `pages/FundraiserManagement.tsx`.
+Fundraiser drafts and submissions are stored by the backend in MongoDB through
+`api/fundraising.api.ts`. Existing browser-local fundraiser records are not
+imported.
 
-## Still to agree with the team
-- Member 5 / Member 1: submitted fundraisers are NOT yet in the shared campaign list. `campaignApi.createCampaign`
-  auto-approves, and admin reads `campaignApi.getAdminCampaigns()`. Decide how a submitted fundraiser enters that list
-  as `pending`. Statuses I use: draft | pending | changes_requested | approved | rejected | completed | paused
-  (admin already has the action `request_changes`).
-- The branch already has `features/fundraiser/` (singular, a simple create form). Mine is `features/fundraising/`.
-  Agree on which one stays, or two similarly named folders will confuse everyone.
+Fundraiser campaigns are created as private drafts, submitted for admin review,
+and kept under the authenticated backend account. Static bank options are
+configuration only; fundraiser and organization records are not browser-seeded.

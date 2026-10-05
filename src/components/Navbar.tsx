@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ShieldCheck, Mic, Sun, Moon, Globe, Heart } from 'lucide-react';
+import { ACTIVE_UI_LANGUAGES, changeLanguage, type AppLanguage } from '../i18n/index.ts';
 
 interface NavbarProps {
   currentView?: string;
@@ -23,9 +24,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
 
-  const handleLanguageSelect = (lng: 'am' | 'en' | 'om') => {
-    i18n.changeLanguage(lng);
-    localStorage.setItem('lewegene_language', lng);
+  const handleLanguageSelect = (lng: AppLanguage) => {
+    void changeLanguage(lng);
     onLanguageChange?.(lng);
   };
 
@@ -92,7 +92,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={onOpenVoice}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#1E4D38] hover:bg-[#153828] text-white shadow-sm transition-all cursor-pointer"
-              title="Voxide Voice"
+              title={t('nav.voiceAssistant')}
             >
               <Mic className="w-3.5 h-3.5 text-[#52B788]" />
               <span className="hidden sm:inline">Voxide</span>
@@ -100,7 +100,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
 
           <div className="flex items-center rounded-xl bg-[#EBE3D3]/70 dark:bg-[#1E1A16] p-0.5 border border-[#D5C8B2]/50 dark:border-[#2E2822]">
-            {(['am', 'en', 'om'] as const).map((lng) => {
+            {ACTIVE_UI_LANGUAGES.map(({ code: lng }) => {
               const isActive = i18n.language?.startsWith(lng);
 
               return (
@@ -123,7 +123,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={onToggleTheme}
               className="p-2 rounded-xl bg-[#EBE3D3]/70 dark:bg-[#1E1A16] text-[#5A5046] dark:text-[#B8AEA0] hover:text-[#14110E] dark:hover:text-white border border-[#D5C8B2]/50 dark:border-[#2E2822] transition-colors cursor-pointer"
-              title={isDark ? 'Light Mode' : 'Dark Mode'}
+              title={isDark ? t('nav.lightMode', 'Light mode') : t('nav.darkMode', 'Dark mode')}
             >
               {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
             </button>

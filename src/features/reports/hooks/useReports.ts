@@ -8,7 +8,6 @@ export const useReports = () => {
   const overviewQuery = useQuery({
     queryKey: ['reports', 'transparency'],
     queryFn: () => reportsApi.getTransparencyOverview(),
-    initialData: localOverview,
   });
 
   return {

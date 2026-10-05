@@ -1,23 +1,10 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Campaign, ContributionCertificate, Donation } from '../types/index.ts';
-import { Card } from '../components/ui/Card.tsx';
-import { Button } from '../components/ui/Button.tsx';
 import { ProgressBar } from '../components/ui/ProgressBar.tsx';
-import {
-  Heart,
-  Award,
-  Download,
-  Calendar,
-  ShieldCheck,
-  TrendingUp,
-  User,
-  Bell,
-  ArrowRight,
-  ExternalLink,
-  CheckCircle2,
-  FileText,
-} from 'lucide-react';
+import { ArrowRight, ShieldCheck } from 'lucide-react';
 import { toGeezNumber } from '../services/utils/currencyUtils.ts';
+import { useAuthStore } from '../features/auth/store/auth.store.ts';
 
 export interface DonorDashboardProps {
   campaigns: Campaign[];
@@ -32,9 +19,13 @@ export const DonorDashboard: React.FC<DonorDashboardProps> = ({
   onExploreCauses,
   onViewCertificate,
 }) => {
+  const { t, i18n } = useTranslation();
+  const user = useAuthStore((state) => state.user);
   const [activeTab, setActiveTab] = useState<'overview' | 'contributions' | 'settings'>('overview');
   const [isAnonymousDefault, setIsAnonymousDefault] = useState(false);
   const [notifyUpdates, setNotifyUpdates] = useState(true);
+  const [registryName, setRegistryName] = useState(user?.name || '');
+  const [receiptEmail, setReceiptEmail] = useState(user?.email || '');
 
   // Flatten all completed donations across causes
   const allDonations: Array<{ donation: Donation; campaign: Campaign }> = [];
@@ -50,7 +41,8 @@ export const DonorDashboard: React.FC<DonorDashboardProps> = ({
 
   const totalContributed = allDonations.reduce((sum, item) => sum + item.donation.amount, 0);
   const supportedCausesCount = new Set(allDonations.map((item) => item.campaign.id)).size;
-  const estimatedLivesImpacted = Math.round(totalContributed / 350) + 120;
+  const estimatedLivesImpacted = Math.round(totalContributed / 350);
+  const dateLocale = i18n.resolvedLanguage === 'am' ? 'am-ET' : 'en-ET';
 
   return (
     <div className="space-y-8 pb-16 animate-in fade-in duration-200">
@@ -66,31 +58,31 @@ export const DonorDashboard: React.FC<DonorDashboardProps> = ({
           <div className="flex items-center gap-2">
             <span className="banknote-serial-red font-black">№ ET-PATRON-2026</span>
             <span className="text-zinc-500">·</span>
-            <span className="font-bold text-[#173C32] dark:text-[#C5A059]">DOCUMENT REVERSE (ተቃራኒ ገፅ)</span>
+            <span className="font-bold text-[#173C32] dark:text-[#C5A059]">{t('donorDashboard.documentReverse')}</span>
           </div>
 
           <div className="flex items-center gap-1 font-bold text-accent">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>ACSO VERIFIED ESCROW RECORD</span>
+            <span>{t('donorDashboard.verifiedEscrowRecord')}</span>
           </div>
         </div>
       
         {/* Monumental Currency Stats Compartment */}
         <div className="relative z-10 py-6 text-center space-y-3">
           <p className="text-[10px] font-mono tracking-[0.3em] uppercase text-[#B08A45] font-bold">
-            NATIONAL CIVIC PATRON IMPACT VAULT
+            {t('donorDashboard.impactVault')}
           </p>
 
           <h1 className="text-3xl sm:text-5xl font-display font-black tracking-tight text-[#173C32] dark:text-[#E8DEC8] leading-none">
-            {totalContributed.toLocaleString()} ETB
+            {totalContributed.toLocaleString(dateLocale)} {t('donorDashboard.currency')}
           </h1>
 
           <p className="text-xs font-ethiopic font-bold text-[#B08A45]">
-            የተበረከተ አጠቃላይ ድምር ({toGeezNumber(totalContributed)} : ብር)
+            {t('donorDashboard.totalContributed')} ({toGeezNumber(totalContributed)}: {t('donorDashboard.currency')})
           </p>
 
           <p className="text-xs font-serif italic text-zinc-600 dark:text-zinc-400 max-w-lg mx-auto">
-            "Every Birr minted into this promissory ledger directly subsidizes medical consumables, educational materials, and clean water restoration."
+            {t('donorDashboard.impactDescription')}
           </p>
         </div>
 
@@ -98,35 +90,35 @@ export const DonorDashboard: React.FC<DonorDashboardProps> = ({
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pt-4 border-t-2 border-[#D8CEBA] dark:border-[#2C3831] font-mono text-center">
           
           <div className="p-3.5 rounded-lg border border-[#D8CEBA] dark:border-[#2C3831] bg-[#F4EFE6]/80 dark:bg-[#1B221E]">
-            <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Causes Backed</p>
+            <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">{t('donorDashboard.causesBacked')}</p>
             <p className="text-2xl font-display font-bold text-[#173C32] dark:text-[#C5A059] mt-1 tabular-nums">
               {supportedCausesCount}
             </p>
-            <p className="text-[10px] font-ethiopic text-[#B08A45]">የተደገፉ ዘመቻዎች</p>
+            <p className="text-[10px] font-ethiopic text-[#B08A45]">{t('donorDashboard.causesBacked')}</p>
           </div>
 
           <div className="p-3.5 rounded-lg border border-[#D8CEBA] dark:border-[#2C3831] bg-[#F4EFE6]/80 dark:bg-[#1B221E]">
-            <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Beneficiaries Reached</p>
+            <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">{t('donorDashboard.estimatedBeneficiaries')}</p>
             <p className="text-2xl font-display font-bold text-[#173C32] dark:text-[#C5A059] mt-1 tabular-nums">
               {estimatedLivesImpacted}+
             </p>
-            <p className="text-[10px] font-ethiopic text-[#B08A45]">የተደረሰላቸው ወገኖች</p>
+            <p className="text-[10px] font-ethiopic text-[#B08A45]">{t('donorDashboard.estimatedBeneficiaries')}</p>
           </div>
 
           <div className="p-3.5 rounded-lg border border-[#D8CEBA] dark:border-[#2C3831] bg-[#F4EFE6]/80 dark:bg-[#1B221E]">
-            <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Archival Certificates</p>
+            <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">{t('donorDashboard.certificates')}</p>
             <p className="text-2xl font-display font-bold text-[#173C32] dark:text-[#C5A059] mt-1 tabular-nums">
               {allDonations.length}
             </p>
-            <p className="text-[10px] font-ethiopic text-[#B08A45]">የምስክር ወረቀቶች</p>
+            <p className="text-[10px] font-ethiopic text-[#B08A45]">{t('donorDashboard.certificates')}</p>
           </div>
 
           <div className="p-3.5 rounded-lg border border-[#D8CEBA] dark:border-[#2C3831] bg-[#F4EFE6]/80 dark:bg-[#1B221E]">
-            <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Escrow Verification</p>
+            <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">{t('donorDashboard.escrowVerification')}</p>
             <p className="text-2xl font-display font-bold text-emerald-600 mt-1">
               100%
             </p>
-            <p className="text-[10px] font-ethiopic text-[#B08A45]">የተረጋገጠ አፈፃፀም</p>
+            <p className="text-[10px] font-ethiopic text-[#B08A45]">{t('donorDashboard.escrowVerification')}</p>
           </div>
 
         </div>
@@ -142,7 +134,7 @@ export const DonorDashboard: React.FC<DonorDashboardProps> = ({
               : 'border-transparent text-zinc-500 hover:text-primary'
           }`}
         >
-          [ ፩ · SUPPORTED CAUSES PROGRESS ]
+          {t('donorDashboard.overviewTab')}
         </button>
 
         <button
@@ -153,7 +145,7 @@ export const DonorDashboard: React.FC<DonorDashboardProps> = ({
               : 'border-transparent text-zinc-500 hover:text-primary'
           }`}
         >
-          [ ፪ · ARCHIVAL CERTIFICATES ({allDonations.length}) ]
+          {t('donorDashboard.certificatesTab', { count: allDonations.length })}
         </button>
 
         <button
@@ -164,7 +156,7 @@ export const DonorDashboard: React.FC<DonorDashboardProps> = ({
               : 'border-transparent text-zinc-500 hover:text-primary'
           }`}
         >
-          [ ፫ · PATRON REGISTRY PREFERENCES ]
+          {t('donorDashboard.settingsTab')}
         </button>
       </div>
 
@@ -173,13 +165,13 @@ export const DonorDashboard: React.FC<DonorDashboardProps> = ({
         <div className="space-y-6">
           <div className="flex items-center justify-between font-mono">
             <h2 className="text-sm font-bold text-primary uppercase tracking-wider">
-              ACTIVE CAUSES IN YOUR PATRON VAULT
+              {t('donorDashboard.activeCauses')}
             </h2>
             <button
               onClick={onExploreCauses}
               className="text-xs font-bold text-accent hover:underline flex items-center gap-1"
             >
-              UNDERWRITE MORE CAUSES <ArrowRight className="w-3.5 h-3.5" />
+              {t('donorDashboard.underwriteMore')} <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
@@ -214,8 +206,8 @@ export const DonorDashboard: React.FC<DonorDashboardProps> = ({
                     showLabel
                   />
                   <div className="flex justify-between items-center text-[11px] text-zinc-500 pt-1">
-                    <span>{camp.donationsCount || 0} Backers</span>
-                    <span className="text-accent font-bold">EXAMINE NOTE →</span>
+                    <span>{camp.donationsCount || 0} {t('donorDashboard.backers')}</span>
+                    <span className="text-accent font-bold">{t('donorDashboard.examineNote')}</span>
                   </div>
                 </div>
               </div>
@@ -229,10 +221,10 @@ export const DonorDashboard: React.FC<DonorDashboardProps> = ({
         <div className="space-y-4">
           <div className="flex items-center justify-between font-mono">
             <h2 className="text-sm font-bold text-primary uppercase tracking-wider">
-              ARCHIVAL BANKNOTE CERTIFICATES VAULT
+              {t('donorDashboard.certificatesVault')}
             </h2>
             <p className="text-xs text-zinc-500">
-              Click any certificate to inspect in high-resolution or print
+              {t('donorDashboard.certificateHint')}
             </p>
           </div>
 
@@ -241,12 +233,12 @@ export const DonorDashboard: React.FC<DonorDashboardProps> = ({
               <table className="w-full text-left">
                 <thead className="bg-[#F3ECE0] dark:bg-[#181E1B] text-primary uppercase text-[10px] tracking-wider font-bold border-b border-[#D8CEBA] dark:border-[#2C3831]">
                   <tr>
-                    <th className="py-3 px-4">Certificate №</th>
-                    <th className="py-3 px-4">Cause Underwritten</th>
-                    <th className="py-3 px-4">Amount</th>
-                    <th className="py-3 px-4">Rail</th>
-                    <th className="py-3 px-4">Issued Date</th>
-                    <th className="py-3 px-4 text-right">Inspect</th>
+                    <th className="py-3 px-4">{t('donorDashboard.certificateNumber')}</th>
+                    <th className="py-3 px-4">{t('donorDashboard.causeUnderwritten')}</th>
+                    <th className="py-3 px-4">{t('donorDashboard.amount')}</th>
+                    <th className="py-3 px-4">{t('donorDashboard.rail')}</th>
+                    <th className="py-3 px-4">{t('donorDashboard.issuedDate')}</th>
+                    <th className="py-3 px-4 text-right">{t('donorDashboard.inspect')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#D8CEBA] dark:divide-[#2C3831]">
@@ -261,8 +253,8 @@ export const DonorDashboard: React.FC<DonorDashboardProps> = ({
                       donorName: item.donation.donorName,
                       amount: item.donation.amount,
                       currency: 'ETB',
-                      impactSummary: item.campaign.impactMetric || 'Direct civic assistance',
-                      location: item.campaign.location || 'Ethiopia',
+                      impactSummary: item.campaign.impactMetric || t('detail.impactFallback'),
+                      location: item.campaign.location || t('detail.defaultLocation'),
                       issuedAt: item.donation.createdAt,
                       transactionRef: item.donation.transactionReference || 'LN-ETB',
                       paymentRail: item.donation.paymentRail || 'telebirr',
@@ -290,7 +282,7 @@ export const DonorDashboard: React.FC<DonorDashboardProps> = ({
                             onClick={() => onViewCertificate(certData)}
                             className="px-3 py-1 rounded border border-[#B08A45] text-[11px] font-bold text-accent hover:bg-[#F0EAD8] cursor-pointer"
                           >
-                            OPEN CERTIFICATE ❖
+                            {t('donorDashboard.openCertificate')}
                           </button>
                         </td>
                       </tr>
@@ -306,23 +298,25 @@ export const DonorDashboard: React.FC<DonorDashboardProps> = ({
       {/* TAB 3: SETTINGS */}
       {activeTab === 'settings' && (
         <div className="max-w-2xl bg-[#FAF7F0] dark:bg-[#161B18] rounded-xl border border-[#D8CEBA] dark:border-[#2C3831] p-6 space-y-4 shadow-xs font-mono text-xs">
-          <h2 className="text-sm font-bold text-primary uppercase">Patron Registry Preferences</h2>
+          <h2 className="text-sm font-bold text-primary uppercase">{t('donorDashboard.registryPreferences')}</h2>
 
           <div className="space-y-3">
             <div>
-              <label className="block text-zinc-500 mb-1 font-bold">BENEFACTOR REGISTRY NAME</label>
+              <label className="block text-zinc-500 mb-1 font-bold">{t('donorDashboard.registryName')}</label>
               <input
                 type="text"
-                defaultValue="Dawit Alemayehu"
+                value={registryName}
+                onChange={(event) => setRegistryName(event.target.value)}
                 className="w-full px-3 py-2 rounded border border-[#D8CEBA] dark:border-[#2C3831] bg-[#FAF7F0] dark:bg-[#1A201D] text-primary"
               />
             </div>
 
             <div>
-              <label className="block text-zinc-500 mb-1 font-bold">ELECTRONIC RECEIPT EMAIL</label>
+              <label className="block text-zinc-500 mb-1 font-bold">{t('donorDashboard.receiptEmail')}</label>
               <input
                 type="email"
-                defaultValue="dawit.diaspora@lewegene.et"
+                value={receiptEmail}
+                onChange={(event) => setReceiptEmail(event.target.value)}
                 className="w-full px-3 py-2 rounded border border-[#D8CEBA] dark:border-[#2C3831] bg-[#FAF7F0] dark:bg-[#1A201D] text-primary"
               />
             </div>
@@ -334,7 +328,7 @@ export const DonorDashboard: React.FC<DonorDashboardProps> = ({
                   checked={isAnonymousDefault}
                   onChange={(e) => setIsAnonymousDefault(e.target.checked)}
                 />
-                <span>Default to anonymous endorsement on public bill</span>
+                <span>{t('donorDashboard.anonymousDefault')}</span>
               </label>
 
               <label className="flex items-center gap-2 cursor-pointer">
@@ -343,7 +337,7 @@ export const DonorDashboard: React.FC<DonorDashboardProps> = ({
                   checked={notifyUpdates}
                   onChange={(e) => setNotifyUpdates(e.target.checked)}
                 />
-                <span>Notify me when funded projects post audited milestone evidence</span>
+                <span>{t('donorDashboard.milestoneNotifications')}</span>
               </label>
             </div>
           </div>

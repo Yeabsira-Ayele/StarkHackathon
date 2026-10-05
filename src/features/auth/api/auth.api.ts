@@ -1,113 +1,76 @@
-import { LoginCredentials, RegisterCredentials, AuthResponse, User } from '../types/auth.types';
+import { api } from '../../../api/axios';
+import type { AuthResponse, LoginCredentials, User, UserRole } from '../types/auth.types';
 
-const ACCOUNTS_KEY = 'lewegene_local_accounts';
-const DEMO_ADMIN_EMAIL = 'admin@local.lewegene';
-const DEMO_ADMIN_PASSCODE = 'demo-admin-123';
-
-interface LocalAccount {
-  user: User;
-  passcodeSalt?: string;
-  passcodeHash?: string;
-  passcode?: string;
+export interface BackendUser {
+  _id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  role: 'USER' | 'ORGANIZATION' | 'ADMIN' | 'SUPER_ADMIN';
+  phoneVerified?: boolean;
+  profilePhoto?: string;
+  createdAt: string;
 }
 
-function getAccounts(): LocalAccount[] {
-  try {
-    return JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || '[]') as LocalAccount[];
-  } catch {
-    return [];
-  }
+export interface BackendOrganization {
+  _id: string;
+  name: string;
+  verificationStatus: string;
 }
 
-function normalizeIdentifier(value: string): string {
-  return value.trim().toLowerCase().replace(/[\s()-]/g, '');
+export interface BackendAuthResponse {
+  user: BackendUser;
+  token: string;
+  organization?: BackendOrganization | null;
 }
 
-function createToken(): string {
-  return `local-${crypto.randomUUID()}`;
+interface BackendEnvelope<T> {
+  data: T;
+  message: string;
+  success: boolean;
 }
 
-async function hashPasscode(passcode: string, salt: string): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${salt}:${passcode}`));
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+export function mapBackendUser(user: BackendUser, organization?: BackendOrganization | null): User {
+  const roles: Record<BackendUser['role'], UserRole> = {
+    USER: 'donor',
+    ORGANIZATION: 'foundation',
+    ADMIN: 'admin',
+    SUPER_ADMIN: 'admin',
+  };
+
+  return {
+    id: user._id,
+    name: user.name,
+    email: user.email || '',
+    phone: user.phone,
+    role: roles[user.role],
+    avatarUrl: user.profilePhoto,
+    verified: user.role === 'ORGANIZATION'
+      ? organization?.verificationStatus === 'approved'
+      : user.role === 'USER'
+        ? Boolean(user.phoneVerified)
+        : true,
+    organizationId: organization?._id,
+    organizationName: organization?.name,
+    createdAt: user.createdAt,
+  };
+}
+
+export function mapBackendAuthResponse(data: BackendAuthResponse): AuthResponse {
+  return { user: mapBackendUser(data.user, data.organization), token: data.token };
 }
 
 export const authApi = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    await new Promise((resolve) => setTimeout(resolve, 250));
-    const identifier = normalizeIdentifier(credentials.emailOrPhone);
-    if (identifier === DEMO_ADMIN_EMAIL && credentials.passcode === DEMO_ADMIN_PASSCODE) {
-      return {
-        user: {
-          id: 'local-demo-admin',
-          name: 'Local Demo Admin',
-          email: DEMO_ADMIN_EMAIL,
-          role: 'admin',
-          verified: true,
-          createdAt: new Date().toISOString(),
-        },
-        token: createToken(),
-      };
-    }
-    const account = getAccounts().find(
-      (entry) => normalizeIdentifier(entry.user.email) === identifier ||
-        (!!entry.user.phone && normalizeIdentifier(entry.user.phone) === identifier),
-    );
-    const accounts = getAccounts();
-    if (!account) {
-      throw new Error('No matching local account was found. Sign up first, then try again.');
-    }
-    let validPasscode = account.passcodeHash
-      ? account.passcodeHash === await hashPasscode(credentials.passcode, account.passcodeSalt || '')
-      : account.passcode === credentials.passcode;
-    if (validPasscode && account.passcode) {
-      const passcodeSalt = crypto.randomUUID();
-      const passcodeHash = await hashPasscode(credentials.passcode, passcodeSalt);
-      const migratedAccounts = accounts.map((entry) => entry.user.id === account.user.id
-        ? { user: entry.user, passcodeSalt, passcodeHash }
-        : entry);
-      localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(migratedAccounts));
-      validPasscode = true;
-    }
-    if (!validPasscode) throw new Error('No matching local account was found. Sign up first, then try again.');
-    return { user: account.user, token: createToken() };
-  },
-
-  async register(data: RegisterCredentials): Promise<AuthResponse> {
-    await new Promise((resolve) => setTimeout(resolve, 250));
-    const identifier = normalizeIdentifier(data.emailOrPhone);
-    const accounts = getAccounts();
-    if (accounts.some((entry) => normalizeIdentifier(entry.user.email) === identifier ||
-      (!!entry.user.phone && normalizeIdentifier(entry.user.phone) === identifier))) {
-      throw new Error('An account with this email or phone number already exists.');
-    }
-
-    const isEmail = identifier.includes('@');
-    const user: User = {
-      id: `local-user-${crypto.randomUUID()}`,
-      name: data.name.trim(),
-      email: isEmail ? identifier : `${identifier}@local.lewegene`,
-      phone: isEmail ? undefined : data.emailOrPhone.trim(),
-      role: data.role,
-      verified: data.role === 'foundation',
-      organizationId: data.role === 'foundation' ? `local-org-${crypto.randomUUID()}` : undefined,
-      organizationName: data.role === 'foundation' ? data.organizationName?.trim() : undefined,
-      createdAt: new Date().toISOString(),
-    };
-
-    const passcodeSalt = crypto.randomUUID();
-    accounts.push({ user, passcodeSalt, passcodeHash: await hashPasscode(data.passcode, passcodeSalt) });
-    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
-    return { user, token: createToken() };
+    const response = await api.post<BackendEnvelope<BackendAuthResponse>>('/auth/login', {
+      identifier: credentials.emailOrPhone,
+      password: credentials.passcode,
+    });
+    return mapBackendAuthResponse(response.data.data);
   },
 
   async getCurrentUser(): Promise<User | null> {
-    try {
-      const token = localStorage.getItem('lewegene_auth_token');
-      const user = localStorage.getItem('lewegene_user');
-      return token && user ? JSON.parse(user) as User : null;
-    } catch {
-      return null;
-    }
+    const response = await api.get<BackendEnvelope<{ user: BackendUser; organization?: BackendOrganization | null }>>('/auth/me');
+    return mapBackendUser(response.data.data.user, response.data.data.organization);
   },
 };

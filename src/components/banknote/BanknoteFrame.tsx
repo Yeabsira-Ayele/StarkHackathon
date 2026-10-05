@@ -293,16 +293,6 @@ export const BanknoteFrame: React.FC<BanknoteFrameProps> = ({
                       <span>አማርኛ</span>
                       {language === 'am' && <Check className="w-3.5 h-3.5 text-accent" />}
                     </button>
-                    <button
-                      onClick={() => {
-                        onLanguageChange('om');
-                        setLangMenuOpen(false);
-                      }}
-                      className="w-full text-left p-1.5 rounded hover:bg-surface-alt flex justify-between"
-                    >
-                      <span>Oromoo</span>
-                      {language === 'om' && <Check className="w-3.5 h-3.5 text-accent" />}
-                    </button>
                   </div>
                 )}
               </div>

@@ -17,10 +17,14 @@ export const TransparencyReportsPage: React.FC<TransparencyReportsPageProps> = (
   onSelectRecord,
 }) => {
   const { t } = useTranslation();
-  const { overview, isLoading, selectedSector, setSelectedSector, setSelectedRecord } = useReports();
+  const { overview, isLoading, error, selectedSector, setSelectedSector, setSelectedRecord } = useReports();
 
   if (isLoading) {
     return <Loading variant="full" message="የግልጽነትና ኦዲት መረጃዎችን በመጫን ላይ..." />;
+  }
+
+  if (error || !overview) {
+    return <ErrorState message={error instanceof Error ? error.message : 'Transparency reports are unavailable.'} />;
   }
 
   const filteredRecords = selectedSector

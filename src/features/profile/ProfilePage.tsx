@@ -1,13 +1,13 @@
 import React, { FormEvent, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ArrowRight, Bookmark, FlaskConical, Heart, Moon, ShieldCheck, Sun, UserRound } from 'lucide-react';
 import { LanguageSwitcher } from '../../components/common/LanguageSwitcher.tsx';
 import { campaignApi } from '../../services/api/campaignApi.ts';
 import type { Campaign } from '../../types/index.ts';
 import { useAuthStore } from '../auth/store/auth.store.ts';
-import { DEMO_ACCOUNTS, DEMO_SESSION_TOKEN, type DemoRole } from '../auth/data/demoAccounts.ts';
 import { fundraisingApi } from '../fundraising/api/fundraising.api.ts';
+import { profileApi } from './api/profile.api.ts';
 import type { Fundraiser } from '../fundraising/types/fundraiser.types.ts';
 
 const SAVED_CAUSES_KEY = 'lewegene_saved_causes';
@@ -25,7 +25,7 @@ const ProfilePage: React.FC = () => {
   const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
-  const navigate = useNavigate();
+  const token = useAuthStore((state) => state.token);
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phone || '');
@@ -83,17 +83,22 @@ const ProfilePage: React.FC = () => {
     };
   }, [user?.id, user?.role]);
 
-  const saveProfile = (event: FormEvent<HTMLFormElement>) => {
+  const saveProfile = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!user) return;
-    setUser({ ...user, name: name.trim(), email: email.trim(), phone: phone.trim() }, DEMO_SESSION_TOKEN);
-    setMessage('Profile updated successfully.');
-  };
-
-  const selectDemoRole = (role: DemoRole) => {
-    setUser(DEMO_ACCOUNTS[role], DEMO_SESSION_TOKEN);
-    if (role === 'admin') navigate('/admin');
-    else if (role === 'fundraiser') navigate('/fundraising');
+    try {
+      await profileApi.updateProfile({
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        preferredLanguage: 'am',
+      });
+      setUser({ ...user, name: name.trim(), email: email.trim() }, token);
+      setMessage('Profile updated successfully.');
+    } catch (error) {
+      console.error('Could not save profile.', error);
+      setMessage(error instanceof Error ? error.message : 'Could not save profile. Please try again.');
+    }
   };
 
   const roleLabel = user?.role === 'foundation' ? 'Fundraiser' : user?.role;
@@ -152,19 +157,7 @@ const ProfilePage: React.FC = () => {
           </span>
         </div>
 
-        {!user ? (
-          <section className="mt-8 border border-[#9A7432]/35 bg-white/60 p-6 dark:bg-white/[.03]">
-            <h2 className="font-serif text-2xl font-bold">Select an account perspective</h2>
-            <p className="mt-2 max-w-xl text-sm text-zinc-600 dark:text-zinc-400">Switch between donor, fundraiser, and admin perspectives.</p>
-            <div className="mt-5 flex flex-wrap gap-3">
-              {(['donor', 'fundraiser', 'admin'] as DemoRole[]).map((role) => (
-                <button key={role} type="button" onClick={() => selectDemoRole(role)} className="border border-[#1E4D38] bg-[#1E4D38] px-4 py-2.5 font-mono text-xs font-bold uppercase text-white hover:bg-[#163E2C]">
-                  Continue as {role}
-                </button>
-              ))}
-            </div>
-          </section>
-        ) : (
+        {user ? (
           <div className="mt-7 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(260px,.7fr)]">
             <section className="border border-[#9A7432]/30 bg-white/60 p-5 dark:bg-white/[.03] sm:p-7">
               <div className="mb-5 flex items-center gap-3">
@@ -182,7 +175,7 @@ const ProfilePage: React.FC = () => {
                   <input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="border border-[#26211C]/20 bg-[#FFFDF9] px-3 py-2.5 font-sans text-sm dark:border-[#9A7432]/30 dark:bg-[#0E0D0B]" />
                 </label>
                 <label className="grid gap-1.5 font-mono text-xs font-bold">Phone
-                  <input value={phone} onChange={(event) => setPhone(event.target.value)} className="border border-[#26211C]/20 bg-[#FFFDF9] px-3 py-2.5 font-sans text-sm dark:border-[#9A7432]/30 dark:bg-[#0E0D0B]" />
+                  <input value={phone} readOnly className="border border-[#26211C]/20 bg-[#FFFDF9] px-3 py-2.5 font-sans text-sm dark:border-[#9A7432]/30 dark:bg-[#0E0D0B]" />
                 </label>
                 <div className="flex flex-wrap items-center gap-3 pt-1">
                   <button type="submit" className="bg-[#1E4D38] px-4 py-2.5 font-mono text-xs font-black uppercase text-white hover:bg-[#163E2C]">Save profile</button>
@@ -221,6 +214,11 @@ const ProfilePage: React.FC = () => {
               )}
             </aside>
           </div>
+        ) : (
+          <section className="mt-8 border border-[#9A7432]/35 bg-white/60 p-6 dark:bg-white/[.03]">
+            <h2 className="font-serif text-2xl font-bold">Sign in to view your profile</h2>
+            <p className="mt-2 max-w-xl text-sm text-zinc-600 dark:text-zinc-400">Profile data is available only for authenticated accounts.</p>
+          </section>
         )}
       </div>
     </main>

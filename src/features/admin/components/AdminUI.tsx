@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search, X, Inbox, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Modal } from '../../../components/ui/Modal.tsx';
 
@@ -45,6 +46,7 @@ type BtnTone = 'red' | 'gold' | 'outline' | 'ghost' | 'dark';
 export const AdminButton: React.FC<
   React.ButtonHTMLAttributes<HTMLButtonElement> & { tone?: BtnTone; busy?: boolean; icon?: React.ReactNode }
 > = ({ tone = 'outline', busy, icon, children, className = '', disabled, ...p }) => {
+  const { t } = useTranslation();
   const tones: Record<BtnTone, string> = {
     red: 'bg-[#8B2626] text-white border-[#8B2626] hover:bg-[#701E1E]',
     gold: 'bg-[#9A7432] text-white border-[#9A7432] hover:bg-[#7F5F26]',
@@ -59,7 +61,7 @@ export const AdminButton: React.FC<
       {...p}
     >
       {icon}
-      <span>{busy ? 'Working…' : children}</span>
+      <span>{busy ? t('adminUi.working') : children}</span>
     </button>
   );
 };
@@ -143,11 +145,14 @@ const BADGE: Record<string, string> = {
 // Fundraiser status names shown to admins (internal values stay unchanged).
 const FUNDRAISER_LABELS: Record<string, string> = { pending: 'Pending Review', approved: 'Active', needs_changes: 'Needs Changes' };
 
-export const StatusBadge: React.FC<{ status: string; fundraiser?: boolean }> = ({ status, fundraiser }) => (
+export const StatusBadge: React.FC<{ status: string; fundraiser?: boolean }> = ({ status, fundraiser }) => {
+  const { t } = useTranslation();
+  return (
   <span className={`admin-status-tag inline-flex items-center px-2 py-0.5 border font-mono text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${BADGE[status] || BADGE.dismissed}`}>
-    {(fundraiser && FUNDRAISER_LABELS[status]) || status.replace(/_/g, ' ')}
+    {t(`adminUi.status.${fundraiser ? FUNDRAISER_LABELS[status] ? status : 'unknown' : status}`, { defaultValue: (fundraiser && FUNDRAISER_LABELS[status]) || status.replace(/_/g, ' ') })}
   </span>
-);
+  );
+};
 
 /* ── Filters ── */
 export const FilterTabs: React.FC<{ tabs: { id: string; label: string; count?: number }[]; value: string; onChange: (id: string) => void }> = ({ tabs, value, onChange }) => (
@@ -170,12 +175,15 @@ export const FilterTabs: React.FC<{ tabs: { id: string; label: string; count?: n
   </div>
 );
 
-export const SearchBox: React.FC<{ value: string; onChange: (v: string) => void; placeholder?: string }> = ({ value, onChange, placeholder = 'Search…' }) => (
+export const SearchBox: React.FC<{ value: string; onChange: (v: string) => void; placeholder?: string }> = ({ value, onChange, placeholder }) => {
+  const { t } = useTranslation();
+  return (
   <div className="relative max-w-xs w-full">
     <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-    <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={`${inputCls} pl-9`} />
+    <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder || t('adminUi.search')} className={`${inputCls} pl-9`} />
   </div>
-);
+  );
+};
 
 /* ── Data table (hairline banknote style) ── */
 export const DataTable: React.FC<{ head: string[]; children: React.ReactNode }> = ({ head, children }) => (
@@ -210,6 +218,7 @@ export const ReasonModal: React.FC<{
   onClose: () => void;
   onConfirm: (reason: string) => Promise<void> | void;
 }> = ({ open, title, description, confirmLabel, tone = 'red', required = true, onClose, onConfirm }) => {
+  const { t } = useTranslation();
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const close = () => { setReason(''); onClose(); };
@@ -226,13 +235,13 @@ export const ReasonModal: React.FC<{
       maxWidth="md"
       footer={
         <div className="flex justify-end gap-2">
-          <AdminButton onClick={close}>Cancel</AdminButton>
+          <AdminButton onClick={close}>{t('adminUi.cancel')}</AdminButton>
           <AdminButton tone={tone} busy={busy} disabled={required && !reason.trim()} onClick={submit}>{confirmLabel}</AdminButton>
         </div>
       }
     >
-      <label className={labelCls}>{required ? 'Reason (required)' : 'Note (optional)'}</label>
-      <textarea rows={4} value={reason} onChange={(e) => setReason(e.target.value)} className={inputCls} placeholder="Write a clear message. The user is notified by email." />
+      <label className={labelCls}>{required ? t('adminUi.reasonRequired') : t('adminUi.noteOptional')}</label>
+      <textarea rows={4} value={reason} onChange={(e) => setReason(e.target.value)} className={inputCls} placeholder={t('adminUi.reasonPlaceholder')} />
     </Modal>
   );
 };
@@ -241,6 +250,7 @@ export const ReasonModal: React.FC<{
 export const DetailDrawer: React.FC<{ open: boolean; title: string; subtitle?: React.ReactNode; onClose: () => void; children: React.ReactNode; footer?: React.ReactNode }> = ({
   open, title, subtitle, onClose, children, footer,
 }) => {
+  const { t } = useTranslation();
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50" role="dialog" aria-modal="true">
@@ -251,7 +261,7 @@ export const DetailDrawer: React.FC<{ open: boolean; title: string; subtitle?: R
             <h3 className="font-serif font-black text-2xl text-[#201C18] dark:text-[#F4EFE6] leading-tight">{title}</h3>
             {subtitle && <div className="mt-1.5">{subtitle}</div>}
           </div>
-          <button onClick={onClose} className="p-1.5 border border-[#26211C]/30 dark:border-[#9A7432]/40 cursor-pointer hover:text-[#8B2626]" aria-label="Close"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="p-1.5 border border-[#26211C]/30 dark:border-[#9A7432]/40 cursor-pointer hover:text-[#8B2626]" aria-label={t('adminUi.close')}><X className="w-4 h-4" /></button>
         </div>
         <div className="flex-1 overflow-y-auto p-6 space-y-5">{children}</div>
         {footer && <div className="px-6 py-4 border-t border-[#26211C]/20 dark:border-[#9A7432]/30 flex flex-wrap justify-end gap-2">{footer}</div>}

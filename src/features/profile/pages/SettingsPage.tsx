@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Save, Loader2, User, Mail, Phone, MapPin, Globe } from 'lucide-react';
 import { useProfile } from '../hooks/useProfile';
 import { ProfileUpdateFormData } from '../schemas/profile.schema';
+import { changeLanguage } from '../../../i18n/index.ts';
 
 interface SettingsPageProps {
   onBack?: () => void;
@@ -34,10 +35,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack, onSuccess })
     try {
       await updateProfile(data);
       if (data.preferredLanguage !== i18n.language) {
-        i18n.changeLanguage(data.preferredLanguage);
-        localStorage.setItem('lewegene_language', data.preferredLanguage);
+        await changeLanguage(data.preferredLanguage === 'en' ? 'en' : 'am');
       }
-      setSuccessMsg('የመለያ መረጃዎ በተሳካ ሁኔታ ተሻሽሏል!');
+      setSuccessMsg('settings.saved');
       setTimeout(() => {
         setSuccessMsg(null);
         onSuccess?.();
@@ -61,26 +61,26 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack, onSuccess })
 
       <div className="p-6 sm:p-8 rounded-3xl bg-[#FAF6EE] dark:bg-[#14110E] border border-[#D5C8B2]/80 dark:border-[#2E2822] shadow-sm">
         <h1 className="text-xl font-serif font-bold text-[#14110E] dark:text-[#FAF6EE] mb-1">
-          የመለያ ቅንብሮች (Account Settings)
+          {t('settings.title')}
         </h1>
         <p className="text-xs text-[#73685B] dark:text-[#A89E90] mb-6">
-          የግል መረጃዎን፣ ቋንቋዎን እና የማሳወቂያ ምርጫዎችዎን ያስተካክሉ
+          {t('settings.description')}
         </p>
 
         {successMsg && (
           <div className="p-3 mb-4 text-xs rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400">
-            {successMsg}
+            {t(successMsg)}
           </div>
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-[#26211C] dark:text-[#F4EFE6] mb-1.5">
-              ሙሉ ስም
+              {t('settings.fullName')}
             </label>
             <div className="relative">
               <input
-                {...register('name', { required: 'ስም ያስገቡ' })}
+                {...register('name', { required: t('settings.nameRequired') })}
                 className="w-full px-3.5 py-2.5 pl-10 rounded-xl bg-[#EFE7D5] dark:bg-[#1E1A16] border border-[#D5C8B2]/70 dark:border-[#2E2822] text-xs text-[#14110E] dark:text-[#FAF6EE] focus:ring-1 focus:ring-[#9A7432] focus:outline-none"
               />
               <User className="w-4 h-4 text-[#73685B] absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -91,11 +91,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack, onSuccess })
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-[#26211C] dark:text-[#F4EFE6] mb-1.5">
-                ኢሜይል አድራሻ
+                {t('settings.email')}
               </label>
               <div className="relative">
                 <input
-                  {...register('email', { required: 'ኢሜይል ያስገቡ' })}
+                  {...register('email', { required: t('settings.emailRequired') })}
                   className="w-full px-3.5 py-2.5 pl-10 rounded-xl bg-[#EFE7D5] dark:bg-[#1E1A16] border border-[#D5C8B2]/70 dark:border-[#2E2822] text-xs text-[#14110E] dark:text-[#FAF6EE] focus:ring-1 focus:ring-[#9A7432] focus:outline-none"
                 />
                 <Mail className="w-4 h-4 text-[#73685B] absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -104,7 +104,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack, onSuccess })
 
             <div>
               <label className="block text-xs font-semibold text-[#26211C] dark:text-[#F4EFE6] mb-1.5">
-                ስልክ ቁጥር
+                {t('settings.phone')}
               </label>
               <div className="relative">
                 <input
@@ -119,7 +119,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack, onSuccess })
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-[#26211C] dark:text-[#F4EFE6] mb-1.5">
-                የመኖሪያ ከተማ / አካባቢ
+                {t('settings.location')}
               </label>
               <div className="relative">
                 <input
@@ -132,16 +132,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack, onSuccess })
 
             <div>
               <label className="block text-xs font-semibold text-[#26211C] dark:text-[#F4EFE6] mb-1.5">
-                ተመራጭ ቋንቋ (Default Language)
+                {t('settings.preferredLanguage')}
               </label>
               <div className="relative">
                 <select
                   {...register('preferredLanguage')}
                   className="w-full px-3.5 py-2.5 pl-10 rounded-xl bg-[#EFE7D5] dark:bg-[#1E1A16] border border-[#D5C8B2]/70 dark:border-[#2E2822] text-xs text-[#14110E] dark:text-[#FAF6EE] focus:ring-1 focus:ring-[#9A7432] focus:outline-none"
                 >
-                  <option value="am">አማርኛ (Amharic - ነባሪ)</option>
-                  <option value="en">English</option>
-                  <option value="om">Afaan Oromoo</option>
+                  <option value="am">{t('settings.amharic')}</option>
+                  <option value="en">{t('settings.english')}</option>
                 </select>
                 <Globe className="w-4 h-4 text-[#73685B] absolute left-3.5 top-1/2 -translate-y-1/2" />
               </div>
@@ -150,7 +149,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack, onSuccess })
 
           <div>
             <label className="block text-xs font-semibold text-[#26211C] dark:text-[#F4EFE6] mb-1.5">
-              አጭር የህይወት ታሪክ (Bio)
+              {t('settings.bio')}
             </label>
             <textarea
               {...register('bio')}
@@ -168,12 +167,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack, onSuccess })
               {isUpdating ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  በማስቀመጥ ላይ...
+                  {t('settings.saving')}
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4" />
-                  ለውጦችን አስቀምጥ
+                  {t('settings.save')}
                 </>
               )}
             </button>

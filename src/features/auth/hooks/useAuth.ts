@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { authApi } from '../api/auth.api';
 import { useAuthStore } from '../store/auth.store';
-import { LoginCredentials, RegisterCredentials } from '../types/auth.types';
+import { LoginCredentials } from '../types/auth.types';
 import {
   authService,
   OtpRequest,
@@ -23,13 +23,6 @@ export const useAuth = () => {
 
   const loginMutation = useMutation({
     mutationFn: (credentials: LoginCredentials) => authApi.login(credentials),
-    onSuccess: (data) => {
-      setUser(data.user, data.token);
-    },
-  });
-
-  const registerMutation = useMutation({
-    mutationFn: (credentials: RegisterCredentials) => authApi.register(credentials),
     onSuccess: (data) => {
       setUser(data.user, data.token);
     },
@@ -64,12 +57,10 @@ export const useAuth = () => {
     isLoading:
       userQuery.isLoading ||
       loginMutation.isPending ||
-      registerMutation.isPending ||
       requestOtpMutation.isPending ||
       verifyOtpMutation.isPending ||
       registerWithPhoneMutation.isPending,
     login: loginMutation.mutateAsync,
-    register: registerMutation.mutateAsync,
     requestOtp: requestOtpMutation.mutateAsync,
     verifyOtp: verifyOtpMutation.mutateAsync,
     registerWithVerifiedPhone: registerWithPhoneMutation.mutateAsync,

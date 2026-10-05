@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle, Eye, XCircle, Paperclip } from 'lucide-react';
 import { useAdmin } from '../hooks/AdminContext.ts';
 import { AdminReport } from '../types/admin.types.ts';
@@ -10,6 +11,7 @@ import {
 const TABS = ['all', 'pending', 'reviewed', 'resolved', 'dismissed'] as const;
 
 export const AdminReports: React.FC = () => {
+  const { t } = useTranslation();
   const { store, focusId, go } = useAdmin();
   const { notify } = useAdminToast();
   const [tab, setTab] = useState<(typeof TABS)[number]>('all');
@@ -40,13 +42,13 @@ export const AdminReports: React.FC = () => {
 
   return (
     <div>
-      <SectionHeader title="Reports" subtitle="Every reported cause lands here. Review it, then resolve or dismiss." actions={<SearchBox value={q} onChange={setQ} placeholder="Search cause, reporter…" />} />
-      <FilterTabs value={tab} onChange={(t) => setTab(t as any)} tabs={TABS.map((t) => ({ id: t, label: t === 'all' ? 'All' : t[0].toUpperCase() + t.slice(1), count: t === 'all' ? s.reports.length : s.reports.filter((r) => r.status === t).length }))} />
+      <SectionHeader title={t('adminReports.title')} subtitle={t('adminReports.description')} actions={<SearchBox value={q} onChange={setQ} placeholder={t('adminReports.search')} />} />
+      <FilterTabs value={tab} onChange={(value) => setTab(value as (typeof TABS)[number])} tabs={TABS.map((status) => ({ id: status, label: t(status === 'all' ? 'adminUi.all' : `adminUi.status.${status}`), count: status === 'all' ? s.reports.length : s.reports.filter((r) => r.status === status).length }))} />
 
       {rows.length === 0 ? (
-        <Panel><EmptyState title="No reports" text="Nothing matches this filter." /></Panel>
+        <Panel><EmptyState title={t('adminReports.empty')} text={t('adminUi.noMatches')} /></Panel>
       ) : (
-        <DataTable head={['Reported cause', 'Category', 'Reporter', 'Date', 'Status', '']}>
+        <DataTable head={[t('adminReports.reportedCause'), t('adminUi.category'), t('adminReports.reporter'), t('adminUi.date'), t('adminUi.statusLabel'), '']}>
           {rows.map((r) => (
             <Tr key={r.id}>
               <Td className="max-w-xs"><span className="text-sm font-semibold line-clamp-2">{view(r).cause}</span></Td>
@@ -54,7 +56,7 @@ export const AdminReports: React.FC = () => {
               <Td className="text-xs">{view(r).reporter}</Td>
               <Td className="font-mono text-xs whitespace-nowrap">{fmtDate(r.createdAt)}</Td>
               <Td><StatusBadge status={r.status} /></Td>
-              <Td className="text-right"><AdminButton onClick={() => setOpenId(r.id)} icon={<Eye className="w-3.5 h-3.5" />}>Open</AdminButton></Td>
+              <Td className="text-right"><AdminButton onClick={() => setOpenId(r.id)} icon={<Eye className="w-3.5 h-3.5" />}>{t('adminUi.open')}</AdminButton></Td>
             </Tr>
           ))}
         </DataTable>
@@ -68,40 +70,40 @@ export const AdminReports: React.FC = () => {
         footer={
           open && (open.status === 'pending' || open.status === 'reviewed') ? (
             <>
-              {open.status === 'pending' && <AdminButton busy={busy} icon={<Eye className="w-3.5 h-3.5" />} onClick={() => act(async () => { await store.actions.updateReport(open.id, 'reviewed'); }, 'Report marked as reviewed.')}>Mark reviewed</AdminButton>}
-              <AdminButton tone="gold" busy={busy} icon={<CheckCircle className="w-3.5 h-3.5" />} onClick={() => setModal('resolve')}>Resolve</AdminButton>
-              <AdminButton tone="red" busy={busy} icon={<XCircle className="w-3.5 h-3.5" />} onClick={() => setModal('dismiss')}>Dismiss</AdminButton>
+              {open.status === 'pending' && <AdminButton busy={busy} icon={<Eye className="w-3.5 h-3.5" />} onClick={() => act(async () => { await store.actions.updateReport(open.id, 'reviewed'); }, t('adminReports.reviewedToast'))}>{t('adminReports.markReviewed')}</AdminButton>}
+              <AdminButton tone="gold" busy={busy} icon={<CheckCircle className="w-3.5 h-3.5" />} onClick={() => setModal('resolve')}>{t('adminReports.resolve')}</AdminButton>
+              <AdminButton tone="red" busy={busy} icon={<XCircle className="w-3.5 h-3.5" />} onClick={() => setModal('dismiss')}>{t('adminReports.dismiss')}</AdminButton>
             </>
           ) : null
         }
       >
         {open && v && (
           <>
-            <Panel title="Report">
+            <Panel title={t('adminReports.report')}>
               <DetailGrid items={[
-                ['Reported by', <>{v.reporter}<div className="font-mono text-[10px] text-zinc-500">{v.reporterEmail}</div></>],
-                ['Cause owner', v.owner],
-                ['Category', open.category],
-                ['Date', fmtDateTime(open.createdAt)],
+                [t('adminReports.reportedBy'), <>{v.reporter}<div className="font-mono text-[10px] text-zinc-500">{v.reporterEmail}</div></>],
+                [t('adminReports.causeOwner'), v.owner],
+                [t('adminUi.category'), open.category],
+                [t('adminUi.date'), fmtDateTime(open.createdAt)],
               ]} />
-              <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mt-4 mb-1">Details</p>
+              <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mt-4 mb-1">{t('adminReports.details')}</p>
               <p className="text-sm leading-relaxed">{open.details}</p>
             </Panel>
-            <Panel title="Evidence">
+            <Panel title={t('adminReports.evidence')}>
               {open.evidence.length ? (
                 <ul className="space-y-2">{open.evidence.map((e) => <li key={e} className="flex items-center gap-2 font-mono text-xs"><Paperclip className="w-4 h-4 text-[#9A7432]" />{e}</li>)}</ul>
-              ) : <p className="font-mono text-xs text-zinc-500">No evidence provided.</p>}
+              ) : <p className="font-mono text-xs text-zinc-500">{t('adminReports.noEvidence')}</p>}
             </Panel>
-            {open.resolutionNote && <Panel title="Admin note"><p className="text-sm">{open.resolutionNote}</p></Panel>}
-            <AdminButton tone="ghost" onClick={() => go('fundraisers', open.campaignId)}>Open the reported fundraiser</AdminButton>
+            {open.resolutionNote && <Panel title={t('adminUi.adminNote')}><p className="text-sm">{open.resolutionNote}</p></Panel>}
+            <AdminButton tone="ghost" onClick={() => go('fundraisers', open.campaignId)}>{t('adminReports.openFundraiser')}</AdminButton>
           </>
         )}
       </DetailDrawer>
 
-      <ReasonModal open={modal === 'resolve'} title="Resolve report" description="Describe what was done." confirmLabel="Resolve" tone="gold" required={false} onClose={() => setModal(null)}
-        onConfirm={(n) => act(async () => { await store.actions.updateReport(open!.id, 'resolved', n || undefined); setModal(null); }, 'Report resolved. The reporter will be notified.')} />
-      <ReasonModal open={modal === 'dismiss'} title="Dismiss report" description="Explain why no action is needed." confirmLabel="Dismiss" onClose={() => setModal(null)}
-        onConfirm={(n) => act(async () => { await store.actions.updateReport(open!.id, 'dismissed', n); setModal(null); }, 'Report dismissed.')} />
+      <ReasonModal open={modal === 'resolve'} title={t('adminReports.resolve')} description={t('adminReports.resolveDescription')} confirmLabel={t('adminReports.resolve')} tone="gold" required={false} onClose={() => setModal(null)}
+        onConfirm={(n) => act(async () => { await store.actions.updateReport(open!.id, 'resolved', n || undefined); setModal(null); }, t('adminReports.resolvedToast'))} />
+      <ReasonModal open={modal === 'dismiss'} title={t('adminReports.dismiss')} description={t('adminReports.dismissDescription')} confirmLabel={t('adminReports.dismiss')} onClose={() => setModal(null)}
+        onConfirm={(n) => act(async () => { await store.actions.updateReport(open!.id, 'dismissed', n); setModal(null); }, t('adminReports.dismissedToast'))} />
     </div>
   );
 };

@@ -1,181 +1,133 @@
+import axios from 'axios';
+import { api } from '../../../api/axios.ts';
 import type { Fundraiser, FundraiserFormValues, FundraiserStatus } from '../types/fundraiser.types.ts';
-import { getCurrentUser } from '../data/currentUser.ts';
 import { fundraiserToValues, validate } from '../schemas/fundraiser.schema.ts';
-import { campaignApi as localCampaignApi } from '../../../services/api/campaignApi.ts';
 
-/**
- * MOCK API stored in localStorage. When the backend exists, replace the bodies with real calls
- * (the function names stay the same, so no component has to change):
- *   getMine()         -> GET   /users/me/campaigns
- *   save(values)      -> POST  /campaigns          (new)   |  PATCH /campaigns/:campaignId (existing)
- *   submit(id)        -> POST  /campaigns/:campaignId/submit
- *   requestDelete(id) -> POST  /campaigns/:campaignId/delete-request
- */
-const KEY = 'lewegene_fundraisers_v1';
-const wait = (ms = 200) => new Promise((r) => setTimeout(r, ms));
-
-function read(): Fundraiser[] {
-  try {
-    return JSON.parse(localStorage.getItem(KEY) || '[]');
-  } catch {
-    return [];
-  }
-}
-function write(list: Fundraiser[]) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(list));
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('lewegene:personal-data-changed'));
-    }
-  } catch {
-    throw new Error('Could not save. The images may be too large — try smaller ones.');
-  }
+interface BackendFundraiser {
+  _id: string;
+  title: string;
+  story: string;
+  goalAmount: number;
+  raisedAmount: number;
+  creatorUserId: string;
+  creatorName: string;
+  category: Fundraiser['category'];
+  imageUrl?: string;
+  location?: string;
+  status: FundraiserStatus;
+  createdAt: string;
+  updatedAt?: string;
+  fundraiserData?: Partial<Fundraiser>;
+  deleteRequested?: boolean;
 }
 
-function applyValues(base: Fundraiser, v: FundraiserFormValues): Fundraiser {
-  const isCommunity = v.beneficiaryType === 'community_org';
-  const resolvedBanks = isCommunity
-    ? []
-    : v.banks && v.banks.length > 0
-      ? v.banks
-      : v.bank?.bankId
-        ? [v.bank]
-        : [];
-  const primaryBank = resolvedBanks[0] || { bankId: '', accountNumber: '', accountName: '' };
-
+function mapFundraiser(campaign: BackendFundraiser): Fundraiser {
+  const details = campaign.fundraiserData || {};
   return {
-    ...base,
-    title: v.title.trim(),
-    category: (v.category || 'other') as Fundraiser['category'],
-    location: v.location.trim(),
-    story: v.story.trim(),
-    images: v.images,
-    goalAmount: Number(v.goalAmount) || 0,
-    deadline: v.deadline || '',
-    beneficiaryType: v.beneficiaryType,
-    beneficiary:
-      v.beneficiaryType === 'myself' || isCommunity
-        ? { name: '', phone: '', info: '' }
-        : v.beneficiary,
-    organizationId: isCommunity ? v.organizationId : undefined,
-    bank: primaryBank,
-    banks: resolvedBanks,
-    documents: v.documents,
-    updatedAt: new Date().toISOString(),
+    ...details,
+    id: campaign._id,
+    creatorId: campaign.creatorUserId,
+    status: campaign.status,
+    title: campaign.title,
+    story: campaign.story,
+    goalAmount: campaign.goalAmount,
+    raisedAmount: campaign.raisedAmount,
+    category: campaign.category,
+    location: campaign.location || details.location || '',
+    images: details.images || (campaign.imageUrl ? [campaign.imageUrl] : []),
+    deadline: details.deadline || '',
+    beneficiaryType: details.beneficiaryType || 'myself',
+    beneficiary: details.beneficiary || { name: '', phone: '', info: '' },
+    bank: details.bank || { bankId: '', accountNumber: '', accountName: '' },
+    banks: details.banks || [],
+    documents: details.documents || [],
+    deleteRequested: campaign.deleteRequested,
+    createdAt: campaign.createdAt,
+    updatedAt: campaign.updatedAt || campaign.createdAt,
+  };
+}
+
+function toBackendPayload(values: FundraiserFormValues): Partial<Fundraiser> {
+  const isCommunity = values.beneficiaryType === 'community_org';
+  const banks = isCommunity
+    ? []
+    : values.banks?.length
+      ? values.banks
+      : values.bank?.bankId
+        ? [values.bank]
+        : [];
+  return {
+    title: values.title.trim(),
+    category: (values.category || 'other') as Fundraiser['category'],
+    location: values.location.trim(),
+    story: values.story.trim(),
+    images: values.images,
+    goalAmount: Number(values.goalAmount) || 1,
+    deadline: values.deadline || '',
+    beneficiaryType: values.beneficiaryType,
+    beneficiary: values.beneficiaryType === 'myself' || isCommunity
+      ? { name: '', phone: '', info: '' }
+      : values.beneficiary,
+    organizationId: isCommunity ? values.organizationId : undefined,
+    bank: banks[0] || { bankId: '', accountNumber: '', accountName: '' },
+    banks,
+    documents: values.documents,
   };
 }
 
 export const fundraisingApi = {
   async getMine(): Promise<Fundraiser[]> {
-    await wait();
-    const campaigns = await localCampaignApi.getAllCampaigns();
-    const synced = read().map((fundraiser) => {
-      const campaign = campaigns.find((item) => item.id === fundraiser.id);
-      if (!campaign) return fundraiser;
-      const status: Fundraiser['status'] = campaign.status === 'needs_changes' ? 'changes_requested' : campaign.status;
-      return { ...fundraiser, status, raisedAmount: campaign.raisedAmount, updatedAt: campaign.createdAt };
-    });
-    write(synced);
-    return synced
-      .filter((f) => f.creatorId === getCurrentUser().id)
-      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    const response = await api.get<BackendFundraiser[]>('/campaigns/mine');
+    return response.data.map(mapFundraiser).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   },
 
   async getById(id: string): Promise<Fundraiser | null> {
-    await wait(100);
-    return read().find((f) => f.id === id) ?? null;
+    try {
+      const response = await api.get<BackendFundraiser>(`/campaigns/${id}`);
+      if (!response.data.fundraiserData) return null;
+      return mapFundraiser(response.data);
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) return null;
+      throw error;
+    }
   },
 
-  /** Creates a new draft, or updates an existing fundraiser (its status is kept). */
   async save(values: FundraiserFormValues, id?: string): Promise<Fundraiser> {
-    await wait();
     const errors = validate(values, 'draft');
     if (Object.keys(errors).length) throw new Error(Object.values(errors)[0]);
-    const list = read();
-    const existing = id ? list.find((f) => f.id === id) : undefined;
-    if (existing) {
-      const updated = applyValues(existing, values);
-      write(list.map((f) => (f.id === existing.id ? updated : f)));
-      return updated;
-    }
-    const now = new Date().toISOString();
-    const created = applyValues(
-      {
-        id: `camp-${Date.now()}`,
-        creatorId: getCurrentUser().id,
-        status: 'draft',
-        raisedAmount: 0,
-        createdAt: now,
-        updatedAt: now,
-      } as Fundraiser,
-      values,
-    );
-    write([created, ...list]);
-    return created;
+    const fundraiserData = toBackendPayload(values);
+    const response = id
+      ? await api.patch<BackendFundraiser>(`/campaigns/${id}`, {
+          title: fundraiserData.title,
+          story: fundraiserData.story,
+          goalAmount: fundraiserData.goalAmount,
+          category: fundraiserData.category,
+          location: fundraiserData.location,
+          imageUrl: fundraiserData.images?.[0],
+          fundraiserData,
+        })
+      : await api.post<BackendFundraiser>('/campaigns/drafts', { fundraiserData });
+    return mapFundraiser(response.data);
   },
 
   async submit(id: string): Promise<Fundraiser> {
-    await wait();
-    const list = read();
-    const f = list.find((x) => x.id === id);
-    if (!f) throw new Error('Fundraiser not found.');
-    if (Object.keys(validate(fundraiserToValues(f), 'submit')).length) {
+    const fundraiser = await this.getById(id);
+    if (!fundraiser) throw new Error('Fundraiser not found.');
+    if (Object.keys(validate(fundraiserToValues(fundraiser), 'submit')).length) {
       throw new Error('Complete all required fields before submitting.');
     }
-
-    // Rule 6: A user must not have more than one active/incomplete fundraiser
-    const ACTIVE_STATUSES: FundraiserStatus[] = ['pending', 'changes_requested', 'approved', 'paused'];
-    const currentUserId = getCurrentUser().id;
-    const existingActive = list.find(
-      (item) => item.creatorId === currentUserId && item.id !== id && ACTIVE_STATUSES.includes(item.status)
-    );
-    if (existingActive) {
-      throw new Error(
-        `You already have an active fundraiser in progress ("${existingActive.title}"). Lewegene policy permits only one active or incomplete fundraiser at a time.`
-      );
-    }
-    const campaigns = await localCampaignApi.getAllCampaigns();
-    if (!campaigns.some((campaign) => campaign.id === f.id)) {
-      await localCampaignApi.createCampaign({
-        id: f.id,
-        title: f.title,
-        story: f.story,
-        goalAmount: f.goalAmount,
-        category: f.category as import('../../../types/index.ts').CampaignCategory,
-        creatorName: getCurrentUser().name,
-        organizationId: f.organizationId || undefined,
-        organizationName: f.beneficiaryType === 'community_org' ? 'Community Organization' : undefined,
-        imageUrl: f.images[0],
-        location: f.location,
-      }, false);
-    }
-    const updated: Fundraiser = { ...f, status: 'pending', reviewNote: undefined, updatedAt: new Date().toISOString() };
-    write(list.map((x) => (x.id === id ? updated : x)));
-    return updated;
+    const response = await api.post<BackendFundraiser>(`/campaigns/${id}/submit`);
+    return mapFundraiser(response.data);
   },
 
-  /** Drafts are deleted straight away. Anything else only gets flagged for admin. */
   async requestDelete(id: string): Promise<void> {
-    await wait();
-    const list = read();
-    const f = list.find((x) => x.id === id);
-    if (!f) return;
-    if (f.status === 'draft') write(list.filter((x) => x.id !== id));
-    else write(list.map((x) => (x.id === id ? { ...x, deleteRequested: true } : x)));
+    await api.post(`/campaigns/${id}/delete-request`);
   },
 
-  /** DEMO ONLY — stands in for Member 5's admin screen. Remove once admin review is connected. */
   async demoReview(
     id: string,
     status: Extract<FundraiserStatus, 'approved' | 'changes_requested' | 'rejected'>,
   ): Promise<void> {
-    await wait(100);
-    const note =
-      status === 'changes_requested'
-        ? 'Please upload a clearer verification letter.'
-        : status === 'rejected'
-          ? 'We could not verify this fundraiser.'
-          : undefined;
-    write(read().map((f) => (f.id === id ? { ...f, status, reviewNote: note, updatedAt: new Date().toISOString() } : f)));
+    await api.patch(`/admin/campaigns/${id}`, { status });
   },
 };

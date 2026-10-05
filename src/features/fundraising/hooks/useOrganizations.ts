@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
 import { organizationService } from '../../../services/organizationService.ts';
-import { INITIAL_ORGANIZATIONS } from '../../../data/mockOrganizations.ts';
-import { COMMUNITIES } from '../data/communities.data.ts';
 
 export interface OrganizationOption {
   id: string;
@@ -10,27 +8,30 @@ export interface OrganizationOption {
 }
 
 export function useOrganizations() {
-  const [data, setData] = useState<OrganizationOption[]>(() => [
-    ...INITIAL_ORGANIZATIONS.filter((o) => o.verified && o.verificationStatus === 'approved').map(
-      (o) => ({ id: o.id, name: o.name, kind: 'organization' as const })
-    ),
-    ...COMMUNITIES.map((c) => ({ id: c.id, name: c.name, kind: 'community' as const })),
-  ]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [data, setData] = useState<OrganizationOption[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
-    organizationService.list().then((orgs) => {
-      if (!active) return;
-      const verified = orgs
-        .filter((o) => o.verified && o.verificationStatus === 'approved')
-        .map((o) => ({ id: o.id, name: o.name, kind: 'organization' as const }));
-      setData([...verified, ...COMMUNITIES.map((c) => ({ id: c.id, name: c.name, kind: 'community' as const }))]);
-    });
+    organizationService.list()
+      .then((orgs) => {
+        if (!active) return;
+        setData(orgs
+          .filter((org) => org.verified && org.verificationStatus === 'approved')
+          .map((org) => ({ id: org.id, name: org.name, kind: 'organization' as const })));
+      })
+      .catch((loadError: unknown) => {
+        if (!active) return;
+        setError(loadError instanceof Error ? loadError.message : 'Could not load organizations.');
+      })
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
     return () => {
       active = false;
     };
   }, []);
 
-  return { data, isLoading };
+  return { data, isLoading, error };
 }

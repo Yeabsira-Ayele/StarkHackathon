@@ -25,15 +25,14 @@ export interface LanguageOption {
   label: string;
 }
 
-/** Single source of truth for the languages offered across the platform. */
+/** Single source of truth for the languages offered in the platform UI. */
 export const SUPPORTED_LANGUAGES: LanguageOption[] = [
   { code: 'am', short: 'አማ', label: 'አማርኛ (Amharic)' },
   { code: 'en', short: 'EN', label: 'English' },
-  { code: 'om', short: 'OM', label: 'Afaan Oromoo' },
 ];
 
-/** Active user-facing languages for this MVP release (English & Amharic). */
-export const ACTIVE_UI_LANGUAGES: LanguageOption[] = SUPPORTED_LANGUAGES.filter((l) => l.code !== 'om');
+/** Languages selectable for static UI text. */
+export const ACTIVE_UI_LANGUAGES: LanguageOption[] = SUPPORTED_LANGUAGES;
 
 /** Amharic is the default platform language (see `config.ts`). */
 export const DEFAULT_LANGUAGE: AppLanguage = 'am';

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle, Eye, XCircle } from 'lucide-react';
 import { useAdmin } from '../hooks/AdminContext.ts';
 import { AdminDonation } from '../types/admin.types.ts';
@@ -10,6 +11,7 @@ import {
 const TABS = ['all', 'pending', 'confirmed', 'rejected'] as const;
 
 export const AdminDonations: React.FC = () => {
+  const { t } = useTranslation();
   const { store, focusId } = useAdmin();
   const { notify } = useAdminToast();
   const [tab, setTab] = useState<(typeof TABS)[number]>('pending');
@@ -34,16 +36,16 @@ export const AdminDonations: React.FC = () => {
 
   return (
     <div>
-      <SectionHeader title="Donations" subtitle="Donations are verified via digital receipt links, with admin review for pending or disputed records." actions={<SearchBox value={q} onChange={setQ} placeholder="Search donor, cause, reference…" />} />
-      <FilterTabs value={tab} onChange={(t) => setTab(t as any)} tabs={TABS.map((t) => ({ id: t, label: t === 'all' ? 'All' : t[0].toUpperCase() + t.slice(1), count: t === 'all' ? s.donations.length : s.donations.filter((d) => d.status === t).length }))} />
+      <SectionHeader title={t('adminDonations.title')} subtitle={t('adminDonations.description')} actions={<SearchBox value={q} onChange={setQ} placeholder={t('adminDonations.search')} />} />
+      <FilterTabs value={tab} onChange={(value) => setTab(value as (typeof TABS)[number])} tabs={TABS.map((status) => ({ id: status, label: t(status === 'all' ? 'adminUi.all' : `adminUi.status.${status}`), count: status === 'all' ? s.donations.length : s.donations.filter((d) => d.status === status).length }))} />
 
       {rows.length === 0 ? (
-        <Panel><EmptyState title="No donations here" text="Nothing matches this filter." /></Panel>
+        <Panel><EmptyState title={t('adminDonations.empty')} text={t('adminUi.noMatches')} /></Panel>
       ) : (
-        <DataTable head={['Donor', 'Cause', 'Amount', 'Date', 'Reference', 'Status', '']}>
+        <DataTable head={[t('adminDonations.donor'), t('adminUi.cause'), t('adminUi.amount'), t('adminUi.date'), t('adminDonations.reference'), t('adminUi.statusLabel'), '']}>
           {rows.map((d) => (
             <Tr key={d.id}>
-              <Td className="text-sm">{d.anonymous ? <span className="italic">Anonymous</span> : d.donorName}</Td>
+              <Td className="text-sm">{d.anonymous ? <span className="italic">{t('adminDonations.anonymous')}</span> : d.donorName}</Td>
               <Td className="max-w-[220px]"><span className="text-xs line-clamp-2">{cause(d)}</span></Td>
               <Td className="font-mono text-xs font-bold tabular-nums whitespace-nowrap">{fmtETB(d.amount)}</Td>
               <Td className="font-mono text-xs whitespace-nowrap">{fmtDateTime(d.createdAt)}</Td>
@@ -52,11 +54,11 @@ export const AdminDonations: React.FC = () => {
               <Td className="text-right whitespace-nowrap">
                 {d.status === 'pending' ? (
                   <div className="flex justify-end gap-1.5">
-                    <AdminButton tone="gold" busy={busy} onClick={() => act(async () => { await store.actions.confirmDonation(d.id); }, 'Donation confirmed.')}>Confirm</AdminButton>
-                    <AdminButton onClick={() => setOpenId(d.id)} icon={<Eye className="w-3.5 h-3.5" />}>Open</AdminButton>
+                    <AdminButton tone="gold" busy={busy} onClick={() => act(async () => { await store.actions.confirmDonation(d.id); }, t('adminDonations.confirmed'))}>{t('adminUi.confirm')}</AdminButton>
+                    <AdminButton onClick={() => setOpenId(d.id)} icon={<Eye className="w-3.5 h-3.5" />}>{t('adminUi.open')}</AdminButton>
                   </div>
                 ) : (
-                  <AdminButton onClick={() => setOpenId(d.id)} icon={<Eye className="w-3.5 h-3.5" />}>Open</AdminButton>
+                  <AdminButton onClick={() => setOpenId(d.id)} icon={<Eye className="w-3.5 h-3.5" />}>{t('adminUi.open')}</AdminButton>
                 )}
               </Td>
             </Tr>
@@ -71,37 +73,37 @@ export const AdminDonations: React.FC = () => {
         subtitle={open && <div className="flex gap-2 items-center"><StatusBadge status={open.status} /><span className="font-mono text-[10px] text-zinc-500">{open.id}</span></div>}
         footer={open?.status === 'pending' ? (
           <>
-            <AdminButton tone="gold" busy={busy} icon={<CheckCircle className="w-3.5 h-3.5" />} onClick={() => act(async () => { await store.actions.confirmDonation(open.id); }, 'Donation confirmed.')}>Confirm</AdminButton>
-            <AdminButton tone="red" busy={busy} icon={<XCircle className="w-3.5 h-3.5" />} onClick={() => setReject(true)}>Reject</AdminButton>
+            <AdminButton tone="gold" busy={busy} icon={<CheckCircle className="w-3.5 h-3.5" />} onClick={() => act(async () => { await store.actions.confirmDonation(open.id); }, t('adminDonations.confirmed'))}>{t('adminUi.confirm')}</AdminButton>
+            <AdminButton tone="red" busy={busy} icon={<XCircle className="w-3.5 h-3.5" />} onClick={() => setReject(true)}>{t('adminUi.reject')}</AdminButton>
           </>
         ) : null}
       >
         {open && (
           <>
-            <Panel title="Donation">
+            <Panel title={t('adminDonations.donation')}>
               <DetailGrid items={[
-                ['Donor', open.anonymous ? 'Anonymous (shown publicly)' : open.donorName],
-                ['Donor email', open.donorEmail],
-                ['Cause', cause(open)],
-                ['Date', fmtDateTime(open.createdAt)],
+                [t('adminDonations.donor'), open.anonymous ? t('adminDonations.anonymousPublic') : open.donorName],
+                [t('adminDonations.donorEmail'), open.donorEmail],
+                [t('adminUi.cause'), cause(open)],
+                [t('adminUi.date'), fmtDateTime(open.createdAt)],
               ]} />
             </Panel>
-            <Panel title="Payment to verify">
+            <Panel title={t('adminDonations.paymentToVerify')}>
               <DetailGrid items={[
-                ['Bank', open.bank],
-                ['Account number', open.accountNumber],
-                ['Payment reference', <span className="font-mono">{open.reference}</span>],
-                ['Amount', fmtETB(open.amount)],
+                [t('adminUi.bank'), open.bank],
+                [t('adminUi.accountNumber'), open.accountNumber],
+                [t('adminDonations.paymentReference'), <span className="font-mono">{open.reference}</span>],
+                [t('adminUi.amount'), fmtETB(open.amount)],
               ]} />
-              <p className="font-mono text-[11px] text-zinc-500 mt-4">Check the reference against the bank statement before confirming.</p>
+              <p className="font-mono text-[11px] text-zinc-500 mt-4">{t('adminDonations.verifyHint')}</p>
             </Panel>
-            {open.decisionNote && <Panel title="Admin note"><p className="text-sm">{open.decisionNote}</p></Panel>}
+            {open.decisionNote && <Panel title={t('adminUi.adminNote')}><p className="text-sm">{open.decisionNote}</p></Panel>}
           </>
         )}
       </DetailDrawer>
 
-      <ReasonModal open={reject} title="Reject donation" description="For example: reference not found in the bank statement." confirmLabel="Reject donation" onClose={() => setReject(false)}
-        onConfirm={(n) => act(async () => { await store.actions.rejectDonation(open!.id, n); setReject(false); }, 'Donation rejected.')} />
+      <ReasonModal open={reject} title={t('adminDonations.rejectTitle')} description={t('adminDonations.rejectDescription')} confirmLabel={t('adminDonations.rejectTitle')} onClose={() => setReject(false)}
+        onConfirm={(n) => act(async () => { await store.actions.rejectDonation(open!.id, n); setReject(false); }, t('adminDonations.rejected'))} />
     </div>
   );
 };

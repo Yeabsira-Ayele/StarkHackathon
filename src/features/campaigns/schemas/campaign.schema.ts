@@ -17,6 +17,7 @@ export const campaignSchema = z.object({
     'medical',
     'education',
     'emergency',
+    'business',
     'water',
     'environment',
     'community',

@@ -1,9 +1,8 @@
 import { create } from 'zustand';
 import { TransparencyOverview, TransparencyAuditRecord } from '../types/reports.types';
-import { MOCK_TRANSPARENCY_OVERVIEW } from '../data/reports.data';
 
 interface ReportsState {
-  overview: TransparencyOverview;
+  overview: TransparencyOverview | null;
   selectedSector: string | null;
   selectedRecord: TransparencyAuditRecord | null;
   setSelectedSector: (sector: string | null) => void;
@@ -11,7 +10,7 @@ interface ReportsState {
 }
 
 export const useReportsStore = create<ReportsState>((set) => ({
-  overview: MOCK_TRANSPARENCY_OVERVIEW,
+  overview: null,
   selectedSector: null,
   selectedRecord: null,
   setSelectedSector: (selectedSector) => set({ selectedSector }),

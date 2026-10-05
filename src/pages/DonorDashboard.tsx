@@ -74,7 +74,7 @@ export const DonorDashboard: React.FC<DonorDashboardProps> = ({
             <span>ACSO VERIFIED ESCROW RECORD</span>
           </div>
         </div>
-
+      
         {/* Monumental Currency Stats Compartment */}
         <div className="relative z-10 py-6 text-center space-y-3">
           <p className="text-[10px] font-mono tracking-[0.3em] uppercase text-[#B08A45] font-bold">

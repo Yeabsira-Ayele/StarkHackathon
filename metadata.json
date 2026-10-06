@@ -1,0 +1,6 @@
+{
+  "name": "LEWEGENE",
+  "description": "Voice-enabled community crowdfunding platform for Ethiopia with Voxide voice interaction, Links.et local payment rail, and verified campaign tracking.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

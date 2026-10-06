@@ -1,0 +1,293 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-accent: var(--accent);
+  --color-accent-gold: var(--accent-gold);
+  --color-accent-burgundy: var(--accent-burgundy);
+  --color-accent-blue: var(--accent-blue);
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+  --color-border: var(--border-color);
+  --color-border-subtle: var(--border-subtle);
+  --color-ink: var(--text-main);
+  --color-ink-muted: var(--text-muted);
+  --color-error: var(--error);
+
+  --font-display: 'Cinzel', serif;
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-ethiopic: 'Noto Serif Ethiopic', 'Noto Sans Ethiopic', serif;
+}
+
+:root {
+  /* Ethiopian Netela (ነጠላ) Handwoven Cotton Cloth & Intaglio Palette */
+  --primary: #26211C;          /* Deep Carbon Intaglio Ink */
+  --primary-dark: #181512;     /* Pure Engraving Black Ink */
+  --accent: #9A7432;           /* Antique Banknote Ochre & Bronze */
+  --accent-gold: #B88B45;      /* Subdued Historical Gold/Ochre */
+  --accent-burgundy: #1E4D38;  /* Authentic Vintage Banknote Green (1 Birr Reference) */
+  --accent-green: #1E4D38;     /* Vintage Banknote Forest Green */
+  --accent-green-dark: #163E2C;/* Deep Banknote Green Hover */
+  --accent-blue: #2A435E;      /* Faded Slate Banknote Blue */
+  --background: #F2ECE1;       /* Warm Natural Netela Linen/Cotton Cloth Swatch (ነጠላ) */
+  --surface: #F8F4EC;          /* Tactile Shemma Plate Surface */
+  --surface-alt: #E9E1D2;      /* Natural Handspun Cotton Slub Layer */
+  --border-color: #383028;     /* Fine Intaglio Engraved Hairline */
+  --border-subtle: #D2C5B0;    /* Subtle Hand-spun Cotton Divider */
+  --text-main: #201C18;        /* Historical Carbon Black Ink */
+  --text-muted: #5A4E3E;       /* Faded Sepia Thread Ink */
+  --error: #1E4D38;
+}
+
+.dark {
+  /* Ultra-Deep Obsidian Banknote Charcoal & Luminous Emerald Watermark */
+  --primary: #B88B45;
+  --primary-dark: #9A7432;
+  --accent: #C89D52;
+  --accent-gold: #D8B066;
+  --accent-burgundy: #52B788;
+  --accent-green: #52B788;
+  --accent-green-dark: #3E966C;
+  --accent-blue: #3A5F82;
+  --background: #080706;       /* True Ultra-Deep Velvet Obsidian Black */
+  --surface: #0E0D0B;          /* Dark Intaglio Steel Plate */
+  --surface-alt: #161411;      /* Secondary Dark Archival Tone */
+  --border-color: #2F261E;
+  --border-subtle: #1C1713;
+  --text-main: #F4EFE6;        /* Crisp Luminous Ivory Lettering */
+  --text-muted: #9E9383;
+  --error: #D34545;
+}
+
+/* Explicit semantic classes */
+.bg-primary { background-color: var(--primary) !important; }
+.text-primary { color: var(--text-main) !important; }
+.bg-accent { background-color: var(--accent) !important; }
+.text-accent { color: var(--accent) !important; }
+.bg-background { background-color: var(--background) !important; }
+.bg-surface { background-color: var(--surface) !important; }
+.border-border { border-color: var(--border-color) !important; }
+.bg-error { background-color: var(--error) !important; }
+.text-error { color: var(--error) !important; }
+
+/* Banknote Guilloché, Intaglio & Security Textures */
+@keyframes guillocheDrift {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.02); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes securityShimmer {
+  0% { opacity: 0.15; }
+  50% { opacity: 0.35; }
+  100% { opacity: 0.15; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 15px rgba(176, 138, 69, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(176, 138, 69, 0.45); }
+}
+
+.animate-guilloche {
+  animation: guillocheDrift 120s linear infinite;
+}
+
+.animate-security {
+  animation: securityShimmer 6s ease-in-out infinite;
+}
+
+.banknote-shadow {
+  box-shadow: 
+    0 4px 20px -2px rgba(23, 60, 50, 0.12),
+    0 0 0 1px rgba(176, 138, 69, 0.3),
+    inset 0 0 40px rgba(176, 138, 69, 0.05);
+}
+
+.banknote-inner-border {
+  box-shadow: 
+    inset 0 0 0 1px var(--border-color),
+    inset 0 0 0 4px var(--surface),
+    inset 0 0 0 5px var(--accent-gold),
+    inset 0 0 0 7px var(--surface);
+}
+
+.banknote-engraved-text {
+  text-shadow: 0.5px 0.5px 0px rgba(0,0,0,0.25);
+  letter-spacing: 0.08em;
+}
+
+.banknote-serial-red {
+  color: #1E4D38; /* Authentic Vintage Banknote Green from reference */
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-shadow: 0 0 1px rgba(30, 77, 56, 0.25);
+}
+
+.dark .banknote-serial-red {
+  color: #52B788;
+  text-shadow: 0 0 1px rgba(82, 183, 136, 0.3);
+}
+
+.banknote-serial-black {
+  color: #1C1A17;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.dark .banknote-serial-black {
+  color: #E8DEC8;
+}
+
+/* Intaglio steel-plate etching effect for imagery */
+.intaglio-image {
+  filter: contrast(1.15) sepia(0.22) saturate(0.9);
+}
+
+.intaglio-overlay {
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(38, 33, 28, 0.06) 0px,
+    rgba(38, 33, 28, 0.06) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  pointer-events: none;
+}
+
+.intaglio-crosshatch {
+  background-image: 
+    repeating-linear-gradient(45deg, rgba(154, 116, 50, 0.04) 0px, rgba(154, 116, 50, 0.04) 1px, transparent 1px, transparent 4px),
+    repeating-linear-gradient(-45deg, rgba(38, 33, 28, 0.04) 0px, rgba(38, 33, 28, 0.04) 1px, transparent 1px, transparent 4px);
+}
+
+/* Authentic banknote paper grain & Ethiopian Netela (ነጠላ) Handwoven Cloth Weave */
+.banknote-paper {
+  background-color: var(--background);
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(154, 116, 50, 0.05) 0%, transparent 65%),
+    repeating-linear-gradient(0deg, rgba(38, 33, 28, 0.03) 0px, rgba(38, 33, 28, 0.03) 1px, transparent 1px, transparent 3px),
+    repeating-linear-gradient(90deg, rgba(38, 33, 28, 0.03) 0px, rgba(38, 33, 28, 0.03) 1px, transparent 1px, transparent 3px);
+}
+
+/* Authentic Ethiopian Netela (ነጠላ) Fine Cotton Gauze Weave (ድርና ማግ) */
+.netela-cloth-texture {
+  background-image:
+    /* Layer 1: Dense Vertical Warp Threads (ድር) with Warm Cotton Highlights */
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.55) 0px,
+      rgba(255, 255, 255, 0.55) 1px,
+      transparent 1px,
+      transparent 3px,
+      rgba(255, 255, 255, 0.35) 3px,
+      rgba(255, 255, 255, 0.35) 4px,
+      transparent 4px,
+      transparent 6px
+    ),
+    /* Layer 2: Dense Horizontal Weft Threads (ማግ) with Warm Cotton Highlights */
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.55) 0px,
+      rgba(255, 255, 255, 0.55) 1px,
+      transparent 1px,
+      transparent 3px,
+      rgba(255, 255, 255, 0.35) 3px,
+      rgba(255, 255, 255, 0.35) 4px,
+      transparent 4px,
+      transparent 6px
+    ),
+    /* Layer 3: Secondary Pit-Loom Structural Grid with Natural Organic Fibers */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M0 3h12M0 9h12' stroke='%23FFFFFF' stroke-width='0.75' stroke-opacity='0.65'/%3E%3Cpath d='M3 0v12M9 0v12' stroke='%23FFFFFF' stroke-width='0.75' stroke-opacity='0.65'/%3E%3Cpath d='M0 6h12' stroke='%23C7B69E' stroke-width='0.45' stroke-opacity='0.25'/%3E%3Cpath d='M6 0v12' stroke='%23C7B69E' stroke-width='0.45' stroke-opacity='0.25'/%3E%3Ccircle cx='3' cy='3' r='0.75' fill='%23FFFFFF' fill-opacity='0.8'/%3E%3Ccircle cx='9' cy='9' r='0.75' fill='%23FFFFFF' fill-opacity='0.8'/%3E%3Ccircle cx='3' cy='9' r='0.6' fill='%23B4A086' fill-opacity='0.2'/%3E%3Ccircle cx='9' cy='3' r='0.6' fill='%23B4A086' fill-opacity='0.2'/%3E%3C/svg%3E"),
+    /* Layer 4: Natural Luminous Gauze Breathing Diffusion */
+    radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.45) 0%, rgba(242, 236, 225, 0.15) 65%, transparent 100%);
+  background-size: 6px 6px, 6px 6px, 12px 12px, 100% 100%;
+}
+
+.dark .netela-cloth-texture {
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgba(216, 176, 102, 0.02) 0px,
+      rgba(216, 176, 102, 0.02) 1px,
+      transparent 1px,
+      transparent 4px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(82, 183, 136, 0.02) 0px,
+      rgba(82, 183, 136, 0.02) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+  background-size: auto;
+}
+
+/* Traditional Ethiopian Tibeb (ጥበብ) Woven Border Tape */
+.tibeb-ribbon-pattern {
+  background-image: repeating-linear-gradient(
+    45deg,
+    #1E4D38 0,
+    #1E4D38 6px,
+    #9A7432 6px,
+    #9A7432 12px,
+    #163E2C 12px,
+    #163E2C 18px,
+    #B88B45 18px,
+    #B88B45 24px
+  );
+}
+
+.font-display {
+  font-family: 'Cinzel', serif;
+}
+
+.font-serif {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+.font-ethiopic {
+  font-family: 'Noto Serif Ethiopic', 'Noto Sans Ethiopic', serif;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text-main);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.banknote-texture {
+  background-image: 
+    repeating-radial-gradient(circle at 0 0, transparent 0, rgba(0,0,0,0.04) 2px, transparent 3px),
+    repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.025) 2px, rgba(0,0,0,0.025) 4px);
+  background-size: 12px 12px, 8px 8px;
+}
+
+.paper-grain {
+  position: relative;
+}
+.paper-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  opacity: 0.08;
+  mix-blend-mode: multiply;
+}
+
+.dark .paper-grain::after {
+  opacity: 0.04;
+  mix-blend-mode: screen;
+}

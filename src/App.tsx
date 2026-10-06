@@ -17,7 +17,7 @@ import { ContributionCertificateModal } from './components/campaign/Contribution
 
 import { VoxideExtraction } from './services/voice/voxideService.ts';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
-import { VoxideAssistant } from './features/voxide';
+import { VoxideBridge } from './features/voxide/components/VoxideBridge';
 import { AuthModal } from './features/auth/components/AuthModal.tsx';
 import { useAuth } from './features/auth/hooks/useAuth.ts';
 import { AdminPortal } from './features/admin/pages/AdminPortal.tsx';
@@ -492,7 +492,7 @@ function PlatformApp({
       />
 
       {/* Voxide Official Voice Assistant */}
-      <VoxideAssistant />
+      <VoxideBridge />
 
       <AuthModal
         isOpen={!!authMode}

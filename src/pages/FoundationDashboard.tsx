@@ -2,17 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Campaign, Donation, Organization } from '../types/index.ts';
-import { Card } from '../components/ui/Card.tsx';
-import { Button } from '../components/ui/Button.tsx';
-import { ProgressBar } from '../components/ui/ProgressBar.tsx';
+import { BanknoteRulerGauge } from '../components/banknote/BanknoteArtwork.tsx';
 import { organizationService } from '../services/organizationService.ts';
 import {
   Building2,
   ShieldCheck,
   Plus,
-  TrendingUp,
-  Users,
-  Bell,
   ArrowRight,
   ArrowLeft,
   FileText,
@@ -25,8 +20,6 @@ import {
   CheckCircle2,
   FileCheck,
   Landmark,
-  Phone,
-  Mail,
   User as UserIcon,
   RefreshCw,
 } from 'lucide-react';
@@ -83,7 +76,7 @@ export const FoundationDashboard: React.FC<FoundationDashboardProps> = ({
       setOrg(updated);
       onOrganizationUpdated?.(updated);
       setIsEditingForResubmit(false);
-      setResubmitSuccess('Application updated and resubmitted for admin verification.');
+      setResubmitSuccess('Application updated and resubmitted for review.');
       setTimeout(() => setResubmitSuccess(null), 5000);
     } catch (err: any) {
       console.error(err);
@@ -100,164 +93,147 @@ export const FoundationDashboard: React.FC<FoundationDashboardProps> = ({
   };
 
   // ══════════════════════════════════════════════════════════════════════════
-  // PENDING / REJECTED / NEEDS_CHANGES STATUS VIEW
+  // PENDING / REJECTED / NEEDS_CHANGES STATUS VIEW (BANKNOTE INTAGLIO PLATE)
   // ══════════════════════════════════════════════════════════════════════════
   if (status !== 'approved') {
     return (
-      <div className="max-w-4xl mx-auto space-y-8 pb-16 animate-in fade-in duration-200 font-sans">
-        {/* Top Navigation Return Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
+      <div className="w-full max-w-[1400px] mx-auto px-6 sm:px-12 lg:px-20 py-8 lg:py-12 space-y-8 font-sans text-[#201C18] dark:text-[#F4EFE6]">
+        {/* Top Intaglio Navigation Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-[#26211C]/20 dark:border-[#9A7432]/30 pb-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <button
               type="button"
               onClick={() => (onBack ? onBack() : navigate('/'))}
-              className="gap-1.5"
+              className="px-4 py-2 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#F2EADA] dark:bg-[#0E0D0B] font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-2 hover:border-[#1E4D38] hover:bg-[#EAE1CF] dark:hover:bg-[#161411] transition-colors cursor-pointer"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
+              <ArrowLeft className="w-4 h-4 text-[#1E4D38] dark:text-[#52B788]" />
               <span>{t('nav.backToHome', 'Back to Home')}</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
+            </button>
+            <button
               type="button"
               onClick={() => navigate('/discover')}
+              className="px-3 py-2 font-mono text-xs font-bold uppercase tracking-wider text-[#5A4E3E] dark:text-[#9E9383] hover:text-[#1E4D38] dark:hover:text-[#52B788] transition-colors cursor-pointer"
             >
-              {t('nav.backToExplore', 'Back to Explore')}
-            </Button>
+              {t('nav.backToExplore', 'Explore Causes')}
+            </button>
           </div>
-          <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+          <span className="font-mono text-xs font-bold uppercase tracking-widest text-[#9A7432]">
             {t('nav.orgDashboard', 'Organization Hub')}
           </span>
         </div>
 
-        {/* Status Header Banner */}
-        <section
-          className={`relative overflow-hidden rounded-2xl border p-6 sm:p-10 shadow-lg text-[#F7F4EB] ${
-            status === 'pending'
-              ? 'border-amber-500/40 bg-gradient-to-br from-[#2A2312] via-[#1E190E] to-[#120F08]'
-              : status === 'needs_changes'
-              ? 'border-amber-600/50 bg-gradient-to-br from-[#2F210A] via-[#201607] to-[#150F05]'
-              : 'border-red-500/40 bg-gradient-to-br from-[#2A1010] via-[#1E0B0B] to-[#120707]'
-          }`}
-        >
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        {/* Status Header Plate */}
+        <section className="relative border-2 border-[#26211C] dark:border-[#9A7432] bg-[#F2EADA] dark:bg-[#0E0D0B] p-6 sm:p-8 lg:p-10 space-y-6 banknote-shadow">
+          <div className="pointer-events-none absolute inset-1.5 border border-[#9A7432]/35" />
+
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold tracking-wider font-mono uppercase ${
-                    status === 'pending'
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                      : status === 'needs_changes'
-                      ? 'bg-amber-600/20 text-amber-200 border border-amber-500/50'
-                      : 'bg-red-500/20 text-red-300 border border-red-500/40'
-                  }`}
-                >
-                  {status === 'pending' && <Clock className="w-3.5 h-3.5 animate-pulse" />}
+              <div className="flex flex-wrap items-center gap-3 font-mono text-xs">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 border border-[#9A7432] bg-[#FAF6EC] dark:bg-[#161411] text-[#9A7432] font-bold uppercase tracking-wider">
+                  {status === 'pending' && <Clock className="w-3.5 h-3.5" />}
                   {status === 'needs_changes' && <MessageSquareWarning className="w-3.5 h-3.5" />}
                   {status === 'rejected' && <XCircle className="w-3.5 h-3.5" />}
                   <span>
                     {status === 'pending'
-                      ? 'STATUS: PENDING ACSO COMPLIANCE REVIEW'
+                      ? 'STATUS: PENDING ADMINISTRATIVE REVIEW'
                       : status === 'needs_changes'
                       ? 'STATUS: ACTION REQUIRED / CHANGES REQUESTED'
                       : 'STATUS: APPLICATION DECLINED'}
                   </span>
                 </span>
-                <span className="text-xs text-zinc-400 font-mono">
-                  Submitted: {org.submittedAt ? new Date(org.submittedAt).toLocaleDateString() : 'Recent'}
+                <span className="text-[#5A4E3E] dark:text-[#9E9383]">
+                  SUBMITTED: {org.submittedAt ? new Date(org.submittedAt).toLocaleDateString() : 'RECENT'}
                 </span>
               </div>
 
-              <h1 className="text-2xl sm:text-3xl font-display font-bold text-white">
+              <h1 className="type-headline text-[#201C18] dark:text-[#F4EFE6]">
                 {org.name}
               </h1>
 
-              <p className="text-xs sm:text-sm text-zinc-300 max-w-xl leading-relaxed">
+              <p className="type-body text-[#5A4E3E] dark:text-[#9E9383]">
                 {status === 'pending' &&
-                  'Your organization registration is currently queued for regulatory and identity verification. Cause publishing and fundraising actions are temporarily held.'}
+                  'Your organization registration is queued for administrative review. Cause publishing and fundraising actions remain held until approval.'}
                 {status === 'needs_changes' &&
-                  'The review administrator has requested clarifying changes before this organization can be approved.'}
+                  'The review administrator has requested clarifying updates before this organization can be accredited.'}
                 {status === 'rejected' &&
-                  'This organization application was not approved. Institutional privileges and campaign publishing remain restricted.'}
+                  'This organization application was not approved. Institutional privileges and cause publishing remain restricted.'}
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <Button
-                variant="outline"
-                size="md"
+            <div className="flex flex-wrap items-center gap-3 shrink-0">
+              <button
+                type="button"
                 onClick={onViewProfile}
-                className="text-[#F7F4EB] border-border hover:bg-surface/20"
-                icon={<ExternalLink className="w-4 h-4 text-accent" />}
+                className="px-5 py-3 border-2 border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-xs font-black uppercase tracking-widest hover:bg-[#163E2C] transition-colors flex items-center gap-2 cursor-pointer"
               >
-                Profile Preview
-              </Button>
+                <span>Preview Public Profile</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
         </section>
 
         {resubmitSuccess && (
-          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-xs flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <div className="p-4 border-2 border-[#1E4D38] bg-[#FAF6EC] dark:bg-[#161411] text-[#1E4D38] dark:text-[#52B788] font-mono text-xs font-bold flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
             <span>{resubmitSuccess}</span>
           </div>
         )}
 
-        {/* Admin Decision Note Banner if needs_changes or rejected */}
+        {/* Admin Decision Note Plate */}
         {org.decisionNote && (
-          <Card className="p-6 border-amber-500/50 bg-amber-500/10 space-y-2">
-            <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-bold text-xs uppercase tracking-wider font-mono">
+          <section className="relative p-6 border-2 border-[#9A7432] bg-[#FAF6EC] dark:bg-[#161411] space-y-3">
+            <div className="flex items-center gap-2 text-[#9A7432] font-mono font-bold text-xs uppercase tracking-wider">
               <MessageSquareWarning className="w-4 h-4" />
-              <span>Note from Administrator / ACSO Auditor:</span>
+              <span>Note from Administrator:</span>
             </div>
-            <p className="text-sm text-primary leading-relaxed italic bg-surface/50 p-3 rounded-lg border border-border">
+            <p className="font-serif text-base text-[#201C18] dark:text-[#F4EFE6] italic p-4 border border-[#26211C]/20 dark:border-[#9A7432]/30 bg-[#F2EADA] dark:bg-[#0E0D0B] max-w-[68ch]">
               &ldquo;{org.decisionNote}&rdquo;
             </p>
             {status === 'needs_changes' && !isEditingForResubmit && (
               <div className="pt-2">
-                <Button
-                  variant="accent"
-                  size="sm"
+                <button
+                  type="button"
                   onClick={() => setIsEditingForResubmit(true)}
-                  icon={<RefreshCw className="w-3.5 h-3.5" />}
+                  className="px-5 py-2.5 border-2 border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-xs font-black uppercase tracking-wider hover:bg-[#163E2C] transition-colors inline-flex items-center gap-2 cursor-pointer"
                 >
-                  Edit Application &amp; Resubmit
-                </Button>
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Edit Application &amp; Resubmit</span>
+                </button>
               </div>
             )}
-          </Card>
+          </section>
         )}
 
         {/* Resubmit Form when needs_changes */}
         {isEditingForResubmit && (
-          <Card className="p-6 border-accent bg-surface space-y-4">
-            <div className="border-b border-border pb-2">
-              <h3 className="font-bold text-sm text-primary font-display uppercase tracking-wider">
+          <section className="relative p-6 sm:p-8 border-2 border-[#26211C] dark:border-[#9A7432] bg-[#F2EADA] dark:bg-[#0E0D0B] space-y-5">
+            <div className="pointer-events-none absolute inset-1.5 border border-[#9A7432]/35" />
+            <div className="relative z-10 border-b border-[#26211C]/20 dark:border-[#9A7432]/30 pb-3">
+              <h2 className="font-display font-black text-lg text-[#201C18] dark:text-[#F4EFE6] uppercase tracking-wider">
                 Update Organization Details &amp; Resubmit
-              </h3>
-              <p className="text-xs text-zinc-500">
+              </h2>
+              <p className="font-sans text-xs text-[#5A4E3E] dark:text-[#9E9383] mt-1">
                 Address the reviewer&apos;s feedback above and resubmit for verification.
               </p>
             </div>
 
-            <form onSubmit={handleResubmit} className="space-y-4 text-xs">
+            <form onSubmit={handleResubmit} className="relative z-10 space-y-4 font-mono text-xs">
               <div>
-                <label className="block font-semibold text-primary mb-1">
-                  Registration / ACSO Number
+                <label className="block font-bold text-[#201C18] dark:text-[#F4EFE6] uppercase mb-1.5">
+                  Registration Number
                 </label>
                 <input
                   type="text"
                   required
                   value={resubmitRegistrationNo}
                   onChange={(e) => setResubmitRegistrationNo(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-surface text-primary font-mono focus:ring-1 focus:ring-accent"
+                  className="w-full px-3 py-2.5 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#FAF6EC] dark:bg-[#161411] text-[#201C18] dark:text-[#F4EFE6] focus:outline-none focus:border-[#1E4D38]"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-primary mb-1">
+                <label className="block font-bold text-[#201C18] dark:text-[#F4EFE6] uppercase mb-1.5">
                   Description / Mission Statement
                 </label>
                 <textarea
@@ -265,36 +241,43 @@ export const FoundationDashboard: React.FC<FoundationDashboardProps> = ({
                   required
                   value={resubmitDescription}
                   onChange={(e) => setResubmitDescription(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-surface text-primary focus:ring-1 focus:ring-accent"
+                  className="w-full px-3 py-2.5 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#FAF6EC] dark:bg-[#161411] font-sans text-sm text-[#201C18] dark:text-[#F4EFE6] focus:outline-none focus:border-[#1E4D38]"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="block font-semibold text-primary">
+                <label className="block font-bold text-[#201C18] dark:text-[#F4EFE6] uppercase">
                   Attached Documents ({resubmitDocuments.length}/3)
                 </label>
                 {resubmitDocuments.length < 3 && (
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      placeholder="e.g. updated_acso_license.pdf"
+                      placeholder="e.g. updated_license.pdf"
                       value={newDocName}
                       onChange={(e) => setNewDocName(e.target.value)}
-                      className="flex-1 px-3 py-1.5 rounded-lg border border-border bg-surface font-mono"
+                      className="flex-1 px-3 py-2 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#FAF6EC] dark:bg-[#161411] font-mono text-xs"
                     />
-                    <Button type="button" size="sm" variant="outline" onClick={handleAddResubmitDoc}>
+                    <button
+                      type="button"
+                      onClick={handleAddResubmitDoc}
+                      className="px-4 py-2 border border-[#26211C] dark:border-[#9A7432] bg-[#EAE1CF] dark:bg-[#161411] font-mono text-xs font-bold uppercase cursor-pointer"
+                    >
                       Add
-                    </Button>
+                    </button>
                   </div>
                 )}
-                <ul className="space-y-1">
+                <ul className="space-y-1.5">
                   {resubmitDocuments.map((d, i) => (
-                    <li key={i} className="flex items-center justify-between p-2 rounded bg-surface-alt font-mono text-[11px]">
+                    <li
+                      key={i}
+                      className="flex items-center justify-between p-2.5 border border-[#26211C]/20 dark:border-[#9A7432]/30 bg-[#FAF6EC] dark:bg-[#161411] font-mono text-xs"
+                    >
                       <span>{d}</span>
                       <button
                         type="button"
                         onClick={() => setResubmitDocuments(resubmitDocuments.filter((_, idx) => idx !== i))}
-                        className="text-red-500 hover:text-red-700 cursor-pointer"
+                        className="text-red-700 dark:text-red-400 font-bold uppercase cursor-pointer"
                       >
                         Remove
                       </button>
@@ -303,142 +286,156 @@ export const FoundationDashboard: React.FC<FoundationDashboardProps> = ({
                 </ul>
               </div>
 
-              <div className="pt-3 flex gap-2 justify-end border-t border-border">
-                <Button type="button" variant="ghost" size="sm" onClick={() => setIsEditingForResubmit(false)}>
+              <div className="pt-3 flex gap-3 justify-end border-t border-[#26211C]/20 dark:border-[#9A7432]/30">
+                <button
+                  type="button"
+                  onClick={() => setIsEditingForResubmit(false)}
+                  className="px-4 py-2.5 border border-[#26211C]/40 dark:border-[#9A7432]/50 font-mono text-xs font-bold uppercase cursor-pointer"
+                >
                   Cancel
-                </Button>
-                <Button type="submit" variant="accent" size="sm" isLoading={isResubmitting}>
-                  Resubmit for Review
-                </Button>
+                </button>
+                <button
+                  type="submit"
+                  disabled={isResubmitting}
+                  className="px-5 py-2.5 border-2 border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-xs font-black uppercase tracking-wider hover:bg-[#163E2C] cursor-pointer"
+                >
+                  {isResubmitting ? 'Submitting...' : 'Resubmit for Review'}
+                </button>
               </div>
             </form>
-          </Card>
+          </section>
         )}
 
-        {/* Protection Alert Card */}
-        <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-50/60 dark:bg-amber-950/20 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+        {/* Governance Notice */}
+        <div className="p-5 border border-[#9A7432] bg-[#FAF6EC] dark:bg-[#161411] flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-[#9A7432]" />
           <div className="space-y-1">
-            <p className="font-bold">Fundraising &amp; Cause Publishing Locked</p>
-            <p className="text-[11px] leading-relaxed">
-              Per Lewegene platform governance and regulatory guidelines, foundations cannot create live cause plates, initiate public fundraisers, or accept donor funds until official ACSO accreditation is verified.
+            <p className="font-mono text-xs font-bold uppercase text-[#201C18] dark:text-[#F4EFE6]">
+              Fundraising &amp; Cause Publishing Locked
+            </p>
+            <p className="font-sans text-sm text-[#5A4E3E] dark:text-[#9E9383] leading-relaxed max-w-[68ch]">
+              Under Lewegene platform governance, organizations cannot publish active cause plates or collect citizen contributions until institutional accreditation is approved.
             </p>
           </div>
         </div>
 
-        {/* Application Credentials Summary Card */}
-        <Card className="p-6 sm:p-8 border-border bg-surface shadow-xs space-y-6">
-          <div className="border-b border-border pb-3">
-            <h2 className="text-base font-bold text-primary font-display uppercase tracking-wider">
+        {/* Application Credentials Summary Plate */}
+        <section className="relative p-6 sm:p-8 border-2 border-[#26211C] dark:border-[#9A7432] bg-[#F2EADA] dark:bg-[#0E0D0B] space-y-6">
+          <div className="pointer-events-none absolute inset-1.5 border border-[#9A7432]/35" />
+
+          <div className="relative z-10 border-b border-[#26211C]/20 dark:border-[#9A7432]/30 pb-3">
+            <h2 className="font-display font-black text-lg sm:text-xl text-[#201C18] dark:text-[#F4EFE6] uppercase tracking-wider">
               Submitted Application Credentials
             </h2>
-            <p className="text-xs text-zinc-500">
-              The details below are currently under review by our moderation team.
+            <p className="font-sans text-xs text-[#5A4E3E] dark:text-[#9E9383] mt-1">
+              The registration records below are on file with our moderation desk.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
             {/* Legal Entity */}
-            <div className="p-4 rounded-xl border border-border bg-surface-alt/40 space-y-2.5">
-              <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
+            <div className="p-5 border border-[#26211C]/25 dark:border-[#9A7432]/35 bg-[#FAF6EC] dark:bg-[#161411] space-y-3">
+              <p className="font-mono text-[11px] font-bold uppercase tracking-wider text-[#9A7432] flex items-center gap-1.5">
                 <Building2 className="w-3.5 h-3.5" />
-                Legal Entity
+                <span>Legal Entity</span>
               </p>
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <div>
-                  <span className="text-zinc-500 block text-[10px]">Legal Name</span>
-                  <span className="font-semibold text-primary">{org.name}</span>
+                  <span className="text-[#5A4E3E] dark:text-[#9E9383] block font-mono text-[10px] uppercase">Legal Name</span>
+                  <span className="font-serif font-bold text-base text-[#201C18] dark:text-[#F4EFE6]">{org.name}</span>
                 </div>
                 <div>
-                  <span className="text-zinc-500 block text-[10px]">Category</span>
-                  <span className="font-mono capitalize text-primary">{org.type.replace('_', ' ')}</span>
+                  <span className="text-[#5A4E3E] dark:text-[#9E9383] block font-mono text-[10px] uppercase">Category</span>
+                  <span className="font-mono uppercase text-[#201C18] dark:text-[#F4EFE6]">{org.type.replace('_', ' ')}</span>
                 </div>
                 <div>
-                  <span className="text-zinc-500 block text-[10px]">Registration / ACSO No.</span>
-                  <span className="font-mono text-primary">{org.registrationNo || 'ACSO Pending'}</span>
+                  <span className="text-[#5A4E3E] dark:text-[#9E9383] block font-mono text-[10px] uppercase">Registration No.</span>
+                  <span className="font-mono font-bold text-[#1E4D38] dark:text-[#52B788]">{(org.registrationNo || 'Pending').replace(/^ACSO[-/]?/i, '')}</span>
                 </div>
                 <div>
-                  <span className="text-zinc-500 block text-[10px]">Location / Address</span>
-                  <span className="text-primary">{org.location}</span>
+                  <span className="text-[#5A4E3E] dark:text-[#9E9383] block font-mono text-[10px] uppercase">Location</span>
+                  <span className="font-sans text-[#201C18] dark:text-[#F4EFE6]">{org.location}</span>
                 </div>
               </div>
             </div>
 
             {/* Representative */}
-            <div className="p-4 rounded-xl border border-border bg-surface-alt/40 space-y-2.5">
-              <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
+            <div className="p-5 border border-[#26211C]/25 dark:border-[#9A7432]/35 bg-[#FAF6EC] dark:bg-[#161411] space-y-3">
+              <p className="font-mono text-[11px] font-bold uppercase tracking-wider text-[#9A7432] flex items-center gap-1.5">
                 <UserIcon className="w-3.5 h-3.5" />
-                Authorized Representative
+                <span>Authorized Representative</span>
               </p>
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <div>
-                  <span className="text-zinc-500 block text-[10px]">Name</span>
-                  <span className="font-semibold text-primary">{org.representative?.name || 'Representative on file'}</span>
+                  <span className="text-[#5A4E3E] dark:text-[#9E9383] block font-mono text-[10px] uppercase">Name</span>
+                  <span className="font-serif font-bold text-base text-[#201C18] dark:text-[#F4EFE6]">{org.representative?.name || 'Representative on file'}</span>
                 </div>
                 <div>
-                  <span className="text-zinc-500 block text-[10px]">Role</span>
-                  <span className="text-primary">{org.representative?.role || 'Executive Officer'}</span>
+                  <span className="text-[#5A4E3E] dark:text-[#9E9383] block font-mono text-[10px] uppercase">Role</span>
+                  <span className="font-sans text-[#201C18] dark:text-[#F4EFE6]">{org.representative?.role || 'Executive Officer'}</span>
                 </div>
                 <div>
-                  <span className="text-zinc-500 block text-[10px]">Verified Phone</span>
-                  <span className="font-mono text-primary">{org.representative?.phone || org.contactPhone}</span>
+                  <span className="text-[#5A4E3E] dark:text-[#9E9383] block font-mono text-[10px] uppercase">Verified Phone</span>
+                  <span className="font-mono text-[#201C18] dark:text-[#F4EFE6]">{org.representative?.phone || org.contactPhone}</span>
                 </div>
                 <div>
-                  <span className="text-zinc-500 block text-[10px]">Email</span>
-                  <span className="font-mono text-primary">{org.representative?.email || org.contactEmail}</span>
+                  <span className="text-[#5A4E3E] dark:text-[#9E9383] block font-mono text-[10px] uppercase">Email</span>
+                  <span className="font-mono text-[#201C18] dark:text-[#F4EFE6]">{org.representative?.email || org.contactEmail}</span>
                 </div>
               </div>
             </div>
 
             {/* Receiving Bank Account */}
-            <div className="p-4 rounded-xl border border-border bg-surface-alt/40 space-y-2.5">
-              <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
+            <div className="p-5 border border-[#26211C]/25 dark:border-[#9A7432]/35 bg-[#FAF6EC] dark:bg-[#161411] space-y-3">
+              <p className="font-mono text-[11px] font-bold uppercase tracking-wider text-[#9A7432] flex items-center gap-1.5">
                 <Landmark className="w-3.5 h-3.5" />
-                Receiving Bank Account
+                <span>Receiving Bank Account</span>
               </p>
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <div>
-                  <span className="text-zinc-500 block text-[10px]">Bank Institution</span>
-                  <span className="font-semibold text-primary">{org.bank?.bank || 'Commercial Bank of Ethiopia (CBE)'}</span>
+                  <span className="text-[#5A4E3E] dark:text-[#9E9383] block font-mono text-[10px] uppercase">Bank Institution</span>
+                  <span className="font-serif font-bold text-base text-[#201C18] dark:text-[#F4EFE6]">{org.bank?.bank || 'Commercial Bank of Ethiopia (CBE)'}</span>
                 </div>
                 <div>
-                  <span className="text-zinc-500 block text-[10px]">Account Number</span>
-                  <span className="font-mono text-primary">{org.bank?.accountNumber || '1000284920194'}</span>
+                  <span className="text-[#5A4E3E] dark:text-[#9E9383] block font-mono text-[10px] uppercase">Account Number</span>
+                  <span className="font-mono font-bold text-[#201C18] dark:text-[#F4EFE6] tabular-nums">{org.bank?.accountNumber || '1000284920194'}</span>
                 </div>
                 <div>
-                  <span className="text-zinc-500 block text-[10px]">Account Holder Name</span>
-                  <span className="text-primary">{org.bank?.accountName || org.name}</span>
+                  <span className="text-[#5A4E3E] dark:text-[#9E9383] block font-mono text-[10px] uppercase">Account Holder Name</span>
+                  <span className="font-sans text-[#201C18] dark:text-[#F4EFE6]">{org.bank?.accountName || org.name}</span>
                 </div>
               </div>
             </div>
 
             {/* Uploaded Documents */}
-            <div className="p-4 rounded-xl border border-border bg-surface-alt/40 space-y-2.5">
-              <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
+            <div className="p-5 border border-[#26211C]/25 dark:border-[#9A7432]/35 bg-[#FAF6EC] dark:bg-[#161411] space-y-3">
+              <p className="font-mono text-[11px] font-bold uppercase tracking-wider text-[#9A7432] flex items-center gap-1.5">
                 <FileText className="w-3.5 h-3.5" />
-                Verification Documents ({org.documents?.length || 0})
+                <span>Verification Documents ({org.documents?.length || 0})</span>
               </p>
               {org.documents && org.documents.length > 0 ? (
-                <ul className="space-y-1.5 font-mono text-[11px]">
+                <ul className="space-y-2 font-mono text-xs">
                   {org.documents.map((doc, idx) => (
-                    <li key={idx} className="flex items-center gap-2 text-primary truncate">
-                      <FileCheck className="w-3.5 h-3.5 text-accent shrink-0" />
+                    <li key={idx} className="flex items-center gap-2 text-[#201C18] dark:text-[#F4EFE6] truncate">
+                      <FileCheck className="w-3.5 h-3.5 text-[#1E4D38] dark:text-[#52B788] shrink-0" />
                       <span className="truncate">{doc}</span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-zinc-400 italic text-[11px]">No external documents attached.</p>
+                <p className="font-sans text-xs text-[#5A4E3E] dark:text-[#9E9383] italic">
+                  No external documents attached.
+                </p>
               )}
             </div>
           </div>
-        </Card>
+        </section>
       </div>
     );
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // ACTIVE / APPROVED OPERATIONAL CONSOLE (Full Existing Features)
+  // ACTIVE / APPROVED OPERATIONAL CONSOLE (BANKNOTE INTAGLIO PLATE SYSTEM)
   // ══════════════════════════════════════════════════════════════════════════
   const totalRaised = campaigns.reduce((acc, c) => acc + c.raisedAmount, 0);
   const totalGoal = campaigns.reduce((acc, c) => acc + c.goalAmount, 0);
@@ -456,288 +453,306 @@ export const FoundationDashboard: React.FC<FoundationDashboardProps> = ({
   );
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-16 animate-in fade-in duration-200">
-      {/* Top Navigation Return Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
+    <div className="w-full max-w-[1400px] mx-auto px-6 sm:px-12 lg:px-20 py-8 lg:py-12 space-y-10 font-sans text-[#201C18] dark:text-[#F4EFE6]">
+      {/* Top Intaglio Navigation Return Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-[#26211C]/20 dark:border-[#9A7432]/30 pb-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
             type="button"
             onClick={() => (onBack ? onBack() : navigate('/'))}
-            className="gap-1.5"
+            className="px-4 py-2 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#F2EADA] dark:bg-[#0E0D0B] font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-2 hover:border-[#1E4D38] hover:bg-[#EAE1CF] dark:hover:bg-[#161411] transition-colors cursor-pointer"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
+            <ArrowLeft className="w-4 h-4 text-[#1E4D38] dark:text-[#52B788]" />
             <span>{t('nav.backToHome', 'Back to Home')}</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
+          </button>
+          <button
             type="button"
             onClick={() => navigate('/discover')}
+            className="px-3 py-2 font-mono text-xs font-bold uppercase tracking-wider text-[#5A4E3E] dark:text-[#9E9383] hover:text-[#1E4D38] dark:hover:text-[#52B788] transition-colors cursor-pointer"
           >
-            {t('nav.backToExplore', 'Back to Explore')}
-          </Button>
+            {t('nav.backToExplore', 'Explore Causes')}
+          </button>
         </div>
-        <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+        <span className="font-mono text-xs font-bold uppercase tracking-widest text-[#9A7432]">
           {t('nav.orgDashboard', 'Organization Hub')}
         </span>
       </div>
 
-      {/* Top Banknote-Style Foundation Banner */}
-      <section className="relative overflow-hidden rounded-2xl border border-[#B08A45]/40 bg-gradient-to-br from-[#173C32] via-[#102B23] to-[#0A1A15] text-[#F7F4EB] p-6 sm:p-10 shadow-lg">
-        <div
-          className="absolute inset-0 pointer-events-none opacity-5"
-          style={{
-            backgroundImage: `repeating-linear-gradient(45deg, #C5A059 0, #C5A059 2px, transparent 0, transparent 8px)`,
-          }}
-        />
+      {/* Engraved Foundation Treasury Header Plate */}
+      <section className="relative border-2 border-[#26211C] dark:border-[#9A7432] bg-[#F2EADA] dark:bg-[#0E0D0B] p-6 sm:p-8 lg:p-10 space-y-8 banknote-shadow">
+        <div className="pointer-events-none absolute inset-1.5 border border-[#9A7432]/35" />
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#B08A45]/50 bg-[#173C32]/80 text-[#C5A059] text-xs font-semibold tracking-wider font-mono">
-                <ShieldCheck className="w-3.5 h-3.5 text-accent" />
-                <span>{org.registrationNo || 'ACSO/ET/2024/9021'} · Verified NGO</span>
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-[#1E4D38] bg-[#1E4D38] text-white font-bold uppercase tracking-wider">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>{(org.registrationNo || 'ET/2024/9021').replace(/^ACSO[-/]?/i, '')}</span>
               </span>
-              <span className="text-xs text-zinc-400 font-mono">
-                HQ: {org.location || 'Addis Ababa'}
+              <span className="text-[#5A4E3E] dark:text-[#9E9383] font-bold uppercase">
+                · HQ: {org.location || 'Addis Ababa'}
               </span>
             </div>
 
-            <h1 className="text-2xl sm:text-4xl font-display font-bold tracking-tight text-white">
+            <h1 className="type-headline text-[#201C18] dark:text-[#F4EFE6]">
               {org.name}
             </h1>
-            <p className="text-xs sm:text-sm text-zinc-300 max-w-xl leading-relaxed">
-              Institutional Operations Console · Audited disbursement, milestone reporting, and donor transparency.
+            <p className="type-body text-[#5A4E3E] dark:text-[#9E9383]">
+              Institutional Operations Console · Audited Birr disbursement, milestone verification, and patron transparency.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              variant="accent"
-              size="md"
+          {/* Single Primary CTA + Lower-Emphasis Link */}
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 shrink-0">
+            <button
+              type="button"
               onClick={onCreateCampaign}
-              icon={<Plus className="w-4 h-4 text-[#1C1A17]" />}
+              className="w-full sm:w-auto justify-center px-6 py-3.5 border-2 border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-xs font-black uppercase tracking-widest hover:bg-[#163E2C] transition-colors flex items-center gap-2 shadow-sm cursor-pointer"
             >
-              Create New Cause
-            </Button>
-            <Button
-              variant="outline"
-              size="md"
+              <Plus className="w-4 h-4" />
+              <span>Publish New Cause</span>
+            </button>
+            <button
+              type="button"
               onClick={onViewProfile}
-              className="text-[#F7F4EB] border-[#B08A45]/60 hover:bg-[#1A4338]"
-              icon={<ExternalLink className="w-4 h-4 text-[#C5A059]" />}
+              className="w-full sm:w-auto justify-center px-4 py-3 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#FAF6EC] dark:bg-[#161411] text-[#201C18] dark:text-[#F4EFE6] font-mono text-xs font-bold uppercase tracking-wider hover:border-[#1E4D38] transition-colors flex items-center gap-2 cursor-pointer"
             >
-              Public Profile
-            </Button>
+              <span>Public Charter</span>
+              <ExternalLink className="w-3.5 h-3.5 text-[#9A7432]" />
+            </button>
           </div>
         </div>
 
-        {/* Overview Numbers */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-8 pt-6 border-t border-[#B08A45]/30">
-          <div className="bg-[#1A4338]/60 backdrop-blur-xs rounded-xl p-4 border border-[#B08A45]/20">
-            <p className="text-xs text-zinc-300 uppercase tracking-wider font-medium">Total Raised</p>
-            <p className="text-xl sm:text-2xl font-display font-bold text-[#E8DFC8] mt-1 tabular-nums">
+        {/* 4-Cell Engraved Treasury Metric Ledger */}
+        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-6 border-t border-[#26211C]/20 dark:border-[#9A7432]/30">
+          <div className="p-4 border border-[#26211C]/25 dark:border-[#9A7432]/35 bg-[#FAF6EC] dark:bg-[#161411] space-y-1">
+            <p className="type-caption text-[#5A4E3E] dark:text-[#9E9383]">
+              Total Underwritten
+            </p>
+            <p className="font-mono font-black text-xl sm:text-2xl text-[#201C18] dark:text-[#D8B066] tabular-nums">
               {totalRaised.toLocaleString()} ETB
             </p>
-            <p className="text-[11px] text-[#C5A059] font-ethiopic mt-0.5">የተሰበሰበ ድምር</p>
+            <p className="text-[11px] text-[#9A7432] font-ethiopic">የተሰበሰበ ድምር</p>
           </div>
 
-          <div className="bg-[#1A4338]/60 backdrop-blur-xs rounded-xl p-4 border border-[#B08A45]/20">
-            <p className="text-xs text-zinc-300 uppercase tracking-wider font-medium">Active Causes</p>
-            <p className="text-xl sm:text-2xl font-display font-bold text-[#E8DFC8] mt-1 tabular-nums">
+          <div className="p-4 border border-[#26211C]/25 dark:border-[#9A7432]/35 bg-[#FAF6EC] dark:bg-[#161411] space-y-1">
+            <p className="type-caption text-[#5A4E3E] dark:text-[#9E9383]">
+              Active Cause Plates
+            </p>
+            <p className="font-mono font-black text-xl sm:text-2xl text-[#201C18] dark:text-[#D8B066] tabular-nums">
               {activeCount}
             </p>
-            <p className="text-[11px] text-[#C5A059] font-ethiopic mt-0.5">ንቁ ዘመቻዎች</p>
+            <p className="text-[11px] text-[#9A7432] font-ethiopic">ንቁ ምክንያቶች</p>
           </div>
 
-          <div className="bg-[#1A4338]/60 backdrop-blur-xs rounded-xl p-4 border border-[#B08A45]/20">
-            <p className="text-xs text-zinc-300 uppercase tracking-wider font-medium">Total Supporters</p>
-            <p className="text-xl sm:text-2xl font-display font-bold text-[#E8DFC8] mt-1 tabular-nums">
-              {totalSupporters}
+          <div className="p-4 border border-[#26211C]/25 dark:border-[#9A7432]/35 bg-[#FAF6EC] dark:bg-[#161411] space-y-1">
+            <p className="type-caption text-[#5A4E3E] dark:text-[#9E9383]">
+              Community Patrons
             </p>
-            <p className="text-[11px] text-[#C5A059] font-ethiopic mt-0.5">ደጋፊዎች</p>
+            <p className="font-mono font-black text-xl sm:text-2xl text-[#201C18] dark:text-[#D8B066] tabular-nums">
+              {totalSupporters.toLocaleString()}
+            </p>
+            <p className="text-[11px] text-[#9A7432] font-ethiopic">ለጋሾች</p>
           </div>
 
-          <div className="bg-[#1A4338]/60 backdrop-blur-xs rounded-xl p-4 border border-[#B08A45]/20">
-            <p className="text-xs text-zinc-300 uppercase tracking-wider font-medium">Funding Progress</p>
-            <p className="text-xl sm:text-2xl font-display font-bold text-[#E8DFC8] mt-1 tabular-nums">
+          <div className="p-4 border border-[#26211C]/25 dark:border-[#9A7432]/35 bg-[#FAF6EC] dark:bg-[#161411] space-y-1">
+            <p className="type-caption text-[#5A4E3E] dark:text-[#9E9383]">
+              Goal Fulfillment
+            </p>
+            <p className="font-mono font-black text-xl sm:text-2xl text-[#1E4D38] dark:text-[#52B788] tabular-nums">
               {totalGoal > 0 ? Math.round((totalRaised / totalGoal) * 100) : 0}%
             </p>
-            <p className="text-[11px] text-[#C5A059] font-ethiopic mt-0.5">የዕቅድ አፈፃፀም</p>
+            <p className="text-[11px] text-[#9A7432] font-ethiopic">የዕቅድ አፈፃፀም</p>
           </div>
         </div>
       </section>
 
-      {/* Secondary Quick Navigation Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-surface p-4 rounded-xl border border-border">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
+      {/* Secondary Operational Utility Strip */}
+      <div className="flex flex-wrap items-center justify-between gap-4 p-4 border border-[#26211C]/30 dark:border-[#9A7432]/40 bg-[#FAF6EC] dark:bg-[#141210]">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
             onClick={onViewContributions}
-            icon={<DollarSign className="w-3.5 h-3.5 text-accent" />}
+            className="px-4 py-2 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#F2EADA] dark:bg-[#0E0D0B] font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-2 hover:border-[#1E4D38] transition-colors cursor-pointer"
           >
-            Donation Ledger ({allRecentDonations.length})
-          </Button>
+            <DollarSign className="w-3.5 h-3.5 text-[#9A7432]" />
+            <span>Contribution Ledger ({allRecentDonations.length})</span>
+          </button>
 
-          <Button
-            variant="secondary"
-            size="sm"
+          <button
+            type="button"
             onClick={onViewImpact}
-            icon={<FileText className="w-3.5 h-3.5 text-accent" />}
+            className="px-4 py-2 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#F2EADA] dark:bg-[#0E0D0B] font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-2 hover:border-[#1E4D38] transition-colors cursor-pointer"
           >
-            Impact Reporting
-          </Button>
+            <FileText className="w-3.5 h-3.5 text-[#9A7432]" />
+            <span>Field Impact Reports</span>
+          </button>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-lg border border-emerald-200">
-          <Clock className="w-3.5 h-3.5 text-emerald-600" />
-          <span>Next milestone audit: Hawassa STEM Lab milestone pending review</span>
+        <div className="flex items-center gap-2 font-mono text-xs text-[#1E4D38] dark:text-[#52B788] font-bold">
+          <Clock className="w-3.5 h-3.5 shrink-0" />
+          <span>NEXT AUDIT: HAWASSA STEM LAB MILESTONE VERIFICATION</span>
         </div>
       </div>
 
-      {/* Main Grid: Causes Management + Recent Donations */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Active Projects */}
-        <div className="lg:col-span-2 space-y-5">
-          <div className="flex items-center justify-between">
+      {/* Main Two-Column Ledger: Managed Cause Plates + Live Contribution Stream */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left 8 Columns: Managed Cause Plates */}
+        <div className="lg:col-span-8 space-y-6">
+          <div className="flex flex-wrap items-end justify-between gap-4 border-b-2 border-[#26211C]/20 dark:border-[#9A7432]/30 pb-3">
             <div>
-              <h2 className="text-lg font-bold text-primary">Managed Causes &amp; Interventions</h2>
-              <p className="text-xs text-zinc-500">
-                Track funding, publish updates to donors, and manage disbursement
+              <p className="type-caption text-[#9A7432]">
+                INSTITUTIONAL CAUSE LEDGER
               </p>
+              <h2 className="type-section-title text-[#201C18] dark:text-[#F4EFE6] mt-1">
+                MANAGED CAUSES ({campaigns.length})
+              </h2>
             </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onCreateCampaign}
-              icon={<Plus className="w-3.5 h-3.5" />}
-            >
-              New Cause
-            </Button>
           </div>
 
-          <div className="space-y-4">
-            {campaigns.map((camp) => (
-              <Card
-                key={camp.id}
-                className="p-5 border-border hover:border-accent/60 transition-all bg-surface shadow-xs space-y-4"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border pb-3">
-                  <div className="flex items-center gap-2 text-xs font-mono">
-                    <span className="font-bold text-accent">{camp.serialCode || 'LW-0421'}</span>
-                    <span className="text-zinc-300">·</span>
-                    <span className="capitalize text-zinc-500">{camp.category}</span>
-                    <span className="text-zinc-300">·</span>
-                    <span className="text-zinc-500">{camp.location}</span>
+          <div className="space-y-5">
+            {campaigns.map((camp) => {
+              const percent = camp.goalAmount
+                ? Math.min(100, Math.round((camp.raisedAmount / camp.goalAmount) * 100))
+                : 0;
+              return (
+                <article
+                  key={camp.id}
+                  className="relative p-5 sm:p-6 border-2 border-[#26211C]/80 dark:border-[#2F261E] bg-[#F2EADA] dark:bg-[#0E0D0B] hover:border-[#1E4D38] dark:hover:border-[#52B788] transition-colors space-y-4"
+                >
+                  <div className="pointer-events-none absolute inset-1.5 border border-[#9A7432]/30" />
+
+                  <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 border-b border-[#26211C]/20 dark:border-[#4A3E33] pb-2.5 font-mono text-xs">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-black text-[#1E4D38] dark:text-[#52B788]">
+                        № {camp.serialCode || 'LW-0421'}
+                      </span>
+                      <span className="text-zinc-400">·</span>
+                      <span className="uppercase font-bold text-[#201C18] dark:text-[#E8DEC8]">
+                        {camp.category}
+                      </span>
+                      <span className="text-zinc-400">·</span>
+                      <span className="text-[#5A4E3E] dark:text-[#9E9383]">{camp.location}</span>
+                    </div>
+
+                    <span
+                      className={`px-2.5 py-0.5 border font-mono text-[10px] font-black uppercase tracking-wider ${
+                        camp.status === 'approved'
+                          ? 'border-[#1E4D38] bg-[#1E4D38] text-white'
+                          : 'border-[#9A7432] bg-[#FAF6EC] dark:bg-[#161411] text-[#9A7432]'
+                      }`}
+                    >
+                      {camp.status}
+                    </span>
                   </div>
 
-                  <span
-                    className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
-                      camp.status === 'approved'
-                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
-                        : camp.status === 'pending'
-                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
-                        : 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800'
-                    }`}
-                  >
-                    {camp.status}
-                  </span>
-                </div>
+                  <div className="relative z-10 space-y-1.5">
+                    <h3
+                      onClick={() => onSelectCampaign(camp)}
+                      className="type-subhead text-[#201C18] dark:text-[#F4EFE6] hover:text-[#1E4D38] dark:hover:text-[#52B788] cursor-pointer transition-colors"
+                    >
+                      {camp.title}
+                    </h3>
+                    <p className="type-body text-[#5A4E3E] dark:text-[#9E9383] line-clamp-2">
+                      {camp.story}
+                    </p>
+                  </div>
 
-                <div>
-                  <h3
-                    onClick={() => onSelectCampaign(camp)}
-                    className="text-base font-bold text-primary hover:text-accent cursor-pointer transition-colors"
-                  >
-                    {camp.title}
-                  </h3>
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1 line-clamp-2">
-                    {camp.story}
-                  </p>
-                </div>
+                  <div className="relative z-10 pt-1">
+                    <BanknoteRulerGauge
+                      percent={percent}
+                      raised={camp.raisedAmount}
+                      goal={camp.goalAmount}
+                    />
+                  </div>
 
-                <div className="space-y-2 pt-2">
-                  <ProgressBar
-                    value={camp.raisedAmount}
-                    max={camp.goalAmount}
-                    size="sm"
-                    color="accent"
-                    showLabel
-                  />
-
-                  <div className="flex flex-wrap items-center justify-between gap-3 text-xs pt-1">
-                    <span className="text-zinc-500">
-                      {camp.donationsCount || 0} verified contributions
+                  <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[#26211C]/20 dark:border-[#4A3E33] font-mono text-xs">
+                    <span className="text-[#5A4E3E] dark:text-[#9E9383] font-bold uppercase tabular-nums">
+                      {camp.donationsCount || 0} PATRONS RECORDED
                     </span>
 
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="secondary"
-                        size="sm"
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
                         onClick={() => onManageCampaign(camp)}
+                        className="px-3.5 py-2 border border-[#26211C] dark:border-[#9A7432] bg-[#FAF6EC] dark:bg-[#161411] text-[#201C18] dark:text-[#F4EFE6] font-mono text-xs font-bold uppercase hover:border-[#1E4D38] transition-colors cursor-pointer"
                       >
                         Manage &amp; Post Update
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => onSelectCampaign(camp)}
-                        icon={<ArrowRight className="w-3.5 h-3.5" />}
-                        iconPosition="right"
+                        className="px-3.5 py-2 border border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-xs font-black uppercase hover:bg-[#163E2C] transition-colors flex items-center gap-1.5 cursor-pointer"
                       >
-                        Donor View
-                      </Button>
+                        <span>View Cause</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
-                </div>
-              </Card>
-            ))}
+                </article>
+              );
+            })}
           </div>
         </div>
 
-        {/* Right Column: Live Recent Donations Feed */}
-        <div className="space-y-5">
-          <div>
-            <h2 className="text-lg font-bold text-primary">Live Contribution Stream</h2>
-            <p className="text-xs text-zinc-500">Real-time Telebirr &amp; CBE Birr verified receipts</p>
+        {/* Right 4 Columns: Live Contribution Stream */}
+        <div className="lg:col-span-4 space-y-6">
+          <div className="border-b-2 border-[#26211C]/20 dark:border-[#9A7432]/30 pb-3">
+            <p className="type-caption text-[#9A7432]">
+              TELEBIRR &amp; CBE CLEARING
+            </p>
+            <h2 className="type-section-title text-[#201C18] dark:text-[#F4EFE6] mt-1">
+              CONTRIBUTION STREAM
+            </h2>
           </div>
 
-          <div className="bg-surface rounded-xl border border-border p-4 space-y-3 shadow-xs">
-            {allRecentDonations.slice(0, 7).map((item) => (
-              <div
-                key={item.donation.id}
-                className="p-3 rounded-lg border border-border/70 hover:border-accent/40 bg-surface-alt/40 dark:bg-zinc-800/40 text-xs space-y-1 transition-all"
+          <div className="relative border-2 border-[#26211C] dark:border-[#9A7432] bg-[#F2EADA] dark:bg-[#0E0D0B] p-5 space-y-3">
+            <div className="pointer-events-none absolute inset-1.5 border border-[#9A7432]/35" />
+
+            <div className="relative z-10 divide-y divide-[#26211C]/15 dark:divide-[#9A7432]/25">
+              {allRecentDonations.slice(0, 7).map((item) => (
+                <div
+                  key={item.donation.id}
+                  className="py-3 first:pt-0 last:pb-0 space-y-1 text-xs"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-serif font-bold text-sm text-[#201C18] dark:text-[#F4EFE6] truncate">
+                      {item.donation.donorName}
+                    </span>
+                    <span className="font-mono font-black text-[#1E4D38] dark:text-[#52B788] tabular-nums shrink-0">
+                      +{item.donation.amount.toLocaleString()} ETB
+                    </span>
+                  </div>
+
+                  <p className="font-sans text-xs text-[#5A4E3E] dark:text-[#9E9383] truncate">
+                    {item.campaign.title}
+                  </p>
+
+                  <div className="flex items-center justify-between text-[10px] text-[#5A4E3E] dark:text-[#9E9383] font-mono pt-0.5 uppercase">
+                    <span>{item.donation.paymentRail || 'TELEBIRR'}</span>
+                    <span className="tabular-nums">
+                      {new Date(item.donation.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+              ))}
+
+              {allRecentDonations.length === 0 && (
+                <p className="py-6 text-center font-mono text-xs text-[#5A4E3E] dark:text-[#9E9383]">
+                  No contributions recorded yet.
+                </p>
+              )}
+            </div>
+
+            <div className="relative z-10 pt-3 border-t border-[#26211C]/20 dark:border-[#9A7432]/30">
+              <button
+                type="button"
+                onClick={onViewContributions}
+                className="w-full py-2.5 px-4 border border-[#26211C] dark:border-[#9A7432] bg-[#FAF6EC] dark:bg-[#161411] text-[#201C18] dark:text-[#F4EFE6] font-mono text-xs font-bold uppercase tracking-wider hover:border-[#1E4D38] transition-colors cursor-pointer"
               >
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-primary truncate max-w-[140px]">
-                    {item.donation.donorName}
-                  </span>
-                  <span className="font-bold text-accent tabular-nums">
-                    +{item.donation.amount.toLocaleString()} ETB
-                  </span>
-                </div>
-
-                <p className="text-[11px] text-zinc-500 truncate">{item.campaign.title}</p>
-
-                <div className="flex items-center justify-between text-[10px] text-zinc-400 font-mono pt-1">
-                  <span>{item.donation.paymentRail?.toUpperCase() || 'TELEBIRR'}</span>
-                  <span>{new Date(item.donation.createdAt).toLocaleDateString()}</span>
-                </div>
-              </div>
-            ))}
-
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full text-xs font-semibold mt-2"
-              onClick={onViewContributions}
-            >
-              View Full Contribution Ledger →
-            </Button>
+                View Full Contribution Ledger →
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -746,3 +761,4 @@ export const FoundationDashboard: React.FC<FoundationDashboardProps> = ({
 };
 
 export default FoundationDashboard;
+

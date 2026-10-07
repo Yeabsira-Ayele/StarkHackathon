@@ -269,7 +269,7 @@ export const AcsoCircularSeal: React.FC<{
     <button
       type="button"
       onClick={onClick}
-      title="Click to view Federal ACSO Registry Certification"
+      title="Official Community Solidarity Seal"
       className={`group relative flex flex-col items-center justify-center p-1 rounded-full cursor-pointer transition-transform hover:scale-105 active:scale-95 focus:outline-none ${className}`}
     >
       <svg viewBox="0 0 120 120" className="w-20 h-20 sm:w-24 sm:h-24">
@@ -286,7 +286,7 @@ export const AcsoCircularSeal: React.FC<{
         />
         <text fontSize="7" fontWeight="bold" fill="#26211C" letterSpacing="0.14em">
           <textPath href="#seal-text-path-top" startOffset="50%" textAnchor="middle">
-            FEDERAL CIVIL SOCIETY ORG
+            ETHIOPIAN CIVIC TRUST
           </textPath>
         </text>
 
@@ -297,7 +297,7 @@ export const AcsoCircularSeal: React.FC<{
         />
         <text fontSize="6.5" fontWeight="bold" fill="#1E4D38" className="dark:fill-[#52B788]" letterSpacing="0.16em">
           <textPath href="#seal-text-path-bottom" startOffset="50%" textAnchor="middle">
-            ★ ACSO VERIFIED 2026 ★
+            ★ SOLIDARITY SEAL 2026 ★
           </textPath>
         </text>
 
@@ -316,7 +316,7 @@ export const AcsoCircularSeal: React.FC<{
         </g>
       </svg>
       <span className="mt-1 text-[9px] font-mono font-bold tracking-widest text-[#1E4D38] dark:text-[#52B788] uppercase">
-        № ACSO-ET-58291
+        № ET-58291
       </span>
     </button>
   );

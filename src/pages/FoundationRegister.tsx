@@ -72,7 +72,7 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
 
   // 4. Supporting Documents (Optional, max 3 files)
   const [documents, setDocuments] = useState<string[]>([
-    'acso_registration_certificate.pdf',
+    'registration_certificate.pdf',
   ]);
   const [docNameInput, setDocNameInput] = useState('');
 
@@ -191,7 +191,7 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
       const payload: Partial<Organization> = {
         name: name.trim(),
         type,
-        registrationNo: registrationNo.trim() || `ACSO/ET/${new Date().getFullYear()}/${Math.floor(1000 + Math.random() * 9000)}`,
+        registrationNo: registrationNo.trim() || `ET/${new Date().getFullYear()}/${Math.floor(1000 + Math.random() * 9000)}`,
         location: location.trim(),
         contactEmail: contactEmail.trim().toLowerCase(),
         contactPhone: contactPhone.trim(),
@@ -256,7 +256,7 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
           Register Your Organization on Lewegene
         </h1>
         <p className="text-xs sm:text-sm text-zinc-500 max-w-lg mx-auto">
-          Submit official ACSO/NGO registration credentials, representative contact, and settlement account for administrative review.
+          Submit official NGO registration credentials, representative contact, and settlement account for administrative review.
         </p>
       </div>
 
@@ -320,7 +320,7 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
                     onChange={(e) => setType(e.target.value as any)}
                     className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-primary focus:ring-1 focus:ring-accent"
                   >
-                    <option value="registered_ngo">Registered NGO (ACSO)</option>
+                    <option value="registered_ngo">Registered NGO</option>
                     <option value="charity_foundation">Charity / Public Foundation</option>
                     <option value="community_coop">Community Cooperative</option>
                     <option value="faith_based">Faith-Based Initiative</option>
@@ -329,11 +329,11 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
 
                 <div>
                   <label className="block font-semibold text-primary mb-1">
-                    ACSO / Legal Registration Number
+                    Legal Registration Number
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. ACSO/ET/2026/8920"
+                    placeholder="e.g. ET/2026/8920"
                     value={registrationNo}
                     onChange={(e) => setRegistrationNo(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-surface text-primary font-mono focus:ring-1 focus:ring-accent"
@@ -677,7 +677,7 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
                   </span>
                 </div>
                 <p className="text-[11px] text-zinc-500 mt-0.5">
-                  Upload ACSO certificate, TIN certificate, or board resolution letter (maximum 3 files).
+                  Upload registration certificate, TIN certificate, or board resolution letter (maximum 3 files).
                 </p>
               </div>
 
@@ -686,7 +686,7 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="e.g. ACSO_Certificate_2026.pdf"
+                    placeholder="e.g. Registration_Certificate_2026.pdf"
                     value={docNameInput}
                     onChange={(e) => setDocNameInput(e.target.value)}
                     className="flex-1 px-3 py-2 rounded-lg border border-border bg-surface text-xs font-mono"

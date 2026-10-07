@@ -319,7 +319,7 @@ export const campaignApi = {
       type: data.type || 'registered_ngo',
       registrationNo:
         data.registrationNo ||
-        `ACSO/ET/${new Date().getFullYear()}/${Math.floor(1000 + Math.random() * 9000)}`,
+        `ET/${new Date().getFullYear()}/${Math.floor(1000 + Math.random() * 9000)}`,
       verified: false,
       verificationStatus: 'pending',
       foundedYear: data.foundedYear || new Date().getFullYear(),

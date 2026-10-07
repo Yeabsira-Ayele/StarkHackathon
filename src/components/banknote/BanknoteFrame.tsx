@@ -84,7 +84,7 @@ export const BanknoteFrame: React.FC<BanknoteFrameProps> = ({
           {/* Banknote Micro-Print Header Line */}
           <div className="flex items-center justify-between text-[10px] tracking-[0.25em] font-mono uppercase text-[#173C32]/70 dark:text-[#C5A059]/75 border-b border-[#D8CEBA] dark:border-[#2E3A34] pb-1.5 mb-2">
             <span>የኢትዮጵያ የሕዝብ ትብብር ሰነድ</span>
-            <span className="hidden sm:inline">NATIONAL PHILANTHROPIC TENDER OF ETHIOPIA · ACSO VERIFIED</span>
+            <span className="hidden sm:inline">NATIONAL PHILANTHROPIC TENDER OF ETHIOPIA</span>
             <span>LEGAL TENDER IN ETHIOPIA</span>
           </div>
 

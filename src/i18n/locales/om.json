@@ -22,13 +22,13 @@
     "patrons": "Gumaachitoota",
     "raised": "Kan walitti qabame",
     "goal": "Kaayyoo",
-    "acsoVerified": "ACSO dhaan kan mirkanaa'e",
+    "acsoVerified": "",
     "directEscrow": "Dhibbeentaa 100 Kallattiin Lammiileef"
   },
   "footer": {
     "brandTagline": "Waltajjii deeggarsa hawaasa Itoophiyaa",
-    "description": "Seenaa Itoophiyaa fi argannoo bu'a-qabeessa dijitaalaa. Gumaachitoota naannoo fi diaspoooraa Itoophiyaa dhaabbilee mirkanaa'an waliin waliitti fida.",
-    "certified": "ACSO'n kan mirkanaa'e · Karaa Kaffaltii Telebirr fi CBE Birr kallattii",
+    "description": "Seenaa Itoophiyaa fi argannoo bu'a-qabeessa dijitaalaa. Gumaachitoota naannoo fi diaspoooraa Itoophiyaa dhaabbilee hawaasaa waliin waliitti fida.",
+    "certified": "Karaa Kaffaltii Telebirr fi CBE Birr kallattii",
     "supporterPortal": "Pootaalaa Deeggaraa",
     "exploreCauses": "Dhimmoota Daawwadhaa",
     "myImpact": "Bu'aa fi Waraqaa Ragaa Kiyya",
@@ -37,7 +37,7 @@
     "foundationsNgos": "Dhaabbilee fi NGO",
     "foundationConsole": "Konsoolii Dhaabbataa",
     "publishCause": "Dhimma Haaraa Ifa Godhi",
-    "acsoVerification": "Mirkaneessa Dhaabbataa ACSO",
+    "acsoVerification": "Gamaaggama Dhaabbataa",
     "auditedReporting": "Gabaasa Sadarkaa Kan To'atame",
     "rights": "Gumaacha Lewegene. Mirgi isaa seeraan eegame.",
     "tagline": "Seenaa Eegaa · Araara Kakaasi"
@@ -59,11 +59,11 @@
     "home": "Fuula Duraa",
     "discoverCauses": "Dhimmoota Daawwadhaa",
     "myReports": "Gabaasawwan Kiyya",
-    "myFundraisers": "Pirojektii Kiyya",
+    "myFundraisers": "Dhimmoota Kiyya",
     "fundraise": "Maallaqa Sassaabuu",
     "signUpLogIn": "Galmaa'aa / Seenaa",
     "tagline": "Itoophiyaa · Gumaacha Lammiilee",
-    "trustLine": "ACSO'n galmaa'e · 0% Kutaa Marsariitii · 100% Kallattiin Dhimmootaaf",
+    "trustLine": "0% Kutaa Marsariitii · 100% Kallattiin Dhimmootaaf",
     "sections": {
       "hero": "Fuula Duraa",
       "causes": "Dhimmoota",
@@ -121,20 +121,20 @@
     "minimumContribution": "Gumaachi xiqqaan {{min}} ETB dha. Gumaachi keessan 100% kallattiin dhimma kanaaf oola."
   },
   "fundraiser": {
-    "title": "Pirojektii Hawaasaa Haaraa Galmeessaa",
-    "subtitle": "Pirojektii heeyyame qabu lammiileef ifa godhaa",
-    "projectTitle": "Mata Duree Pirojektii",
+    "title": "Dhimma Hawaasaa Haaraa Galmeessaa",
+    "subtitle": "Dhimma heeyyama qabu lammiileef ifa godhaa",
+    "projectTitle": "Mata Duree Dhimmaa",
     "category": "Damee Hojii",
     "targetGoal": "Hamma Qarshii Barbaadamu",
-    "story": "Seenaa fi Kaayyoo Pirojektichaa",
+    "story": "Seenaa fi Kaayyoo Dhimmichaa",
     "beneficiaries": "Baay'ina Lammiilee Fayyadamanii",
     "impactMetric": "Bu'aa Eegamu",
     "location": "Bakka Hojicha",
-    "publish": "Ummataaf Ifa Godhi",
+    "publish": "Dhimma Ummataaf Ifa Godhi",
     "publishing": "Galmeessaa jira...",
     "tabs": {
-      "start": "Jalqabi",
-      "mine": "Pirojektii Kiyya",
+      "start": "Maallaqa sassaabuu jalqabaa",
+      "mine": "Dhimmoota Kiyya",
       "drafts": "Wixineewwan"
     }
   },
@@ -292,17 +292,73 @@
       "dismiss": "Cufaa"
     }
   },
+  "home": {
+    "tenderBadgeLine1": "BAANKII AMANTAA HAWAASAA",
+    "tenderBadgeLine2": "GALMEE GAMTAA LAMMIILEE BIYYAALESSAA",
+    "tagline": "Ummata fi Kaayyoo Itoophiyaa Deeggaruu",
+    "motto": "« Lammiif Lammiitu Birmata. »",
+    "exploreCauses": "Dhimmoota daawwadhaa",
+    "forFoundations": "Dhaabbileef",
+    "plateSerial": "PIRINTII SIBIILAA LAKK. 001",
+    "plateCaption": "SIIDAA TOKKUMMAA FI WAL-GARGAARSAA",
+    "plateLocation": "FINFINNEE · ፳፻፲፰",
+    "hero": {
+      "description": "Lewegene namoota fi dhimmoota hawaasaa amanamoo walitti dhiyeessa. Seenaa garaa keessan tuqu argadhaa, boqonnaa itti aanus dhugoomsaa.",
+      "discover": "Dhimmoota daawwadhaa",
+      "startFundraising": "Maallaqa sassaabuu jalqabaa"
+    },
+    "featured": {
+      "badge": "Dhimmoota filatamanii fi ariifachiisoo",
+      "ledger": "★ Galmee gumaacha kallattii",
+      "title": "Dhimmoota hawaasaa fi adeemsa Birrii kallattii",
+      "description": "Fedhiiwwan dhugaa hawaasa naannootiin durfaman. Dhimmi hundi fuula kana irra ga'uu isaa dura ni mirkanaa'a.",
+      "browseAll": "Dhimmoota hunda ilaalaa",
+      "empty": "Dhimmoonni haaraan qophaa'aa jiru. Yeroo dhiyootti deebi'aa ilaalaa."
+    },
+    "howItWorks": {
+      "eyebrow": "Akkamitti hojjeta",
+      "titleLine1": "Wanti gaariin ni uumama",
+      "titleLine2": "tarkaanfii tokkoon yeroo tokkotti.",
+      "description": "Dhimma hawaasaa argadhaa, deeggarsa keessan kennaa, jijjiirama argamsiistanis hordofaa.",
+      "step1Title": "Dhimma filadhaa",
+      "step1Detail": "Dhimmoota hawaasaan durfaman daawwadhaatii dhimma isiniif hiika qabu filadhaa.",
+      "step2Title": "Waan dandeessan gumaachaa",
+      "step2Detail": "Gumaachi hundi gatii qaba. Ummata fi kaayyoo itti amantan deeggaraa.",
+      "step3Title": "Bu'aa isaa ilaalaa",
+      "step3Detail": "Odeeffannoo haaromsa dhimmichaa hordofaa, hawaasni akkamitti akka tarkaanfatu ilaalaa."
+    },
+    "impact": {
+      "totalUnderwritten": "WALIIGALA BIRRII WALITTI QABAME",
+      "communityPatrons": "GUMAACHITOOTA HAWAASAA",
+      "directToBeneficiaries": "KALLATTIIN LAMMIILEEF",
+      "verifiedPlates": "DHIMMOOTA MIRKANAA'AN"
+    },
+    "communities": {
+      "eyebrow": "Michoota dirree mirkanaa'an",
+      "title": "Hawaasa jijjiirama gaarii fidan"
+    },
+    "voxide": {
+      "try": "Voxide waliin sagaleedhaan dubbadhaa"
+    },
+    "cta": {
+      "eyebrow": "Iddoon keessan as jira",
+      "title": "Waan gaarii kam guddisuuf gargaartu?",
+      "description": "Hawaasa keessan dhimma mirkanaa'e tokko irratti walitti qabaa, ykn Afaan Ingilizii, Amaariffaa fi Afaan Oromootiin sagaleedhaan barbaadaa.",
+      "startFundraising": "Maallaqa sassaabuu jalqabaa",
+      "discover": "Dhimmoota daawwadhaa"
+    }
+  },
   "organization": {
     "signupTitle": "Galmee Dhaabbataa",
     "signupSubtitle": "Tola ooltummaa mirkanaa'eef dhaabbata hawaasaa keessan galmeessaa",
     "statusPending": "Mirkaneessa Eegaa Jira",
-    "statusApproved": "Dhaabbata Mirkanaa'e (ACSO)",
+    "statusApproved": "Dhaabbata Ragga'e",
     "statusNeedsChanges": "Jijjiiramni Gaafatameera",
     "statusRejected": "Kufaa Ta'eera",
-    "pendingNotice": "Iyyannoon keessan bulchitoota Lewegene fi to'attoota ACSO'n gamaaggamaa jira.",
-    "lockedFundraising": "Hamma dhaabbanni keessan mirkanaa'utti duula jalqabuu fi maallaqa walitti qabuun hin hayyamamu.",
+    "pendingNotice": "Iyyannoon keessan bulchitoota Lewegene'n gamaaggamaa jira.",
+    "lockedFundraising": "Hamma dhaabbanni keessan ragga'utti dhimma haaraa maxxansuu fi maallaqa sassaabuun hin hayyamamu.",
     "documents": "Sanadoota Mirkaneessaa",
-    "documentsHint": "Filannoo: Sanadoota deeggarsaa hanga 3 fe'aa (waraqaa ragaa ACSO, TIN, xalayaa boordii)",
+    "documentsHint": "Filannoo: Sanadoota deeggarsaa hanga 3 fe'aa (waraqaa ragaa galmee, TIN, xalayaa boordii)",
     "representative": "Bakka Bu'aa Seeraa",
     "bankInfo": "Herrega Baankii Fudhattuu",
     "resubmit": "Fooyyessanii Irra Deebi'anii Galchaa"

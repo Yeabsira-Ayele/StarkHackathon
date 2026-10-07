@@ -44,7 +44,7 @@ export const Footer: React.FC<FooterProps> = ({
 
             <div className="flex items-center gap-2 text-xs text-primary font-medium pt-1 font-mono">
               <ShieldCheck className="w-4 h-4 text-accent" />
-              <span>{t('footer.certified', 'ACSO Certified · Direct Telebirr & CBE Birr Escrow Rails')}</span>
+              <span>{t('footer.certified', 'Direct Telebirr & CBE Birr Escrow Rails')}</span>
             </div>
           </div>
 
@@ -102,7 +102,7 @@ export const Footer: React.FC<FooterProps> = ({
                 </button>
               </li>
               <li>
-                <span className="text-zinc-400">{t('footer.acsoVerification', 'ACSO Institutional Verification')}</span>
+                <span className="text-zinc-400">{t('footer.acsoVerification', 'Institutional Charter Review')}</span>
               </li>
               <li>
                 <span className="text-zinc-400">{t('footer.auditedReporting', 'Audited Milestone Reporting')}</span>

@@ -61,15 +61,6 @@ export const BanknotePlateCard: React.FC<BanknotePlateCardProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          {campaign.verifiedOrganization && (
-            <span
-              title="Federal ACSO Verified Organization"
-              className="flex items-center gap-1 text-[9px] font-mono font-bold text-[#1E4D38] dark:text-[#52B788]"
-            >
-              <ShieldCheck className="w-3 h-3 text-[#1E4D38] dark:text-[#52B788]" />
-              <span>ACSO VERIFIED</span>
-            </span>
-          )}
           <span className="font-mono text-[9px] font-bold text-zinc-500">2026</span>
         </div>
       </div>
@@ -175,7 +166,7 @@ export const BanknotePlateCard: React.FC<BanknotePlateCardProps> = ({
       <div className="relative z-10 mt-2 flex justify-between items-center text-[8px] font-mono text-zinc-500 tracking-wider">
         <span>{serial}</span>
         <span>{campaign.donationsCount || 0} PATRONS</span>
-        <span>ACSO CLEARING · ፳፻፲፰</span>
+        <span>SERIES 2026 · ፳፻፲፰</span>
       </div>
     </div>
   );

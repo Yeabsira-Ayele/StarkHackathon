@@ -304,7 +304,7 @@ export const mockAuthAdapter = {
         id: orgId,
         name: data.organizationName?.trim() || 'New Foundation',
         type: 'registered_ngo',
-        registrationNo: `ACSO/ET/${new Date().getFullYear()}/${Math.floor(1000 + Math.random() * 9000)}`,
+        registrationNo: `ET/${new Date().getFullYear()}/${Math.floor(1000 + Math.random() * 9000)}`,
         verified: false,
         verificationStatus: 'pending',
         foundedYear: new Date().getFullYear(),

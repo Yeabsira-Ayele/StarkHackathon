@@ -81,14 +81,6 @@ export const BanknoteVignetteCard: React.FC<BanknoteVignetteCardProps> = ({
         {/* Intaglio Line Screen Overlay */}
         <div className="absolute inset-0 intaglio-overlay opacity-60" />
 
-        {/* ACSO Verified Seal Badge */}
-        {campaign.verifiedOrganization && (
-          <div className="absolute top-2.5 right-2.5 bg-[#FAF7F0]/95 dark:bg-[#161B18]/95 backdrop-blur-xs text-[#173C32] dark:text-[#C5A059] border border-[#B08A45]/60 rounded px-2 py-0.5 text-[10px] font-mono font-bold flex items-center gap-1 shadow-sm">
-            <ShieldCheck className="w-3.5 h-3.5 text-accent" />
-            <span>ACSO VERIFIED</span>
-          </div>
-        )}
-
         {/* Denomination Percentage Stamp */}
         <div className="absolute bottom-2.5 left-2.5 bg-[#173C32]/95 text-[#F7F4EB] border border-[#B08A45]/40 rounded px-2 py-0.5 text-[10px] font-mono font-black tracking-wider">
           {percent}% FUNDED ({toGeezNumber(percent)}%)

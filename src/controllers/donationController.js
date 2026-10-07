@@ -13,203 +13,47 @@ const {
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 const DONATABLE_CAMPAIGN_STATUSES = new Set(['pending', 'approved']);
 
-const normalizeDonationIntentPart = (value) => {
-  if (value === null || value === undefined) return '';
-  return String(value).trim().toLowerCase();
-};
-
-const buildDonationIntentKey = ({ campaignId, donorId, requestedAmount, donorName, donorEmail, anonymous, bankId, message }) => {
-  const source = [
-    String(campaignId || ''),
-    String(donorId || ''),
-    String(requestedAmount ?? ''),
-    normalizeDonationIntentPart(donorName),
-    normalizeDonationIntentPart(donorEmail),
-    String(Boolean(anonymous)),
-    String(bankId || ''),
-    normalizeDonationIntentPart(message),
-  ].join('|');
-
-  return crypto.createHash('sha256').update(source).digest('hex');
-};
-
-// POST /donations/drafts
-exports.createDraft = async (req, res) => {
-  try {
-    const { campaignId, amount, donorName, donorEmail, anonymous, bankId, message } = req.body || {};
-    if (!isValidId(campaignId)) return res.status(400).json({ message: 'Invalid campaign ID' });
-    const requestedAmount = Number(amount);
-    if (!Number.isFinite(requestedAmount) || requestedAmount < 50) {
-      return res.status(400).json({ message: 'Contribution amount must be at least 50 ETB' });
-    }
-    if (message && String(message).length > 500) {
-      return res.status(400).json({ message: 'Message must be 500 characters or fewer' });
-    }
-    const campaign = await Campaign.findById(campaignId);
-    if (!campaign) return res.status(404).json({ message: 'Campaign not found' });
-    if (!DONATABLE_CAMPAIGN_STATUSES.has(campaign.status)) {
-      return res.status(403).json({ message: 'This campaign is not open for donations yet' });
-    }
-    const organization = campaign.organizationId
-      ? await Organization.findById(campaign.organizationId).select('payoutAccounts')
-      : null;
-    const payoutAccount = getCampaignPayoutAccounts(campaign, organization)
-      .find((account) => account.bankId === String(bankId || ''));
-    if (!payoutAccount) {
-      return res.status(400).json({ message: 'This campaign has no valid saved account for the selected bank.' });
-    }
-    const donationIntentKey = buildDonationIntentKey({
-      campaignId,
-      donorId: req.user?._id || null,
-      requestedAmount,
-      donorName: anonymous ? 'Anonymous' : String(donorName || req.user?.name || 'Anonymous').trim(),
-      donorEmail: donorEmail ? String(donorEmail).trim().toLowerCase() : undefined,
-      anonymous,
-      bankId: payoutAccount.bankId,
-      message,
-    });
-
-    const existingDonation = await Donation.findOne({ donationIntentKey }).lean();
-    if (existingDonation) {
-      return res.status(200).json({
-        donation: {
-          ...existingDonation,
-          campaignId: {
-            _id: campaign._id,
-            title: campaign.title,
-            creatorName: campaign.creatorName,
-            organizationName: campaign.organizationName,
-          },
-        },
-      });
-    }
-
-    let donation;
-    try {
-      donation = await Donation.create({
-        campaignId,
-        donorId: req.user?._id || null,
-        requestedAmount,
-        amount: 0,
-        donorName: anonymous ? 'Anonymous' : String(donorName || req.user?.name || 'Anonymous').trim(),
-        donorEmail: donorEmail ? String(donorEmail).trim().toLowerCase() : undefined,
-        anonymous: Boolean(anonymous),
-        bankId: payoutAccount.bankId,
-        message: message ? String(message).trim() : undefined,
-        paymentStatus: 'pending',
-        donationIntentKey,
-      });
-    } catch (err) {
-      if (err.code === 11000) {
-        const retryDonation = await Donation.findOne({ donationIntentKey }).lean();
-        if (retryDonation) {
-          return res.status(200).json({
-            donation: {
-              ...retryDonation,
-              campaignId: {
-                _id: campaign._id,
-                title: campaign.title,
-                creatorName: campaign.creatorName,
-                organizationName: campaign.organizationName,
-              },
-            },
-          });
-        }
-      }
-      throw err;
-    }
-    res.status(201).json({
-      donation: {
-        ...donation.toObject(),
-        campaignId: {
-          _id: campaign._id,
-          title: campaign.title,
-          creatorName: campaign.creatorName,
-          organizationName: campaign.organizationName,
-        },
-      },
-    });
-  } catch (err) {
-    console.error('createDonationDraft error:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-// POST /donations/records/:id/verify
-exports.verifyDraft = async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (!isValidId(id)) return res.status(400).json({ message: 'Invalid donation ID' });
-    const donation = await Donation.findById(id);
-    if (!donation) return res.status(404).json({ message: 'Donation not found' });
-    if (donation.donorId && String(donation.donorId) !== String(req.user?._id)) {
-      return res.status(403).json({ message: 'You cannot verify this donation' });
-    }
-    if (donation.paymentStatus !== 'pending') {
-      return res.status(409).json({ message: 'This donation is no longer awaiting payment verification' });
-    }
-    if (typeof req.body?.receiptUrl !== 'string' || !req.body.receiptUrl.trim()) {
-      return res.status(400).json({ message: 'receiptUrl is required' });
-    }
-    if (req.body.message && String(req.body.message).length > 500) {
-      return res.status(400).json({ message: 'Message must be 500 characters or fewer' });
-    }
-
-    const campaign = await Campaign.findById(donation.campaignId);
-    const organization = campaign?.organizationId
-      ? await Organization.findById(campaign.organizationId).select('payoutAccounts')
-      : null;
-    const payoutAccount = campaign && getCampaignPayoutAccounts(campaign, organization)
-      .find((account) => account.bankId === donation.bankId);
-    if (!payoutAccount) {
-      return res.status(409).json({ message: 'This fundraiser no longer has a valid saved receiving account.' });
-    }
-
-    const verified = await verifyDonationReceipt(req.body.receiptUrl, payoutAccount.accountName);
-    if (Math.abs(verified.amount - donation.requestedAmount) > 0.01) {
-      return res.status(422).json({ message: 'The receipt amount does not match your contribution amount', code: 'amount_mismatch' });
-    }
-
-    donation.amount = verified.amount;
-    donation.paymentStatus = 'completed';
-    donation.provider = verified.provider;
-    donation.receiptKey = verified.receiptKey;
-    donation.certificateId = `LW-ETB-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
-    if (req.body.message !== undefined) donation.message = String(req.body.message).trim() || undefined;
-    await donation.save();
-    await Campaign.findByIdAndUpdate(donation.campaignId, {
-      $inc: { raisedAmount: verified.amount, donationsCount: 1 },
-    });
-
-    res.json({ donation });
-  } catch (err) {
-    if (err instanceof VerificationError) {
-      return res.status(err.status).json({ message: err.message, code: err.code });
-    }
-    if (err.code === 11000) {
-      return res.status(409).json({ message: 'This receipt has already been used for a donation', code: 'duplicate_receipt' });
-    }
-    console.error('verifyDonationDraft error:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+const toDonationResponse = (donation, campaign) => ({
+  _id: donation._id,
+  campaignId: {
+    _id: campaign._id,
+    title: campaign.title,
+    creatorName: campaign.creatorName,
+    organizationName: campaign.organizationName,
+    location: campaign.location,
+    impactMetric: campaign.impactMetric,
+  },
+  donorId: donation.donorId,
+  amount: donation.amount,
+  donorName: donation.donorName,
+  donorEmail: donation.donorEmail,
+  anonymous: donation.anonymous,
+  message: donation.message,
+  bankId: donation.bankId,
+  paymentStatus: donation.paymentStatus,
+  provider: donation.provider,
+  certificateId: donation.certificateId,
+  failureReason: donation.failureReason,
+  createdAt: donation.createdAt,
+});
 
 exports.getMyDonations = async (req, res) => {
   try {
-    const donations = await Donation.find({ donorId: req.user._id })
+    const donations = await Donation.find({
+      donorId: req.user._id,
+      paymentStatus: { $in: ['completed', 'failed'] },
+    })
       .populate('campaignId', 'title creatorName organizationName')
       .sort({ createdAt: -1 })
       .lean();
-    const completed = donations.filter((item) => item.paymentStatus === 'completed');
+    const successful = donations.filter((item) => item.paymentStatus === 'completed');
     const stats = {
-      totalAmount: completed.reduce((sum, item) => sum + item.amount, 0),
+      totalAmount: successful.reduce((sum, item) => sum + item.amount, 0),
       totalDonationsCount: donations.length,
-      causesSupportedCount: new Set(donations.map((item) => String(item.campaignId?._id || item.campaignId))).size,
-      confirmedCount: completed.length,
-      pendingCount: donations.filter((item) => item.paymentStatus === 'pending').length,
-      verifyingCount: 0,
+      causesSupportedCount: new Set(successful.map((item) => String(item.campaignId?._id || item.campaignId))).size,
+      successfulCount: successful.length,
       failedCount: donations.filter((item) => item.paymentStatus === 'failed').length,
-      largestDonation: completed.reduce((largest, item) => Math.max(largest, item.amount), 0),
+      largestDonation: successful.reduce((largest, item) => Math.max(largest, item.amount), 0),
     };
     res.json({ donations, stats });
   } catch (err) {
@@ -221,7 +65,10 @@ exports.getMyDonations = async (req, res) => {
 exports.getDonationById = async (req, res) => {
   try {
     if (!isValidId(req.params.id)) return res.status(400).json({ message: 'Invalid donation ID' });
-    const donation = await Donation.findById(req.params.id)
+    const donation = await Donation.findOne({
+      _id: req.params.id,
+      paymentStatus: { $in: ['completed', 'failed'] },
+    })
       .populate('campaignId', 'title creatorName organizationName location impactMetric')
       .lean();
     if (!donation) return res.status(404).json({ message: 'Donation not found' });
@@ -261,7 +108,7 @@ exports.getDonationsByCampaign = async (req, res) => {
 
     const [donations, total] = await Promise.all([
       Donation.find(filter)
-        .select('-receiptKey')
+        .select('-receiptKey -donorEmail -donorId')
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
@@ -280,26 +127,49 @@ exports.getDonationsByCampaign = async (req, res) => {
 };
 
 // POST /donations/:campaignId
-// Body: { receiptUrl, bankId, donorName?, message? }
+// Body: { amount, receiptUrl, bankId, donorName?, donorEmail?, anonymous?, message? }
 //
 // The donor first pays by telebirr / CBE / Zemen / BoA / Awash, then submits
-// the receipt link. We verify it with links.et and record the donation using
-// the amount on the receipt (never an amount typed by the donor).
+// the receipt link. We verify it with links.et before creating any donation
+// record; definitive verification failures are stored only as failed attempts.
 exports.createDonation = async (req, res) => {
   try {
     const { campaignId } = req.params;
-    const { receiptUrl, donorName, message, bankId } = req.body;
+    const { amount, receiptUrl, donorName, donorEmail, anonymous, message, bankId } = req.body || {};
 
     if (!isValidId(campaignId)) {
       return res.status(400).json({ message: 'Invalid campaign ID' });
+    }
+
+    const requestedAmount = Number(amount);
+    if (!Number.isFinite(requestedAmount) || requestedAmount < 50) {
+      return res.status(400).json({ message: 'Contribution amount must be at least 50 ETB' });
     }
 
     if (typeof receiptUrl !== 'string' || !receiptUrl.trim()) {
       return res.status(400).json({ message: 'receiptUrl is required' });
     }
 
-    if (message && String(message).length > 500) {
+    if (donorName !== undefined && typeof donorName !== 'string') {
+      return res.status(400).json({ message: 'Donor name must be text' });
+    }
+    if (donorName && donorName.length > 120) {
+      return res.status(400).json({ message: 'Donor name must be 120 characters or fewer' });
+    }
+    if (donorEmail !== undefined && typeof donorEmail !== 'string') {
+      return res.status(400).json({ message: 'Donor email must be text' });
+    }
+    if (donorEmail && donorEmail.length > 254) {
+      return res.status(400).json({ message: 'Donor email must be 254 characters or fewer' });
+    }
+    if (message !== undefined && typeof message !== 'string') {
+      return res.status(400).json({ message: 'Message must be text' });
+    }
+    if (message && message.length > 500) {
       return res.status(400).json({ message: 'Message must be 500 characters or fewer' });
+    }
+    if (anonymous !== undefined && typeof anonymous !== 'boolean') {
+      return res.status(400).json({ message: 'Anonymous must be a boolean' });
     }
 
     // Cheap local checks first so we don't spend a verification on bad input
@@ -323,7 +193,47 @@ exports.createDonation = async (req, res) => {
       return res.status(400).json({ message: 'Select a valid receiving account saved for this campaign.' });
     }
 
-    const verified = await verifyDonationReceipt(receiptUrl, payoutAccount.accountName);
+    const isAnonymous = Boolean(anonymous);
+    const donationDetails = {
+      campaignId,
+      donorId: req.user?._id || null,
+      donorName: isAnonymous ? 'Anonymous' : donorName?.trim() || req.user?.name || undefined,
+      donorEmail: donorEmail?.trim().toLowerCase() || undefined,
+      anonymous: isAnonymous,
+      bankId: payoutAccount.bankId,
+      message: message?.trim() || undefined,
+    };
+
+    let verified;
+    try {
+      verified = await verifyDonationReceipt(receiptUrl, payoutAccount.accountName);
+    } catch (err) {
+      if (!(err instanceof VerificationError) || err.status !== 422) throw err;
+
+      const donation = await Donation.create({
+        ...donationDetails,
+        amount: requestedAmount,
+        paymentStatus: 'failed',
+        failureReason: err.message,
+      });
+      return res.status(201).json({
+        message: 'Payment verification failed.',
+        donation: toDonationResponse(donation, campaign),
+      });
+    }
+
+    if (Math.abs(verified.amount - requestedAmount) > 0.01) {
+      const donation = await Donation.create({
+        ...donationDetails,
+        amount: requestedAmount,
+        paymentStatus: 'failed',
+        failureReason: 'The receipt amount does not match your contribution amount',
+      });
+      return res.status(201).json({
+        message: donation.failureReason,
+        donation: toDonationResponse(donation, campaign),
+      });
+    }
 
     const existingDonation = await Donation.findOne({ receiptKey: verified.receiptKey }).lean();
     if (existingDonation) {
@@ -335,12 +245,8 @@ exports.createDonation = async (req, res) => {
     }
 
     const donation = await Donation.create({
-      campaignId,
-      donorId: req.user?._id || null,
+      ...donationDetails,
       amount: verified.amount,
-      donorName: donorName?.trim() || undefined, // schema default: "Anonymous"
-      bankId: payoutAccount.bankId,
-      message: message?.trim() || undefined,
       paymentStatus: 'completed',
       provider: verified.provider,
       receiptKey: verified.receiptKey,
@@ -353,16 +259,7 @@ exports.createDonation = async (req, res) => {
 
     res.status(201).json({
       message: 'Donation verified. Thank you!',
-      donation: {
-        _id: donation._id,
-        campaignId: donation.campaignId,
-        amount: donation.amount,
-        donorName: donation.donorName,
-        message: donation.message,
-        paymentStatus: donation.paymentStatus,
-        provider: donation.provider,
-        createdAt: donation.createdAt,
-      },
+      donation: toDonationResponse(donation, campaign),
     });
   } catch (err) {
     if (err instanceof VerificationError) {

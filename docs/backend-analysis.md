@@ -695,49 +695,35 @@ Auth:
 
 #### Donation endpoints
 
-##### `POST /api/donations`
+##### `POST /api/donations/:campaignId`
 
 Purpose:
-- create a donation record with amount, donor, and bank reference
+- verify a receipt through Links.et, then create a completed donation
 
 Auth:
-- public or logged-in depending on product decision
+- public or logged-in
 
 Request data:
-- fundraiserId
-- amount
-- donor name/email
-- anonymous flag
-- bank name
-- reference
-- payment proof
+- campaign ID in the route
+- expected amount
+- receipt URL
+- saved campaign bank ID
+- optional donor name/email, anonymous flag, and message
 
 Response:
-- donation record with pending or pending-verification status
+- completed donation after successful Links.et verification
+- verification error without a donation record when the receipt fails
 
 ##### `GET /api/users/me/donations`
 
 Purpose:
-- view donor history
+- view final successful or failed donation history
 
 Auth:
 - logged-in user
 
-##### `GET /api/admin/donations`
-
-Purpose:
-- list donations pending admin verification
-
-Auth:
-- admin-only
-
-##### `PATCH /api/admin/donations/:id/verify`
-
-Purpose:
-- confirm or reject donation
-
-Auth:
-- admin-only
+Admin dashboard donation data is read-only. Links.et verification replaces
+manual donation approval; there are no donation confirmation/rejection routes.
 
 #### Report endpoints
 
@@ -999,18 +985,16 @@ Frontend:
 - submits donation request
 
 API:
-- `POST /api/donations` or `POST /api/donations/:campaignId`
+- `POST /api/donations/:campaignId`
 
 Backend logic:
-- validate fundraiser is approved and active
-- validate amount and donor details
-- save donation with pending status
-- call receipt verification service
-- confirm payment,
+- validate campaign, selected saved account, receipt URL, and requested amount
+- verify the receipt, receiver, and amount through Links.et
+- create a completed donation only after verification succeeds
 - update fundraiser total
 
 Database operation:
-- insert donation record
+- insert the successful donation after verification
 - increment `raisedAmount`
 
 Response:
@@ -1173,11 +1157,8 @@ Workflow expects additional fields:
 
 Current backend:
 - donation submission triggers immediate verification through `links.et`
-
-This is only a partial solution. The workflow likely expects a manual verification model:
-- donation goes to pending verification
-- admin verifies
-- status becomes confirmed
+- failed or unavailable verification creates no donation record
+- the admin dashboard can view final donation records but cannot approve them
 
 ### Payment/donation processing
 

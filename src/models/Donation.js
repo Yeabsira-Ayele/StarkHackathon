@@ -3,19 +3,15 @@ const mongoose = require('mongoose');
 const donationSchema = new mongoose.Schema({
   campaignId: { type: mongoose.Schema.Types.ObjectId, ref: 'Campaign', required: true },
   donorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
-  requestedAmount: { type: Number, min: 50 },
   amount: { type: Number, required: true },
   donorName: { type: String, default: 'Anonymous' },
   donorEmail: { type: String, lowercase: true, trim: true },
   bankId: { type: String, trim: true },
   anonymous: { type: Boolean, default: false },
   message: { type: String },
-  paymentStatus: { type: String, enum: ['pending', 'completed', 'failed'], default: 'pending' },
+  paymentStatus: { type: String, enum: ['completed', 'failed'], required: true },
+  failureReason: { type: String },
   certificateId: { type: String, unique: true, sparse: true },
-
-  // Stable request id used to make donation draft creation retry-safe. This
-  // avoids duplicate queued records when a donor retries the same intent.
-  donationIntentKey: { type: String, unique: true, sparse: true, index: true },
 
   // Set when the donation is verified through links.et
   provider: { type: String },

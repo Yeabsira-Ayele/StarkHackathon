@@ -16,7 +16,7 @@ exports.getDashboard = async (req, res) => {
       .select('name email phone role status createdAt')
       .sort({ createdAt: -1 })
       .lean(),
-    Donation.find().sort({ createdAt: -1 }).lean(),
+    Donation.find({ paymentStatus: { $in: ['completed', 'failed'] } }).sort({ createdAt: -1 }).lean(),
     Report.find().sort({ createdAt: -1 }).lean(),
     Organization.find().sort({ createdAt: -1 }).lean(),
     Campaign.find().select('title status creatorUserId organizationId payoutAccounts fundraiserData').lean(),
@@ -87,11 +87,7 @@ exports.getDashboard = async (req, res) => {
         bank: payoutAccount?.bankName || donation.bankId || '',
         accountNumber: payoutAccount?.accountNumber || '',
         reference: donation.receiptKey || '',
-        status: donation.paymentStatus === 'completed'
-          ? 'confirmed'
-          : donation.paymentStatus === 'failed'
-            ? 'rejected'
-            : 'pending',
+        status: donation.paymentStatus === 'completed' ? 'successful' : 'failed',
         createdAt: donation.createdAt,
       };
     }),

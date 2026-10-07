@@ -19,10 +19,7 @@ Success responses use `{ success: true, message, data }`. Errors use `{ success:
 
 ## Auth
 
-Admin-only routes expect the `x-admin-key` header, compared to `ADMIN_KEY`.
-
-- `503 { "message": "Admin access is not configured" }` if `ADMIN_KEY` is unset
-- `401 { "message": "Invalid admin key" }` if the header is missing or does not match
+Admin-only routes require a bearer token for an active account whose database role is `ADMIN` or `SUPER_ADMIN`.
 
 ### User authentication
 
@@ -31,6 +28,14 @@ Admin-only routes expect the `x-admin-key` header, compared to `ADMIN_KEY`.
 - `PATCH /api/users/me` accepts profile fields including `preferredLanguage` (`am` or `en`) for the language options shown in the frontend. Older stored values are normalized to Amharic by the frontend.
 - `POST /api/organizations/signup` requires that Google-authenticated bearer token and creates an organization application for the signed-in account. Organization contact details are separate from the account's verified Google email.
 - To grant `SUPER_ADMIN` to a verified Google account, first sign in to the app with that account, then run `node scripts/promote-google-super-admin.js <email>` from the backend directory. The script only promotes an existing, active account linked to a verified Google identity; it does not create or link accounts.
+
+### Admin dashboard and reports
+
+- `GET /api/admin/dashboard` returns `{ success, message, data }`. The `data` object contains `users`, `donations`, `reports`, and `organizations` arrays shaped for the frontend admin snapshot, as well as empty `activity` and `admins` arrays and `currentAdminId`. User and donation/report records are read from their persisted MongoDB collections; empty collections return empty arrays, not unavailable data.
+- The dashboard currently identifies `activity`, `admins`, and `profile` in `unavailableSections`; `users`, `donations`, and `reports` are available and are not marked unavailable.
+- `POST /api/reports` requires authentication and accepts `{ campaignId, category, details, evidence? }`. Categories are `False Information`, `Fraud / Scam`, `Misleading Content`, and `Other`. The authenticated user is recorded as the reporter.
+- `GET /api/reports/me` returns the signed-in user's reports.
+- `PATCH /api/admin/reports/:id` requires an admin role and accepts `{ status, note? }`, where status is `reviewed`, `resolved`, or `dismissed`.
 
 ## Rate limits
 

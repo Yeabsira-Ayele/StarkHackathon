@@ -13,6 +13,26 @@ const {
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 const DONATABLE_CAMPAIGN_STATUSES = new Set(['pending', 'approved']);
 
+const normalizeDonationIntentPart = (value) => {
+  if (value === null || value === undefined) return '';
+  return String(value).trim().toLowerCase();
+};
+
+const buildDonationIntentKey = ({ campaignId, donorId, requestedAmount, donorName, donorEmail, anonymous, bankId, message }) => {
+  const source = [
+    String(campaignId || ''),
+    String(donorId || ''),
+    String(requestedAmount ?? ''),
+    normalizeDonationIntentPart(donorName),
+    normalizeDonationIntentPart(donorEmail),
+    String(Boolean(anonymous)),
+    String(bankId || ''),
+    normalizeDonationIntentPart(message),
+  ].join('|');
+
+  return crypto.createHash('sha256').update(source).digest('hex');
+};
+
 // POST /donations/drafts
 exports.createDraft = async (req, res) => {
   try {
@@ -38,18 +58,66 @@ exports.createDraft = async (req, res) => {
     if (!payoutAccount) {
       return res.status(400).json({ message: 'This campaign has no valid saved account for the selected bank.' });
     }
-    const donation = await Donation.create({
+    const donationIntentKey = buildDonationIntentKey({
       campaignId,
       donorId: req.user?._id || null,
       requestedAmount,
-      amount: 0,
       donorName: anonymous ? 'Anonymous' : String(donorName || req.user?.name || 'Anonymous').trim(),
       donorEmail: donorEmail ? String(donorEmail).trim().toLowerCase() : undefined,
-      anonymous: Boolean(anonymous),
+      anonymous,
       bankId: payoutAccount.bankId,
-      message: message ? String(message).trim() : undefined,
-      paymentStatus: 'pending',
+      message,
     });
+
+    const existingDonation = await Donation.findOne({ donationIntentKey }).lean();
+    if (existingDonation) {
+      return res.status(200).json({
+        donation: {
+          ...existingDonation,
+          campaignId: {
+            _id: campaign._id,
+            title: campaign.title,
+            creatorName: campaign.creatorName,
+            organizationName: campaign.organizationName,
+          },
+        },
+      });
+    }
+
+    let donation;
+    try {
+      donation = await Donation.create({
+        campaignId,
+        donorId: req.user?._id || null,
+        requestedAmount,
+        amount: 0,
+        donorName: anonymous ? 'Anonymous' : String(donorName || req.user?.name || 'Anonymous').trim(),
+        donorEmail: donorEmail ? String(donorEmail).trim().toLowerCase() : undefined,
+        anonymous: Boolean(anonymous),
+        bankId: payoutAccount.bankId,
+        message: message ? String(message).trim() : undefined,
+        paymentStatus: 'pending',
+        donationIntentKey,
+      });
+    } catch (err) {
+      if (err.code === 11000) {
+        const retryDonation = await Donation.findOne({ donationIntentKey }).lean();
+        if (retryDonation) {
+          return res.status(200).json({
+            donation: {
+              ...retryDonation,
+              campaignId: {
+                _id: campaign._id,
+                title: campaign.title,
+                creatorName: campaign.creatorName,
+                organizationName: campaign.organizationName,
+              },
+            },
+          });
+        }
+      }
+      throw err;
+    }
     res.status(201).json({
       donation: {
         ...donation.toObject(),
@@ -256,6 +324,15 @@ exports.createDonation = async (req, res) => {
     }
 
     const verified = await verifyDonationReceipt(receiptUrl, payoutAccount.accountName);
+
+    const existingDonation = await Donation.findOne({ receiptKey: verified.receiptKey }).lean();
+    if (existingDonation) {
+      return res.status(409).json({
+        message: 'This receipt has already been used for a donation',
+        code: 'duplicate_receipt',
+        donationId: existingDonation._id,
+      });
+    }
 
     const donation = await Donation.create({
       campaignId,

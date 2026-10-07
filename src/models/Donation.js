@@ -13,6 +13,10 @@ const donationSchema = new mongoose.Schema({
   paymentStatus: { type: String, enum: ['pending', 'completed', 'failed'], default: 'pending' },
   certificateId: { type: String, unique: true, sparse: true },
 
+  // Stable request id used to make donation draft creation retry-safe. This
+  // avoids duplicate queued records when a donor retries the same intent.
+  donationIntentKey: { type: String, unique: true, sparse: true, index: true },
+
   // Set when the donation is verified through links.et
   provider: { type: String },
   // "<provider>:<bank reference>". The unique index makes it impossible to

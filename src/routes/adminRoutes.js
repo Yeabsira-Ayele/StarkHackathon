@@ -6,5 +6,6 @@ const { requireAdmin } = require('../middleware/roleMiddleware');
 
 router.get('/admin/campaigns', requireAuth, requireAdmin, adminController.getPendingCampaigns);
 router.patch('/admin/campaigns/:id', requireAuth, requireAdmin, adminController.reviewCampaign);
+router.get('/admin/dashboard', requireAuth, requireAdmin, adminController.getDashboard);
 
 module.exports = router;

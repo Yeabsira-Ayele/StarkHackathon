@@ -9,6 +9,7 @@ const connectDB = require("./src/config/db");
 const campaignRoutes = require("./src/routes/CampaignRoutes");
 const donationRoutes = require("./src/routes/donationRoutes");
 const adminRoutes = require("./src/routes/adminRoutes");
+const reportRoutes = require("./src/routes/reportRoutes");
 // Person 1: authentication and users
 const authRoutes = require("./src/routes/authRoutes");
 const userRoutes = require("./src/routes/userRoutes");
@@ -36,6 +37,7 @@ app.use("/api", organizationRoutes);
 app.use("/api", campaignRoutes);
 app.use("/api", donationRoutes);
 app.use("/api", adminRoutes);
+app.use("/api", reportRoutes);
 
 // 404 handler and error handler (standard { success, message, error } format)
 app.use(notFound);

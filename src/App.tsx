@@ -11,7 +11,6 @@ import { APP_NAME } from './data/content.ts';
 import { Campaign, CampaignCategory, ContributionCertificate, Organization, PaymentRail } from './types/index.ts';
 import { campaignApi } from './services/api/campaignApi.ts';
 import { BanknoteMasterCanvas } from './components/banknote/BanknoteMasterCanvas.tsx';
-import { VoxideBar } from './components/voice/VoxideBar.tsx';
 import { VoiceCampaignModal } from './components/voice/VoiceCampaignModal.tsx';
 import { VoiceDonationModal } from './components/voice/VoiceDonationModal.tsx';
 import { ScholarxivDrawer } from './components/research/ScholarxivDrawer.tsx';
@@ -427,10 +426,7 @@ function PlatformApp({
         onApproveCampaign={handleAdminApprove}
         onRejectCampaign={handleAdminReject}
         onCreateCampaign={async (data) => handleCreateCampaign(data as any, true)}
-        onOpenVoice={() => {
-          setIsVoiceBarOpen(true);
-          navigate('/voxide');
-        }}
+        onOpenVoice={() => window.dispatchEvent(new CustomEvent('voxide:open'))}
         onOpenScholarxiv={() => setIsScholarxivOpen(true)}
         language={language}
         isDark={isDark}
@@ -455,18 +451,7 @@ function PlatformApp({
         }}
       />
 
-      {/* Voxide Voice Assistant Dock */}
-      <VoxideBar
-        isOpen={isVoiceBarOpen}
-        onClose={() => {
-          setIsVoiceBarOpen(false);
-          if (openVoice) navigate('/');
-        }}
-        campaigns={campaigns}
-        language={language}
-        onExtractedCreation={(data) => setVoiceCampaignData(data)}
-        onExtractedDonation={(data) => setVoiceDonationData(data)}
-      />
+      
 
       {/* Voice Modals */}
       <VoiceCampaignModal

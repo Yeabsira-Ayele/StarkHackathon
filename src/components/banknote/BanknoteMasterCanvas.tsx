@@ -900,7 +900,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
             {/* Voxide Voice Assistant */}
             <button
               type="button"
-              onClick={() => (showPersonalNavigation ? navigate('/voxide') : onOpenVoice())}
+              onClick={() => onOpenVoice()}
               className="p-2 border border-[#1E4D38]/60 bg-[#1E4D38]/5 hover:bg-[#1E4D38]/15 text-[#1E4D38] dark:text-[#52B788] transition-colors cursor-pointer flex items-center gap-1.5"
               title={t('nav.speakVoxide')}
             >

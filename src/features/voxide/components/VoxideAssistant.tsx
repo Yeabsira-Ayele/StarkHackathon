@@ -14,6 +14,24 @@ export function VoxideAssistant() {
   const [showMicPrompt, setShowMicPrompt] = useState(false);
   const [isRequesting, setIsRequesting] = useState(false);
 
+  // Lets other buttons (navbar, Try Voxide) start this same assistant.
+  useEffect(() => {
+    const openAssistant = async () => {
+      if (status === 'listening' || status === 'speaking' || status === 'thinking') return;
+      try {
+        if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          stream.getTracks().forEach((track) => track.stop());
+        }
+        await connect();
+      } catch {
+        setShowMicPrompt(true);
+      }
+    };
+    window.addEventListener('voxide:open', openAssistant);
+    return () => window.removeEventListener('voxide:open', openAssistant);
+  }, [connect, status]);
+
   useEffect(() => {
     if (status === 'error') {
       setShowMicPrompt(true);

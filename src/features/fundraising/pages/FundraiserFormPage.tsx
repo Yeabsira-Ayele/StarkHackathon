@@ -9,7 +9,6 @@ import { organizationService } from '../../../services/organizationService.ts';
 import { Clock, ShieldAlert } from 'lucide-react';
 import { Button } from '../components/bn.tsx';
 import { ErrorState } from '../../../components/ErrorState.tsx';
-import { Loading } from '../../../components/Loading.tsx';
 
 export const FundraiserFormPage: React.FC<PageProps> = ({ go, toast }) => {
   const { t } = useTranslation();
@@ -52,19 +51,6 @@ export const FundraiserFormPage: React.FC<PageProps> = ({ go, toast }) => {
     };
   }, [user, retryKey]);
 
-  if (isCheckingOrganization) {
-    return <Loading variant="full" message={t('common.loading', 'Loading organization details…')} />;
-  }
-
-  if (organizationError) {
-    return (
-      <ErrorState
-        message={organizationError.message}
-        onRetry={() => setRetryKey((key) => key + 1)}
-      />
-    );
-  }
-
   if (blockedOrganization) {
     const statusKey = blockedOrganization.status === 'pending'
       ? 'fundraiser.form.organizationPending'
@@ -74,6 +60,9 @@ export const FundraiserFormPage: React.FC<PageProps> = ({ go, toast }) => {
 
     return (
       <div className="space-y-6 font-mono">
+        <h1 className="text-3xl font-serif font-black uppercase text-[#14110E] dark:text-[#F4EFE6]">
+          {t('fundraiser.form.createTitle')}
+        </h1>
         <div className="p-6 border-2 border-amber-600/60 bg-[#FAF6EC] dark:bg-[#161411] space-y-3">
           <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
             <Clock className="w-5 h-5 animate-pulse" />
@@ -102,19 +91,32 @@ export const FundraiserFormPage: React.FC<PageProps> = ({ go, toast }) => {
       <h1 className="text-3xl font-serif font-black uppercase text-[#14110E] dark:text-[#F4EFE6]">
         {t('fundraiser.form.createTitle')}
       </h1>
-      <FundraiserForm
-        initial={emptyValues}
-        onBack={() => go({ name: 'start' })}
-        onSaveDraft={async (values) => {
-          await fundraisingApi.save(values);
-          toast(t('fundraiser.form.draftSaved'));
-          go({ name: 'drafts' });
-        }}
-        onContinue={async (values) => {
-          const saved = await fundraisingApi.save(values);
-          go({ name: 'preview', id: saved.id });
-        }}
-      />
+      {isCheckingOrganization && (
+        <p role="status" className="text-xs text-zinc-500">
+          {t('common.loading')}
+        </p>
+      )}
+      {organizationError && (
+        <ErrorState
+          message={organizationError.message}
+          onRetry={() => setRetryKey((key) => key + 1)}
+        />
+      )}
+      <fieldset disabled={isCheckingOrganization || Boolean(organizationError)} className="min-w-0">
+        <FundraiserForm
+          initial={emptyValues}
+          onBack={() => go({ name: 'start' })}
+          onSaveDraft={async (values) => {
+            await fundraisingApi.save(values);
+            toast(t('fundraiser.form.draftSaved'));
+            go({ name: 'drafts' });
+          }}
+          onContinue={async (values) => {
+            const saved = await fundraisingApi.save(values);
+            go({ name: 'preview', id: saved.id });
+          }}
+        />
+      </fieldset>
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import React from 'react';
+import { APP_NAME } from '../../data/content.ts';
 import { Modal } from '../ui/Modal.tsx';
 import { Button } from '../ui/Button.tsx';
 import { BookOpen, ExternalLink, CheckCircle, FileText, Sparkles } from 'lucide-react';
@@ -15,7 +16,7 @@ export const ScholarxivDrawer: React.FC<ScholarxivDrawerProps> = ({ isOpen, onCl
       informs: 'Section 16: Admin Review Model & Public Progress Display',
       citation: 'Addis Ababa University & FinTech Africa Journal (2024)',
       summary:
-        'Informal mutual aid in Ethiopia relies on high interpersonal trust. Digital adoption falters when platforms allow unvetted campaigns. Lewegene introduces manual administrative verification for every new campaign before public listing, guaranteeing institutional credibility.',
+        `Informal mutual aid in Ethiopia relies on high interpersonal trust. Digital adoption falters when platforms allow unvetted campaigns. ${APP_NAME} introduces manual administrative verification for every new campaign before public listing, guaranteeing institutional credibility.`,
       status: 'Implemented in MVP',
     },
     {
@@ -23,7 +24,7 @@ export const ScholarxivDrawer: React.FC<ScholarxivDrawerProps> = ({ isOpen, onCl
       informs: 'Section 12 & 25: Localized Payment Rails via Links.et',
       citation: 'National Bank of Ethiopia & GSMA Mobile Money Report (2025)',
       summary:
-        'With over 45M Telebirr users and widespread CBE Birr integration, requiring international credit cards excludes 96% of local donors. Lewegene integrates Links.et to support native ETB settlement across Telebirr and local banking rails.',
+        `With over 45M Telebirr users and widespread CBE Birr integration, requiring international credit cards excludes 96% of local donors. ${APP_NAME} integrates Links.et to support native ETB settlement across Telebirr and local banking rails.`,
       status: 'Implemented in MVP',
     },
     {
@@ -39,7 +40,7 @@ export const ScholarxivDrawer: React.FC<ScholarxivDrawerProps> = ({ isOpen, onCl
       informs: 'Section 25: Cultural Framing without Misrepresenting Mechanics',
       citation: 'Institute of Ethiopian Studies, Ethnography of Informal Finance',
       summary:
-        'Ethical product rule: Lewegene draws inspiration from Equb/Iddir communal values of mutual rescue, but explicitly clarifies it is not an Equb (rotating savings). This maintains regulatory compliance while honoring cultural resonance.',
+        `Ethical product rule: ${APP_NAME} draws inspiration from Equb/Iddir communal values of mutual rescue, but explicitly clarifies it is not an Equb (rotating savings). This maintains regulatory compliance while honoring cultural resonance.`,
       status: 'Guaranteed by Design',
     },
   ];
@@ -72,7 +73,7 @@ export const ScholarxivDrawer: React.FC<ScholarxivDrawerProps> = ({ isOpen, onCl
     >
       <div className="space-y-4">
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-600 leading-relaxed">
-          As required by the STARK Hackathon guidelines, every core architectural decision in Lewegene is
+          As required by the STARK Hackathon guidelines, every core architectural decision in {APP_NAME} is
           grounded in an audited Scholarxiv research entry rather than speculative product assumptions.
         </div>
 

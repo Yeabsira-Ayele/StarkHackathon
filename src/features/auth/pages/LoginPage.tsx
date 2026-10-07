@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { APP_NAME } from '../../../data/content.ts';
 import { ShieldCheck, ArrowLeft } from 'lucide-react';
 import { LoginForm } from '../components/LoginForm';
 
@@ -25,22 +26,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({
             className="flex items-center gap-1.5 text-xs text-[#73685B] hover:text-[#14110E] dark:hover:text-[#FAF6EE] mb-6 cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
-            {t('common.back', 'ወደ ኋላ')}
+            {t('common.back')}
           </button>
         )}
 
         <div className="flex items-center gap-2 text-[#1E4D38] dark:text-[#52B788] mb-2">
           <ShieldCheck className="w-5 h-5" />
           <span className="text-[11px] font-bold uppercase tracking-wider">
-            {t('auth.portalLabel', 'Lewegene Citizen Solidarity Portal')}
+            {t('auth.portalLabel', { appName: APP_NAME })}
           </span>
         </div>
 
         <h1 className="text-2xl font-serif font-bold text-[#14110E] dark:text-[#FAF6EE] mb-2">
-          {t('auth.loginPageTitle', 'Sign in to your account')}
+          {t('auth.loginPageTitle')}
         </h1>
         <p className="text-xs text-[#73685B] dark:text-[#A89E90] mb-6">
-          {t('auth.loginPageDesc', 'View your completed digital donation certificates and contributions')}
+          {t('auth.loginPageDesc')}
         </p>
 
         <LoginForm

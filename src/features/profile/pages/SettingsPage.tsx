@@ -5,7 +5,6 @@ import { ArrowLeft, Save, Loader2, User, Mail, Phone, MapPin, Globe } from 'luci
 import { useProfile } from '../hooks/useProfile';
 import { ProfileUpdateFormData } from '../schemas/profile.schema';
 import { changeLanguage } from '../../../i18n/index.ts';
-import { Loading } from '../../../components/Loading';
 import { ErrorState } from '../../../components/ErrorState';
 
 interface SettingsPageProps {
@@ -47,21 +46,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack, onSuccess })
     });
   }, [profile, reset]);
 
-  if (isLoading) {
-    return <Loading variant="full" message={t('common.loading', 'Loading profile…')} />;
-  }
-
-  if (error || !profile) {
-    return (
-      <ErrorState
-        message={error instanceof Error ? error.message : t('settings.loadError', 'Your profile is unavailable.')}
-        onRetry={() => void refetch()}
-      />
-    );
-  }
-
   const onSubmit = async (data: ProfileUpdateFormData) => {
     setErrorMsg(null);
+    if (!profile) {
+      setErrorMsg(t('settings.loadError'));
+      return;
+    }
     try {
       await updateProfile(data);
       if (data.preferredLanguage !== i18n.language) {
@@ -85,7 +75,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack, onSuccess })
           className="flex items-center gap-1.5 text-xs text-[#73685B] hover:text-[#14110E] dark:hover:text-[#FAF6EE] mb-6 cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
-          {t('common.back', 'ወደ ኋላ')}
+          {t('common.back')}
         </button>
       )}
 
@@ -96,6 +86,25 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack, onSuccess })
         <p className="text-xs text-[#73685B] dark:text-[#A89E90] mb-6">
           {t('settings.description')}
         </p>
+
+        {isLoading && (
+          <p role="status" className="text-xs text-zinc-500 mb-4">
+            {t('common.loading')}
+          </p>
+        )}
+        {error && (
+          <div className="mb-4">
+            <ErrorState
+              message={error instanceof Error ? error.message : t('settings.loadError')}
+              onRetry={() => void refetch()}
+            />
+          </div>
+        )}
+        {!isLoading && !error && !profile && (
+          <p role="status" className="text-xs text-zinc-500 mb-4">
+            {t('settings.loadError')}
+          </p>
+        )}
 
         {successMsg && (
           <div className="p-3 mb-4 text-xs rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400">
@@ -196,7 +205,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack, onSuccess })
           <div className="pt-2 flex justify-end">
             <button
               type="submit"
-              disabled={isUpdating}
+              disabled={isUpdating || !profile}
               className="px-6 py-2.5 rounded-xl bg-[#1E4D38] hover:bg-[#163829] text-white text-xs font-bold flex items-center gap-2 cursor-pointer shadow-sm transition-all disabled:opacity-50"
             >
               {isUpdating ? (

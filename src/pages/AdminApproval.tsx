@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { APP_NAME } from '../data/content.ts';
 import { Campaign } from '../types/index.ts';
 import { Button } from '../components/ui/Button.tsx';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/Table.tsx';
@@ -67,7 +68,7 @@ export const AdminApproval: React.FC<AdminApprovalProps> = ({
             </h1>
           </div>
           <p className="text-xs text-zinc-500 max-w-2xl leading-relaxed">
-            Review fundraisers to verify legitimacy and maintain trust for the Lewegene community.
+            Review fundraisers to verify legitimacy and maintain trust for the {APP_NAME} community.
           </p>
         </div>
 

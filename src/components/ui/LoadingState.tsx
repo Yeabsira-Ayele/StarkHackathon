@@ -13,7 +13,7 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
   className = '',
 }) => {
   const { t } = useTranslation();
-  const message = text ?? t('common.loading', 'Loading...');
+  const message = text ?? t('common.loading');
   const sizeMap = {
     sm: 'h-4 w-4 border-2',
     md: 'h-6 w-6 border-2',

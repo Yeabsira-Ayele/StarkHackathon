@@ -72,9 +72,9 @@ export default function FundraisingApp({
   const props: PageProps = { go, toast: setMessage, onCampaignsChanged };
 
   const tabs: { key: string; label: string; route: Route; active: Route['name'][] }[] = [
-    { key: 'start', label: t('fundraiser.tabs.start', 'Start'), route: { name: 'start' }, active: ['start', 'form'] },
-    { key: 'mine', label: t('fundraiser.tabs.mine', 'My fundraisers'), route: { name: 'mine' }, active: ['mine', 'manage'] },
-    { key: 'drafts', label: t('fundraiser.tabs.drafts', 'Drafts'), route: { name: 'drafts' }, active: ['drafts'] },
+    { key: 'start', label: t('fundraiser.tabs.start'), route: { name: 'start' }, active: ['start', 'form'] },
+    { key: 'mine', label: t('fundraiser.tabs.mine'), route: { name: 'mine' }, active: ['mine', 'manage'] },
+    { key: 'drafts', label: t('fundraiser.tabs.drafts'), route: { name: 'drafts' }, active: ['drafts'] },
   ];
 
   return (
@@ -90,7 +90,7 @@ export default function FundraisingApp({
               className="inline-flex items-center gap-2 border border-[#26211C]/40 bg-[#F2ECE1] px-3 py-1.5 font-mono text-[10px] font-black uppercase tracking-widest text-[#14110E] transition-colors hover:border-[#1E4D38] hover:text-[#1E4D38] dark:border-[#9A7432]/50 dark:bg-[#1C1814] dark:text-[#F4EFE6] dark:hover:border-[#52B788] dark:hover:text-[#52B788] cursor-pointer"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
-              <span>{t('nav.backToHome', 'Back to Home')}</span>
+              <span>{t('nav.backToHome')}</span>
             </button>
             <button
               type="button"
@@ -98,7 +98,7 @@ export default function FundraisingApp({
               className="inline-flex items-center gap-1.5 border border-[#26211C]/30 bg-transparent px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-[#201C18] transition-colors hover:border-[#1E4D38] hover:text-[#1E4D38] dark:border-[#9A7432]/40 dark:text-[#E8DEC8] dark:hover:border-[#52B788] dark:hover:text-[#52B788] cursor-pointer"
             >
               <Compass className="h-3.5 w-3.5" />
-              <span>{t('nav.discoverCauses', 'Discover Causes')}</span>
+              <span>{t('nav.discoverCauses')}</span>
             </button>
           </div>
 
@@ -107,8 +107,8 @@ export default function FundraisingApp({
             <button
               type="button"
               onClick={() => setIsDark((prev) => !prev)}
-              aria-label={t('nav.toggleTheme', 'Toggle Parchment / Midnight Ink')}
-              title={t('nav.toggleTheme', 'Toggle Parchment / Midnight Ink')}
+              aria-label={t('nav.toggleTheme')}
+              title={t('nav.toggleTheme')}
               className="p-2 border border-[#9A7432]/50 bg-[#F2ECE1] hover:bg-[#9A7432]/15 text-[#201C18] dark:bg-[#1C1814] dark:text-[#D8B066] transition-colors cursor-pointer"
             >
               {isDark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}

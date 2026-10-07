@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { APP_NAME } from '../../../data/content.ts';
 import { Donation } from '../types/donation.types';
 import { toGeezNumber } from '../api/donation.api';
 import {
   CheckCircle2,
-  Clock,
   Share2,
   Download,
   ArrowRight,
@@ -16,7 +16,6 @@ import {
   Printer,
   Copy,
   Check,
-  Loader2,
   AlertTriangle,
 } from 'lucide-react';
 import { ShareDonationModal } from './ShareDonationModal';
@@ -52,78 +51,47 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
     window.print();
   };
 
-  const isConfirmed = donation.status === 'confirmed';
-  const isVerifying = donation.status === 'verifying';
+  const isSuccessful = donation.status === 'successful';
   const isFailed = donation.status === 'failed';
-  const isPending = donation.status === 'pending';
 
   const getStatusIcon = () => {
-    if (isConfirmed) return <CheckCircle2 className="w-10 h-10" />;
-    if (isVerifying) return <Loader2 className="w-10 h-10 animate-spin" />;
-    if (isFailed) return <AlertTriangle className="w-10 h-10" />;
-    return <Clock className="w-10 h-10 animate-pulse" />;
+    return isSuccessful ? <CheckCircle2 className="w-10 h-10" /> : <AlertTriangle className="w-10 h-10" />;
   };
 
   const getStatusColor = () => {
-    if (isConfirmed) return 'bg-[#1E4D38]/10 border-[#1E4D38] text-[#1E4D38] dark:text-[#52B788]';
-    if (isFailed) return 'bg-red-500/10 border-red-500 text-red-600 dark:text-red-400';
-    if (isVerifying) return 'bg-blue-500/10 border-blue-500 text-blue-600 dark:text-blue-400';
-    return 'bg-[#9A7432]/10 border-[#9A7432] text-[#9A7432]';
+    return isSuccessful
+      ? 'bg-[#1E4D38]/10 border-[#1E4D38] text-[#1E4D38] dark:text-[#52B788]'
+      : 'bg-red-500/10 border-red-500 text-red-600 dark:text-red-400';
   };
 
   const getHeading = () => {
-    if (isConfirmed) return 'Contribution Verified & Confirmed!';
-    if (isVerifying) return 'Verifying Your Payment...';
-    if (isFailed) return 'Verification Could Not Be Completed';
-    return 'Contribution Recorded!';
+    return isSuccessful ? 'Contribution Successful' : 'Contribution Failed';
   };
 
   const getDescription = () => {
-    if (isConfirmed) {
+    if (isSuccessful) {
       return `Your contribution of ${donation.amount.toLocaleString()} ETB to ${donation.campaignTitle || 'this cause'} has been verified and recorded.`;
     }
-    if (isVerifying) {
-      return `Verifying your payment of ${donation.amount.toLocaleString()} ETB — this usually takes a few seconds.`;
-    }
-    if (isFailed) {
-      const reason =
-        donation.verification?.failureReason ||
-        donation.verifiedPayment?.failureReason ||
-        'The payment receipt link could not be verified.';
-      return `${reason} You can submit a different receipt link to try again.`;
-    }
-    return `Your contribution of ${donation.amount.toLocaleString()} ETB has been recorded. Please submit your payment receipt link to complete verification.`;
+    const reason =
+      donation.verification?.failureReason ||
+      donation.verifiedPayment?.failureReason ||
+      'The payment receipt link could not be verified.';
+    return `${reason} You can submit a different receipt link to try again.`;
   };
 
   const getStatusPill = () => {
-    if (isConfirmed) {
+    if (isSuccessful) {
       return (
         <span className="bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706] px-2 py-0.5 flex items-center gap-1.5">
           <CheckCircle2 className="w-3.5 h-3.5" />
-          <span>VERIFIED &amp; CONFIRMED</span>
-        </span>
-      );
-    }
-    if (isVerifying) {
-      return (
-        <span className="bg-blue-600 text-white px-2 py-0.5 flex items-center gap-1.5">
-          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          <span>VERIFYING PAYMENT</span>
-        </span>
-      );
-    }
-    if (isFailed) {
-      return (
-        <span className="bg-red-600 text-white px-2 py-0.5 flex items-center gap-1.5">
-          <AlertTriangle className="w-3.5 h-3.5" />
-          <span>VERIFICATION FAILED</span>
+          <span>SUCCESSFUL</span>
         </span>
       );
     }
     return (
-      <span className="bg-[#9A7432] text-white px-2 py-0.5 flex items-center gap-1.5">
-        <Clock className="w-3.5 h-3.5" />
-        <span>AWAITING RECEIPT</span>
+      <span className="bg-red-600 text-white px-2 py-0.5 flex items-center gap-1.5">
+        <AlertTriangle className="w-3.5 h-3.5" />
+        <span>FAILED</span>
       </span>
     );
   };
@@ -176,7 +144,7 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
       )}
 
       {/* Verification Details (if available) */}
-      {isConfirmed && (donation.verification || donation.verifiedPayment) && (
+      {isSuccessful && (donation.verification || donation.verifiedPayment) && (
         <div className="p-4 border border-[#1E4D38]/30 dark:border-[#52B788]/30 bg-[#1E4D38]/5 dark:bg-[#52B788]/5 space-y-2 rounded-[1px]">
           <div className="flex items-center gap-2 text-[#1E4D38] dark:text-[#52B788] font-black uppercase text-[11px]">
             <ShieldCheck className="w-4 h-4" />
@@ -218,20 +186,20 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
       )}
 
       {/* Living Ethiopian Banknote Commemorative Certificate Card */}
-      <div
+      {isSuccessful && <div
         id="printable-donation-receipt"
         className="p-8 border-4 border-[#1E4D38] dark:border-[#52B788] bg-[#FFFDF9] dark:bg-[#12100E] space-y-6 rounded-[1px] shadow-2xl relative overflow-hidden"
       >
         {/* Watermark / Banknote Guilloche Pattern Emulation */}
         <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none font-serif text-6xl font-black text-[#1E4D38] dark:text-[#52B788]">
-          LEWEGENE
+          {APP_NAME.toUpperCase()}
         </div>
 
         {/* Certificate Header */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-[#1E4D38]/30 dark:border-[#52B788]/30 pb-4">
           <div>
             <span className="text-[10px] font-black uppercase text-[#1E4D38] dark:text-[#52B788] tracking-widest block">
-              LEWEGENE NATIONAL CIVIC SOLIDARITY TENDER
+              {APP_NAME.toUpperCase()} NATIONAL CIVIC SOLIDARITY TENDER
             </span>
             <h3 className="font-serif font-black text-2xl text-[#14110E] dark:text-[#FFFFFF] mt-0.5">
               Official Contribution Certificate
@@ -283,21 +251,9 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
               ESCROW SETTLEMENT STATUS
             </span>
             <span className={`text-sm font-black ${
-              isConfirmed
-                ? 'text-emerald-700 dark:text-emerald-400'
-                : isVerifying
-                  ? 'text-blue-700 dark:text-blue-400'
-                  : isFailed
-                    ? 'text-red-700 dark:text-red-400'
-                    : 'text-[#9A7432]'
+              isSuccessful ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'
             }`}>
-              {isConfirmed
-                ? 'Verified'
-                : isVerifying
-                  ? 'Verification in progress'
-                  : isFailed
-                    ? 'Verification failed'
-                    : 'Awaiting receipt'}
+              {isSuccessful ? 'Successful' : 'Failed'}
             </span>
           </div>
         </div>
@@ -373,11 +329,11 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
           <span>Receipt verified</span>
           <span>Receipt verified by the payment verification service</span>
         </div>
-      </div>
+      </div>}
 
       {/* Action Buttons: Share, Download Receipt, Back to Discover */}
       <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
-        <div className="flex flex-wrap items-center gap-3">
+        {isSuccessful && <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
             onClick={() => setIsShareOpen(true)}
@@ -395,7 +351,7 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
             <Printer className="w-4 h-4 text-[#1E4D38] dark:text-[#52B788]" />
             <span>PRINT CERTIFICATE</span>
           </button>
-        </div>
+        </div>}
 
         <div className="flex flex-wrap items-center gap-3">
           {onBackToCause && (
@@ -405,7 +361,7 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
               className="py-3 px-5 border-2 border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#EFE8D8] dark:bg-[#1C1814] font-mono text-xs font-black uppercase tracking-wider flex items-center gap-2 hover:border-[#1E4D38] dark:hover:border-[#52B788] cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>{t('nav.returnToCampaign', 'Return to Campaign')}</span>
+              <span>{t('nav.returnToCampaign')}</span>
             </button>
           )}
 
@@ -414,7 +370,7 @@ export const DonationConfirmation: React.FC<DonationConfirmationProps> = ({
             onClick={onExploreMore}
             className="py-3 px-5 border-2 border-[#1E4D38] dark:border-[#52B788] bg-transparent text-[#1E4D38] dark:text-[#52B788] font-mono text-xs font-black uppercase tracking-wider flex items-center gap-2 hover:bg-[#1E4D38] hover:text-white dark:hover:bg-[#52B788] dark:hover:text-[#080706] transition-colors cursor-pointer"
           >
-            <span>{t('common.explore', 'Explore Causes')}</span>
+            <span>{t('common.explore')}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
 

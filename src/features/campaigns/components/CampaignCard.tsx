@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ShieldCheck, MapPin, ArrowRight } from 'lucide-react';
 import { Campaign } from '../types/campaign.types';
+import { APP_NAME } from '../../../data/content.ts';
 
 interface CampaignCardProps {
   campaign: Campaign;
@@ -41,7 +42,7 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
             </span>
             <span className="text-zinc-400">·</span>
             <span className="font-bold uppercase text-[#8B5E14] dark:text-[#D8B066]">
-              {campaign.category}
+              {t(`categories.${campaign.category}`)}
             </span>
           </div>
 
@@ -65,11 +66,11 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center font-mono text-xs text-zinc-500">
-              {t('campaigns.intaglioPlate', 'LEWEGENE INTAGLIO PLATE')}
+              {t('campaigns.intaglioPlate', { appName: APP_NAME.toUpperCase() })}
             </div>
           )}
           <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-[#FAF6EC]/90 dark:bg-[#0C0A09]/90 border border-[#26211C]/30 text-[9px] font-mono font-bold text-[#14110E] dark:text-[#E8DEC8]">
-            {t('campaigns.fundedPercent', '{{percent}}% FUNDED', { percent: percentage })}
+            {t('campaigns.fundedPercent', { percent: percentage })}
           </div>
         </div>
 
@@ -110,7 +111,7 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
         <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 pt-1">
           <span className="flex items-center gap-1 truncate max-w-[65%]">
             <MapPin className="w-3 h-3 text-[#9A7432] shrink-0" />
-            <span className="truncate">{campaign.location || t('campaigns.defaultLocation', 'Addis Ababa')}</span>
+            <span className="truncate">{campaign.location || t('campaigns.defaultLocation')}</span>
           </span>
           <span className="font-bold">
             {campaign.donationsCount || 0} {t('common.patrons')}

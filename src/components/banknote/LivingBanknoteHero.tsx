@@ -1,4 +1,5 @@
 import React from 'react';
+import { APP_NAME } from '../../data/content.ts';
 import { Button } from '../ui/Button.tsx';
 import {
   ShieldCheck,
@@ -72,7 +73,7 @@ export const LivingBanknoteHero: React.FC<LivingBanknoteHeroProps> = ({
 
           <div className="space-y-1">
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-display font-black tracking-tight text-[#173C32] dark:text-[#E8DEC8] leading-none banknote-engraved-text">
-              LEWEGENE
+              {APP_NAME.toUpperCase()}
             </h1>
             <p className="text-xs sm:text-sm font-serif italic text-zinc-600 dark:text-zinc-400 max-w-xl mx-auto">
               "Underwritten by collective compassion, sealed by Ethiopian civil society, settled directly in Birr."

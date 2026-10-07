@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { APP_NAME } from '../data/content.ts';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../components/ui/Button.tsx';
 import { Card } from '../components/ui/Card.tsx';
@@ -182,7 +183,7 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
       <div className="max-w-xl mx-auto py-10 space-y-6">
         <Button variant="outline" size="sm" type="button" onClick={onCancel} className="gap-1.5">
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>{t('nav.backToHome', 'Back to Home')}</span>
+          <span>{t('nav.backToHome')}</span>
         </Button>
         <Card className="p-6 sm:p-8 border-border bg-surface shadow-xs space-y-4">
           <h1 className="text-xl font-display font-bold text-primary">
@@ -209,10 +210,10 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
           className="gap-1.5"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>{t('nav.backToHome', 'Back to Home')}</span>
+          <span>{t('nav.backToHome')}</span>
         </Button>
         <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-          {t('organization.signupTitle', 'Organization Registration')}
+          {t('organization.signupTitle')}
         </span>
       </div>
 
@@ -223,7 +224,7 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
           <span>Institutional Accreditation &amp; Onboarding</span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-display font-bold text-primary">
-          Register Your Organization on Lewegene
+          Register Your Organization on {APP_NAME}
         </h1>
         <p className="text-xs sm:text-sm text-zinc-500 max-w-lg mx-auto">
           Submit official ACSO/NGO registration credentials, representative contact, and settlement account for administrative review.
@@ -659,7 +660,7 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
               Application Submitted: {submittedOrg.name}
             </h2>
             <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-lg mx-auto leading-relaxed">
-              Your organizational credentials have been recorded and routed directly to the Lewegene compliance review desk.
+              Your organizational credentials have been recorded and routed directly to the {APP_NAME} compliance review desk.
             </p>
           </div>
 

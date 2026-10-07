@@ -8,6 +8,7 @@ import type { Campaign } from '../../types/index.ts';
 import { useAuthStore } from '../auth/store/auth.store.ts';
 import { fundraisingApi } from '../fundraising/api/fundraising.api.ts';
 import { profileApi } from './api/profile.api.ts';
+import { APP_NAME } from '../../data/content.ts';
 import type { Fundraiser } from '../fundraising/types/fundraiser.types.ts';
 
 const SAVED_CAUSES_KEY = 'lewegene_saved_causes';
@@ -142,25 +143,25 @@ const ProfilePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
               className="inline-flex items-center gap-1.5 border border-[#26211C]/35 bg-[#FFFDF9] px-3 py-1.5 font-black text-[#1E4D38] transition-colors hover:border-[#1E4D38] dark:border-[#9A7432]/45 dark:bg-[#1C1814] dark:text-[#52B788]"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
-              <span>{t('nav.home', 'Home')}</span>
+              <span>{t('nav.home')}</span>
             </Link>
             <Link
               to="/fundraising"
               className="px-2.5 py-1.5 text-[#201C18] transition-colors hover:text-[#1E4D38] dark:text-[#E8DEC8] dark:hover:text-[#52B788]"
             >
-              {t('nav.myFundraisers', 'My Fundraisers')}
+              {t('nav.myFundraisers')}
             </Link>
             <Link
               to="/contributions"
               className="px-2.5 py-1.5 text-[#201C18] transition-colors hover:text-[#1E4D38] dark:text-[#E8DEC8] dark:hover:text-[#52B788]"
             >
-              {t('nav.myContributions', 'My Contributions')}
+              {t('nav.myContributions')}
             </Link>
             <Link
               to="/reports"
               className="px-2.5 py-1.5 text-[#201C18] transition-colors hover:text-[#1E4D38] dark:text-[#E8DEC8] dark:hover:text-[#52B788]"
             >
-              {t('nav.myReports', 'My Reports')}
+              {t('nav.myReports')}
             </Link>
           </div>
           <div className="flex items-center gap-2">
@@ -168,8 +169,8 @@ const ProfilePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
             <button
               type="button"
               onClick={() => setIsDark((prev) => !prev)}
-              aria-label={t('nav.toggleTheme', 'Toggle Parchment / Midnight Ink')}
-              title={t('nav.toggleTheme', 'Toggle Parchment / Midnight Ink')}
+              aria-label={t('nav.toggleTheme')}
+              title={t('nav.toggleTheme')}
               className="p-2 border border-[#9A7432]/50 bg-[#F2ECE1] hover:bg-[#9A7432]/15 text-[#201C18] dark:bg-[#1C1814] dark:text-[#D8B066] transition-colors cursor-pointer"
             >
               {isDark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
@@ -179,7 +180,7 @@ const ProfilePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
         )}
         <div className="mt-6 flex flex-wrap items-end justify-between gap-4 border-b border-[#9A7432]/30 pb-5">
           <div>
-            <p className="font-mono text-[10px] font-black uppercase tracking-[.2em] text-[#9A7432]">{t('profile.space')}</p>
+            <p className="font-mono text-[10px] font-black uppercase tracking-[.2em] text-[#9A7432]">{t('profile.space', { appName: APP_NAME })}</p>
             <h1 className="mt-2 font-serif text-3xl font-black sm:text-4xl">{t('profile.title')}</h1>
           </div>
           <span className="inline-flex items-center gap-2 border border-[#9A7432]/40 px-3 py-2 font-mono text-[10px] font-bold uppercase">
@@ -208,7 +209,7 @@ const ProfilePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
                   <input value={phone} readOnly className="border border-[#26211C]/20 bg-[#FFFDF9] px-3 py-2.5 font-sans text-sm dark:border-[#9A7432]/30 dark:bg-[#0E0D0B]" />
                 </label>
                 <div className="flex flex-wrap items-center gap-3 pt-1">
-                  <button type="submit" disabled={isSaving} className="bg-[#1E4D38] px-4 py-2.5 font-mono text-xs font-black uppercase text-white hover:bg-[#163E2C] disabled:cursor-not-allowed disabled:opacity-50">{isSaving ? t('common.loading', 'Saving…') : t('profile.saveProfile')}</button>
+                  <button type="submit" disabled={isSaving} className="bg-[#1E4D38] px-4 py-2.5 font-mono text-xs font-black uppercase text-white hover:bg-[#163E2C] disabled:cursor-not-allowed disabled:opacity-50">{isSaving ? t('common.loading') : t('profile.saveProfile')}</button>
                   {message && <p role={messageIsError ? 'alert' : 'status'} className={`text-xs ${messageIsError ? 'text-red-700 dark:text-red-300' : 'text-zinc-600 dark:text-zinc-400'}`}>{message}</p>}
                 </div>
               </form>

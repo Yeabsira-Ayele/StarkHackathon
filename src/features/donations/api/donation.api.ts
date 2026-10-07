@@ -5,10 +5,7 @@ import { Campaign, ContributionCertificate } from '../../../types/index.ts';
 import {
   Donation,
   CreateDonationPayload,
-  SubmitReferencePayload,
-  SubmitReceiptPayload,
   DonationSummaryStats,
-  DonationSubmitPayload,
   CampaignPayoutAccount,
 } from '../types/donation.types';
 import { getBankById } from '../data/banks.data';
@@ -25,32 +22,34 @@ interface BackendDonation {
   _id: string;
   campaignId: BackendCampaign | string;
   donorId?: string;
-  requestedAmount?: number;
   amount: number;
   donorName: string;
   donorEmail?: string;
   bankId?: string;
   anonymous?: boolean;
   message?: string;
-  paymentStatus: 'pending' | 'completed' | 'failed';
+  paymentStatus: string;
   provider?: string;
   receiptKey?: string;
   certificateId?: string;
+  failureReason?: string;
   createdAt: string;
 }
 
 interface DonationResponse {
   donation: BackendDonation;
-  stats?: DonationSummaryStats;
+}
+
+function isFinalDonation(donation: BackendDonation): boolean {
+  return donation.paymentStatus === 'completed' || donation.paymentStatus === 'failed';
 }
 
 function toDonation(donation: BackendDonation): Donation {
+  if (!isFinalDonation(donation)) {
+    throw new Error('Payment verification has not returned a final result.');
+  }
   const campaign = typeof donation.campaignId === 'string' ? undefined : donation.campaignId;
-  const status = donation.paymentStatus === 'completed'
-    ? 'confirmed'
-    : donation.paymentStatus === 'failed'
-      ? 'failed'
-      : 'pending';
+  const status = donation.paymentStatus === 'completed' ? 'successful' : 'failed';
 
   return {
     id: donation._id,
@@ -58,7 +57,7 @@ function toDonation(donation: BackendDonation): Donation {
     donorId: donation.donorId,
     campaignTitle: campaign?.title,
     beneficiaryName: campaign?.organizationName || campaign?.creatorName,
-    amount: donation.paymentStatus === 'completed' ? donation.amount : donation.requestedAmount || donation.amount,
+    amount: donation.amount,
     donorName: donation.donorName,
     donorEmail: donation.donorEmail,
     anonymous: Boolean(donation.anonymous),
@@ -66,9 +65,11 @@ function toDonation(donation: BackendDonation): Donation {
     bankId: donation.bankId || donation.provider || '',
     bankName: getBankById(donation.bankId || '')?.shortName || donation.bankId || donation.provider,
     status,
+    verification: donation.failureReason
+      ? { verifiedAt: null, verifiedAmount: null, verifiedSender: null, failureReason: donation.failureReason }
+      : undefined,
     createdAt: donation.createdAt,
     certificateId: donation.certificateId,
-    paymentStatus: donation.paymentStatus,
     paymentRail: undefined,
     transactionReference: donation.receiptKey,
   };
@@ -108,29 +109,11 @@ export const donationApi = {
   },
 
   async createDonation(payload: CreateDonationPayload): Promise<Donation> {
-    const response = await api.post<DonationResponse>('/donations/drafts', payload);
-    return toDonation(response.data.donation);
-  },
-
-  async submitReceiptVerification(
-    donationId: string,
-    payload: SubmitReceiptPayload,
-  ): Promise<Donation> {
-    const response = await api.post<DonationResponse>(`/donations/records/${donationId}/verify`, {
-      receiptUrl: payload.receiptUrl,
+    const { campaignId, ...donationPayload } = payload;
+    const response = await api.post<DonationResponse>(`/donations/${campaignId}`, donationPayload, {
+      timeout: 90_000,
     });
     return toDonation(response.data.donation);
-  },
-
-  async submitPaymentReference(
-    donationId: string,
-    payload: SubmitReferencePayload,
-  ): Promise<Donation> {
-    return this.submitReceiptVerification(donationId, {
-      donationId,
-      receiptUrl: payload.reference,
-      proofUrl: payload.proofUrl,
-    });
   },
 
   async getDonationDetails(donationId: string): Promise<Donation | null> {
@@ -139,29 +122,26 @@ export const donationApi = {
   },
 
   async getMyContributions(): Promise<{ donations: Donation[]; stats: DonationSummaryStats }> {
-    const response = await api.get<{ donations: BackendDonation[]; stats: DonationSummaryStats }>('/users/me/donations');
-    return { donations: response.data.donations.map(toDonation), stats: response.data.stats };
-  },
-
-  async confirmDonation(_donationId: string): Promise<Donation> {
-    throw new Error('Manual donation confirmation is an admin operation and is not available from this screen.');
-  },
-
-  async rejectDonation(_donationId: string, _reason: string): Promise<Donation> {
-    throw new Error('Manual donation rejection is an admin operation and is not available from this screen.');
-  },
-
-  async submitDonation(payload: DonationSubmitPayload): Promise<{
-    certificate: ContributionCertificate;
-    donation: Donation;
-  }> {
-    throw new Error(`Submit a bank receipt link to verify the ${payload.amount.toLocaleString()} ETB contribution.`);
+    const response = await api.get<{ donations: BackendDonation[] }>('/users/me/donations');
+    const donations = response.data.donations.filter(isFinalDonation).map(toDonation);
+    const successful = donations.filter((donation) => donation.status === 'successful');
+    return {
+      donations,
+      stats: {
+        totalAmount: successful.reduce((sum, donation) => sum + donation.amount, 0),
+        totalDonationsCount: donations.length,
+        causesSupportedCount: new Set(successful.map((donation) => donation.campaignId)).size,
+        successfulCount: successful.length,
+        failedCount: donations.filter((donation) => donation.status === 'failed').length,
+        largestDonation: successful.reduce((largest, donation) => Math.max(largest, donation.amount), 0),
+      },
+    };
   },
 
   async getPatronCertificates(): Promise<ContributionCertificate[]> {
     const { donations } = await this.getMyContributions();
     return donations
-      .filter((donation) => donation.status === 'confirmed' && donation.certificateId)
+      .filter((donation) => donation.status === 'successful' && donation.certificateId)
       .map(toCertificate);
   },
 

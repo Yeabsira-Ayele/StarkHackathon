@@ -21,6 +21,7 @@ import { AdminAdmins } from './AdminAdmins.tsx';
 import { AdminProfile } from './AdminProfile.tsx';
 import { useAuthStore } from '../../auth/store/auth.store.ts';
 import { LanguageSwitcher } from '../../../components/common/LanguageSwitcher.tsx';
+import { APP_NAME } from '../../../data/content.ts';
 
 export interface AdminPortalProps {
   isDark: boolean;
@@ -74,15 +75,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme,
 
   const snap = store.snapshot;
   const counts = useMemo(() => {
-    if (!snap || store.loading || store.error) return {} as Record<string, number>;
+    if (!snap || store.loading) return {} as Record<string, number>;
     const unavailable = snap.unavailableSections || [];
     return {
-      fundraisers: store.campaigns.filter((c) => c.status === 'pending').length,
+      ...(unavailable.includes('fundraisers') ? {} : { fundraisers: store.campaigns.filter((c) => c.status === 'pending').length }),
       ...(unavailable.includes('reports') ? {} : { reports: snap.reports.filter((r) => r.status === 'pending').length }),
-      ...(unavailable.includes('donations') ? {} : { donations: snap.donations.filter((d) => d.status === 'pending').length }),
-      organizations: snap.organizations.filter((o) => o.status === 'pending').length,
+      ...(unavailable.includes('organizations') ? {} : { organizations: snap.organizations.filter((o) => o.status === 'pending').length }),
     } as Record<string, number>;
-  }, [snap, store.campaigns, store.loading, store.error]);
+  }, [snap, store.campaigns, store.loading]);
   const totalPending = Object.values(counts).reduce((a, b) => a + b, 0);
   const me = snap?.admins.find((a) => a.id === snap.currentAdminId);
   React.useEffect(() => {
@@ -127,8 +127,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme,
     <nav aria-label="Admin navigation" className="flex h-full flex-col">
       <div className="flex h-16 shrink-0 items-center border-b border-[var(--admin-border)] px-4 xl:px-5">
         <div className="hidden xl:block">
-          <h1 className="font-display text-lg font-black leading-none tracking-[0.16em] text-[var(--admin-ink)]">LEWEGENE</h1>
-          <span className="mt-1 block font-mono text-[9px] font-semibold text-[var(--admin-muted)]">{t('admin.console', 'Admin console')}</span>
+          <h1 className="notranslate font-display text-lg font-black leading-none tracking-[0.16em] text-[var(--admin-ink)]">{APP_NAME.toUpperCase()}</h1>
+          <span className="mt-1 block font-mono text-[9px] font-semibold text-[var(--admin-muted)]">{t('admin.console')}</span>
         </div>
         <span className="grid h-9 w-9 place-items-center border border-[var(--admin-gold)] font-display text-xl font-black text-[var(--admin-green)] xl:hidden">L</span>
       </div>
@@ -171,11 +171,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme,
         <button
           type="button"
           onClick={onExit}
-          title={t('admin.nav.viewPublicSite', 'View public site')}
+          title={t('admin.nav.viewPublicSite')}
           className="flex w-full items-center justify-center xl:justify-start gap-2 rounded-md px-3 py-2 text-sm text-[var(--admin-muted)] transition-colors hover:bg-[var(--admin-green)]/5 hover:text-[var(--admin-green)] cursor-pointer"
         >
           <ExternalLink className="h-4 w-4 shrink-0" />
-          <span className="md:hidden xl:inline">{t('admin.nav.viewPublicSite', 'View public site')}</span>
+          <span className="md:hidden xl:inline">{t('admin.nav.viewPublicSite')}</span>
         </button>
       </div>
     </nav>
@@ -220,7 +220,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme,
                 {searchOpen && search.trim() && (
                   <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-80 overflow-y-auto rounded-md border border-[var(--admin-border)] bg-[var(--admin-card)] p-1 shadow-[var(--admin-shadow)]">
                     {store.loading ? <p role="status" className="px-3 py-3 text-sm text-[var(--admin-muted)]">Loading admin records…</p>
-                    : store.error ? <p role="alert" className="px-3 py-3 text-sm text-[var(--admin-red)]">{store.error}</p>
                     : quickResults.length ? quickResults.map((result) => (
                       <button key={`${result.section}-${result.id}`} type="button" onClick={() => { go(result.section, result.id); setSearchOpen(false); }} className="block w-full rounded px-3 py-2 text-left hover:bg-[var(--admin-green)]/10">
                         <span className="block truncate text-sm font-medium text-[var(--admin-ink)]">{result.label}</span>
@@ -236,17 +235,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme,
               <button
                 type="button"
                 onClick={onExit}
-                title={t('admin.nav.viewPublicSite', 'View public site')}
+                title={t('admin.nav.viewPublicSite')}
                 className="inline-flex h-9 items-center gap-1.5 rounded-md border border-[var(--admin-border)] bg-[var(--admin-cream)] px-2.5 font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--admin-ink)] transition-colors hover:bg-[var(--admin-green)]/10 hover:text-[var(--admin-green)] cursor-pointer"
               >
                 <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-                <span>{t('nav.mainSite', 'Main Site')}</span>
+                <span>{t('nav.mainSite')}</span>
               </button>
               <LanguageSwitcher variant="admin" />
               <div className="relative">
                 <button type="button" onClick={() => { setBellOpen((open) => !open); setProfileOpen(false); }} title="Notifications" aria-label="Notifications" aria-expanded={bellOpen} className="relative grid h-9 w-9 place-items-center rounded-md border border-[var(--admin-border)] hover:bg-[var(--admin-green)]/10">
                   <Bell className="h-4 w-4" />
-                  {!store.loading && !store.error && totalPending > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[var(--admin-red)] px-1 font-mono text-[9px] font-bold text-white">{totalPending}</span>}
+                  {!store.loading && totalPending > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[var(--admin-red)] px-1 font-mono text-[9px] font-bold text-white">{totalPending}</span>}
                 </button>
                 {bellOpen && (
                   <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-md border border-[var(--admin-border)] bg-[var(--admin-card)] p-2 shadow-[var(--admin-shadow)]">
@@ -255,15 +254,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme,
                       <button type="button" onClick={() => setBellOpen(false)} aria-label="Close notifications" title="Close" className="rounded p-1 hover:bg-[var(--admin-green)]/10"><X className="h-4 w-4" /></button>
                     </div>
                     {store.loading ? <p role="status" className="px-3 py-3 text-sm text-[var(--admin-muted)]">Loading admin records…</p>
-                    : store.error ? (
-                      <div className="px-3 py-3" role="alert">
-                        <p className="text-sm text-[var(--admin-red)]">{store.error}</p>
-                        <button type="button" onClick={() => void store.actions.refresh()} className="mt-2 text-xs font-semibold text-[var(--admin-green)] hover:underline">Retry</button>
-                      </div>
-                    ) : ([
+                    : ([
                       ['fundraisers', 'Fundraisers', counts.fundraisers],
                       ['reports', 'Reports', counts.reports],
-                      ['donations', 'Donations', counts.donations],
                       ['organizations', 'Organizations', counts.organizations],
                     ] as const).map(([id, label, count]) => (
                       <button key={id} type="button" onClick={() => go(id)} className="flex w-full items-center justify-between rounded px-2 py-2.5 text-sm hover:bg-[var(--admin-green)]/10">
@@ -285,7 +278,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme,
                   <div className="absolute right-0 top-full z-50 mt-2 w-52 rounded-md border border-[var(--admin-border)] bg-[var(--admin-card)] p-1.5 shadow-[var(--admin-shadow)]">
                     <p className="truncate px-3 py-2 text-sm font-semibold">{authUser?.name || me?.name || 'Admin'}</p>
                     <button type="button" onClick={() => { go('profile'); setProfileOpen(false); }} className="w-full rounded px-3 py-2 text-left text-sm hover:bg-[var(--admin-green)]/10">Admin profile</button>
-                    <button type="button" onClick={() => { setProfileOpen(false); onExit(); }} className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm hover:bg-[var(--admin-green)]/10"><ExternalLink className="h-4 w-4" /> {t('admin.nav.viewPublicSite', 'View public site')}</button>
+                    <button type="button" onClick={() => { setProfileOpen(false); onExit(); }} className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm hover:bg-[var(--admin-green)]/10"><ExternalLink className="h-4 w-4" /> {t('admin.nav.viewPublicSite')}</button>
                     <button type="button" onClick={() => { setProfileOpen(false); logout(); onExit(); }} className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm text-[var(--admin-red)] hover:bg-[var(--admin-red)]/10"><LogOut className="h-4 w-4" /> Log out</button>
                   </div>
                 )}
@@ -294,19 +287,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme,
           </header>
 
           <main className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-            {store.loading ? (
+            {store.loading && !snap ? (
               <div role="status" aria-label="Loading admin dashboard" className="space-y-6">
                 <div className="h-16 max-w-md animate-pulse rounded-md bg-[var(--admin-gold)]/10" />
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                   {Array.from({ length: 4 }, (_, index) => <div key={index} className="h-36 animate-pulse rounded-md border border-[var(--admin-border)] bg-[var(--admin-card)]" />)}
                 </div>
                 <div className="h-72 animate-pulse rounded-md border border-[var(--admin-border)] bg-[var(--admin-card)]" />
-              </div>
-            ) : store.error ? (
-              <div role="alert" className="max-w-xl rounded-md border border-[var(--admin-red)]/40 bg-[var(--admin-card)] p-6 shadow-[var(--admin-shadow)]">
-                <h1 className="font-serif text-2xl font-bold">Admin data is unavailable</h1>
-                <p className="mt-2 text-sm text-[var(--admin-muted)]">{store.error}</p>
-                <button type="button" onClick={() => void store.actions.refresh()} className="mt-4 rounded-md bg-[var(--admin-green)] px-4 py-2 text-sm font-semibold text-white">Retry</button>
               </div>
             ) : !snap ? (
               <div className="rounded-md border border-[var(--admin-border)] bg-[var(--admin-card)] p-6">
@@ -315,7 +302,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme,
                 <button type="button" onClick={() => void store.actions.refresh()} className="mt-4 rounded-md bg-[var(--admin-green)] px-4 py-2 text-sm font-semibold text-white">Refresh data</button>
               </div>
             ) : (
-              <AdminContext.Provider value={{ store, go, focusId, isDark, onExit }}>{page()}</AdminContext.Provider>
+              <AdminContext.Provider value={{ store, go, focusId, isDark, onExit }}>
+                {store.error && (
+                  <div role="alert" className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[var(--admin-red)]/40 bg-[var(--admin-card)] px-4 py-3 text-sm shadow-[var(--admin-shadow)]">
+                    <p><span className="font-semibold">{t('adminPortal.partialLoad')}</span> {store.error}</p>
+                    <button type="button" onClick={() => void store.actions.refresh()} className="rounded-md bg-[var(--admin-green)] px-3 py-1.5 text-xs font-semibold text-white">{t('adminPortal.retry')}</button>
+                  </div>
+                )}
+                {page()}
+              </AdminContext.Provider>
             )}
           </main>
         </div>

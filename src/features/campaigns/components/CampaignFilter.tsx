@@ -6,8 +6,7 @@ import { CAMPAIGN_CATEGORIES } from '../data/categories.data';
 import { CampaignCategory, CampaignFilterStatus } from '../types/campaign.types';
 
 export const CampaignFilter: React.FC = () => {
-  const { t, i18n } = useTranslation();
-  const currentLang = (i18n.language as 'am' | 'en' | 'om') || 'am';
+  const { t } = useTranslation();
 
   const {
     searchQuery,
@@ -47,7 +46,6 @@ export const CampaignFilter: React.FC = () => {
             {t('campaigns.sector')}:
           </span>
           {CAMPAIGN_CATEGORIES.map((cat) => {
-            const label = cat.labels[currentLang] || cat.label;
             const isSelected = selectedCategory === cat.id;
 
             return (
@@ -61,7 +59,7 @@ export const CampaignFilter: React.FC = () => {
                     : 'border-[#26211C]/25 bg-[#FAF6EC] dark:bg-[#201B16] text-[#201C18] dark:text-[#E8DEC8] hover:border-[#1E4D38]'
                 }`}
               >
-                {label}
+                {t(`categories.${cat.id}`)}
               </button>
             );
           })}
@@ -70,7 +68,7 @@ export const CampaignFilter: React.FC = () => {
         {/* Funding Status Tabs */}
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase mr-1">
-            {t('campaigns.status')}:
+            {t('campaigns.statusLabel')}:
           </span>
           {statusOptions.map((status) => {
             const isSelected = filterStatus === status.id;

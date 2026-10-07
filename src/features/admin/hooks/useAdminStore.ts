@@ -4,6 +4,17 @@ import { campaignApi } from '../../../services/api/campaignApi.ts';
 import { adminApi } from '../api/admin.api.ts';
 import { AdminSnapshot } from '../types/admin.types.ts';
 
+const EMPTY_ADMIN_SNAPSHOT: AdminSnapshot = {
+  users: [],
+  donations: [],
+  reports: [],
+  organizations: [],
+  activity: [],
+  admins: [],
+  currentAdminId: '',
+  unavailableSections: ['users', 'donations', 'reports', 'organizations', 'activity', 'admins', 'profile'],
+};
+
 export interface AdminStoreOptions {
   // Existing App handlers: approving / rejecting also refreshes the public feed.
   onApproveCampaign?: (id: string) => void | Promise<void>;
@@ -20,15 +31,46 @@ export function useAdminStore({ onApproveCampaign, onRejectCampaign }: AdminStor
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
-    try {
-      const [snap, all] = await Promise.all([adminApi.getSnapshot(), campaignApi.getAllCampaigns()]);
-      setSnapshot(snap);
-      setCampaigns(all);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not load admin data');
-    } finally {
-      setLoading(false);
+    const [snapshotResult, campaignResult] = await Promise.allSettled([
+      adminApi.getSnapshot(),
+      campaignApi.getAllCampaigns(),
+    ]);
+    const errors: string[] = [];
+
+    if (snapshotResult.status === 'fulfilled') {
+      setSnapshot(snapshotResult.value);
+    } else {
+      errors.push(snapshotResult.reason instanceof Error ? snapshotResult.reason.message : 'Could not load admin records');
+      setSnapshot((current) => {
+        const snapshot = current ?? EMPTY_ADMIN_SNAPSHOT;
+        return {
+          ...snapshot,
+          unavailableSections: Array.from(new Set([...(snapshot.unavailableSections ?? []), 'organizations'])),
+        };
+      });
     }
+
+    if (campaignResult.status === 'fulfilled') {
+      setCampaigns(campaignResult.value);
+      setSnapshot((current) => {
+        const snapshot = current ?? EMPTY_ADMIN_SNAPSHOT;
+        return {
+          ...snapshot,
+          unavailableSections: (snapshot.unavailableSections ?? []).filter((section) => section !== 'fundraisers'),
+        };
+      });
+    } else {
+      errors.push(campaignResult.reason instanceof Error ? campaignResult.reason.message : 'Could not load fundraisers');
+      setSnapshot((current) => {
+        const snapshot = current ?? EMPTY_ADMIN_SNAPSHOT;
+        return {
+          ...snapshot,
+          unavailableSections: Array.from(new Set([...(snapshot.unavailableSections ?? []), 'fundraisers'])),
+        };
+      });
+    }
+    setError(errors.length ? errors.join(' ') : null);
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -64,9 +106,6 @@ export function useAdminStore({ onApproveCampaign, onRejectCampaign }: AdminStor
           if (onRejectCampaign) await onRejectCampaign(c.id);
           else await adminApi.moderateCampaign(c.id, 'reject', reason);
         }),
-      // Donations
-      confirmDonation: (id: string) => run(() => adminApi.decideDonation(id, 'confirmed')),
-      rejectDonation: (id: string, note: string) => run(() => adminApi.decideDonation(id, 'rejected', note)),
       // Reports
       updateReport: (id: string, status: 'reviewed' | 'resolved' | 'dismissed', note?: string) =>
         run(() => adminApi.updateReport(id, status, note)),

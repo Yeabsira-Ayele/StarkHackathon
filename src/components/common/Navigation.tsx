@@ -17,6 +17,7 @@ import {
   Play,
 } from 'lucide-react';
 import { Button } from '../ui/Button.tsx';
+import { APP_NAME } from '../../data/content.ts';
 
 export interface NavigationProps {
   currentView: string;
@@ -130,7 +131,7 @@ export const Navigation: React.FC<NavigationProps> = ({
               </div>
               <div className="text-left">
                 <span className="text-xl font-display font-bold tracking-tight text-primary leading-none block">
-                  LEWEGENE
+                  {APP_NAME.toUpperCase()}
                 </span>
                 <span className="text-[10px] text-accent font-ethiopic font-semibold tracking-wider">
                   ለወገን ደራሽ

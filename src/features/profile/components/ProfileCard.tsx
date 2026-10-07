@@ -68,7 +68,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({ profile, onEdit }) => 
             ጠቅላላ የተበረከተ
           </p>
           <p className="text-base font-serif font-bold text-[#1E4D38] dark:text-[#52B788] mt-0.5">
-            {profile.totalDonated?.toLocaleString() ?? '—'} {t('common.currency', 'ብር')}
+            {profile.totalDonated?.toLocaleString() ?? '—'} {t('common.currency')}
           </p>
         </div>
         <div className="p-3 rounded-2xl bg-[#EFE7D5]/60 dark:bg-[#1C1814] text-center">

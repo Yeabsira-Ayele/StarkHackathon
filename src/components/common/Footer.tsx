@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ShieldCheck, Award } from 'lucide-react';
+import { APP_NAME } from '../../data/content.ts';
 
 interface FooterProps {
   onNavigateToCampaigns?: () => void;
@@ -30,28 +31,28 @@ export const Footer: React.FC<FooterProps> = ({
               </div>
               <div>
                 <span className="font-display font-bold text-primary tracking-tight text-base block">
-                  {t('common.appName', 'LEWEGENE')} · ለወገን
+                  <span className="notranslate">{APP_NAME.toUpperCase()}</span> · ለወገን
                 </span>
                 <span className="text-[10px] text-accent font-ethiopic font-semibold">
-                  {t('footer.brandTagline', 'Ethiopian community support platform')}
+                  {t('footer.brandTagline')}
                 </span>
               </div>
             </div>
 
             <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-md leading-relaxed font-sans">
-              {t('footer.description', 'Ethiopian heritage × old-money digital philanthropy. Connecting compassionate local donors and global diaspora with verified foundations through audited Birr settlements.')}
+              {t('footer.description')}
             </p>
 
             <div className="flex items-center gap-2 text-xs text-primary font-medium pt-1 font-mono">
               <ShieldCheck className="w-4 h-4 text-accent" />
-              <span>{t('footer.certified', 'ACSO Certified · Direct Telebirr & CBE Birr Escrow Rails')}</span>
+              <span>{t('footer.certified')}</span>
             </div>
           </div>
 
           {/* Donor Links */}
           <div>
             <h5 className="text-xs font-semibold text-primary uppercase tracking-wider mb-3 font-display">
-              {t('footer.supporterPortal', 'Supporter Portal')}
+              {t('footer.supporterPortal')}
             </h5>
             <ul className="space-y-2 text-xs text-zinc-500 dark:text-zinc-400">
               <li>
@@ -59,7 +60,7 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={onNavigateToCampaigns}
                   className="hover:text-primary transition-colors cursor-pointer"
                 >
-                  {t('footer.exploreCauses', 'Explore Causes')}
+                  {t('footer.exploreCauses')}
                 </button>
               </li>
               <li>
@@ -67,14 +68,14 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={onNavigateToDonorDashboard}
                   className="hover:text-primary transition-colors cursor-pointer"
                 >
-                  {t('footer.myImpact', 'My Impact & Certificates')}
+                  {t('footer.myImpact')}
                 </button>
               </li>
               <li>
-                <span className="text-zinc-400">{t('footer.archivalReceipts', 'Archival Contribution Receipts')}</span>
+                <span className="text-zinc-400">{t('footer.archivalReceipts')}</span>
               </li>
               <li>
-                <span className="text-zinc-400">{t('footer.zeroFee', 'Zero-Fee Giving Guarantee')}</span>
+                <span className="text-zinc-400">{t('footer.zeroFee')}</span>
               </li>
             </ul>
           </div>
@@ -82,7 +83,7 @@ export const Footer: React.FC<FooterProps> = ({
           {/* Foundation Links */}
           <div>
             <h5 className="text-xs font-semibold text-primary uppercase tracking-wider mb-3 font-display">
-              {t('footer.foundationsNgos', 'Foundations & NGOs')}
+              {t('footer.foundationsNgos')}
             </h5>
             <ul className="space-y-2 text-xs text-zinc-500 dark:text-zinc-400">
               <li>
@@ -90,7 +91,7 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={onNavigateToFoundation}
                   className="hover:text-primary transition-colors cursor-pointer"
                 >
-                  {t('footer.foundationConsole', 'Foundation Console')}
+                  {t('footer.foundationConsole')}
                 </button>
               </li>
               <li>
@@ -98,14 +99,14 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={onNavigateToCreate}
                   className="hover:text-primary transition-colors cursor-pointer"
                 >
-                  {t('footer.publishCause', 'Publish New Cause')}
+                  {t('footer.publishCause')}
                 </button>
               </li>
               <li>
-                <span className="text-zinc-400">{t('footer.acsoVerification', 'ACSO Institutional Verification')}</span>
+                <span className="text-zinc-400">{t('footer.acsoVerification')}</span>
               </li>
               <li>
-                <span className="text-zinc-400">{t('footer.auditedReporting', 'Audited Milestone Reporting')}</span>
+                <span className="text-zinc-400">{t('footer.auditedReporting')}</span>
               </li>
             </ul>
           </div>
@@ -113,11 +114,11 @@ export const Footer: React.FC<FooterProps> = ({
 
         <div className="mt-8 pt-6 border-t border-[#D8CEBA]/60 dark:border-[#313C36] flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-zinc-400">
           <div>
-            &copy; {new Date().getFullYear()} {t('footer.rights', 'Lewegene Philanthropy. All rights reserved.')}
+            &copy; {new Date().getFullYear()} {t('footer.rights', { appName: APP_NAME })}
           </div>
           <div className="flex items-center gap-1.5 font-mono text-[11px]">
             <Award className="w-3.5 h-3.5 text-accent" />
-            <span>{t('footer.tagline', 'Preserving Heritage · Inspiring Compassion')}</span>
+            <span>{t('footer.tagline')}</span>
           </div>
         </div>
       </div>

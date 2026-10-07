@@ -10,7 +10,7 @@ export interface VoxideBarProps {
   campaigns: Campaign[];
   onExtractedCreation: (data: NonNullable<VoxideExtraction['campaignData']>) => void;
   onExtractedDonation: (data: NonNullable<VoxideExtraction['donationData']>) => void;
-  language?: 'en' | 'am' | 'om';
+  language?: 'en' | 'am';
 }
 
 export const VoxideBar: React.FC<VoxideBarProps> = ({

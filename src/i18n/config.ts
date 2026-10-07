@@ -12,8 +12,14 @@ export const LANGUAGE_STORAGE_KEY = 'lewegene_language';
 /** Event fired on window whenever the active language changes. */
 export const LANGUAGE_CHANGED_EVENT = 'lewegene:language-changed';
 
+type TranslationShape<T> = {
+  [K in keyof T]: T[K] extends string ? string : TranslationShape<T[K]>;
+};
+
+const amTranslation: TranslationShape<typeof en> = am;
+
 const resources = {
-  am: { translation: am },
+  am: { translation: amTranslation },
   en: { translation: en },
 };
 
@@ -32,8 +38,11 @@ i18n
   .init({
     resources,
     lng: readSavedLanguage(),
-    fallbackLng: 'am', // Rule 7: Amharic is the default
+    fallbackLng: false,
     supportedLngs: ['am', 'en'],
+    load: 'languageOnly',
+    cleanCode: true,
+    nonExplicitSupportedLngs: false,
     interpolation: {
       escapeValue: false, // React already escapes values
     },

@@ -26,7 +26,7 @@ export const GoalCalculator: React.FC<GoalCalculatorProps> = ({
           የበጀትና የተጠቃሚ ስሌት (Budget Impact Calc)
         </span>
         <span className="text-[#9A7432] font-mono">
-          ~{perBeneficiary.toLocaleString()} {t('common.currency', 'ብር')}/ሰው
+          ~{perBeneficiary.toLocaleString()} {t('common.currency')}/ሰው
         </span>
       </div>
 

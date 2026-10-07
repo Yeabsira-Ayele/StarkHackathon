@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { Building2, Plus, Users, Wallet, ShieldCheck } from 'lucide-react';
 import { useCampaigns } from '../../campaigns/hooks/useCampaigns';
 import { Campaign } from '../../campaigns/types/campaign.types';
-import { Loading } from '../../../components/Loading';
 import { ErrorState } from '../../../components/ErrorState';
 import { EmptyState } from '../../../components/EmptyState';
 
@@ -19,13 +18,9 @@ export const FoundationDashboardPage: React.FC<FoundationDashboardPageProps> = (
   const { t } = useTranslation();
   const { campaigns, isLoading, isFetching, isError, error, refetch } = useCampaigns();
 
-  if (isLoading || isFetching) return <Loading variant="full" message={t('common.loading', 'Loading foundation dashboard…')} />;
-  if (isError) {
-    return <ErrorState message={error instanceof Error ? error.message : undefined} onRetry={() => void refetch()} />;
-  }
-
   const totalRaisedAll = campaigns.reduce((acc, c) => acc + c.raisedAmount, 0);
   const totalDonorsAll = campaigns.reduce((acc, c) => acc + (c.donationsCount || 0), 0);
+  const hasCampaignData = !isLoading && !isFetching && !isError;
 
   return (
     <div className="w-full space-y-8 animate-in fade-in duration-300">
@@ -43,6 +38,18 @@ export const FoundationDashboardPage: React.FC<FoundationDashboardPageProps> = (
           </p>
         </div>
 
+        {(isLoading || isFetching) && (
+          <p role="status" className="font-mono text-xs text-zinc-500">
+            {t('common.loading')}
+          </p>
+        )}
+        {isError && (
+          <ErrorState
+            message={error instanceof Error ? error.message : undefined}
+            onRetry={() => void refetch()}
+          />
+        )}
+
         <button
           type="button"
           onClick={onCreateProject}
@@ -57,19 +64,19 @@ export const FoundationDashboardPage: React.FC<FoundationDashboardPageProps> = (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-center">
         <div className="p-6 border-2 border-[#26211C]/20 dark:border-[#9A7432]/35 bg-[#FFFDF9] dark:bg-[#12100E] space-y-1 rounded-[1px]">
           <span className="text-3xl font-black text-[#1E4D38] dark:text-[#52B788]">
-            {totalRaisedAll.toLocaleString()} {t('common.currency')}
+            {hasCampaignData ? `${totalRaisedAll.toLocaleString()} ${t('common.currency')}` : '—'}
           </span>
           <span className="block text-[10px] text-zinc-500 uppercase font-bold">TOTAL DISBURSED ESCROW</span>
         </div>
         <div className="p-6 border-2 border-[#26211C]/20 dark:border-[#9A7432]/35 bg-[#FFFDF9] dark:bg-[#12100E] space-y-1 rounded-[1px]">
           <span className="text-3xl font-black text-[#14110E] dark:text-[#FFFFFF]">
-            {campaigns.length}
+            {hasCampaignData ? campaigns.length : '—'}
           </span>
           <span className="block text-[10px] text-zinc-500 uppercase font-bold">ACTIVE CAUSE PLATES</span>
         </div>
         <div className="p-6 border-2 border-[#26211C]/20 dark:border-[#9A7432]/35 bg-[#FFFDF9] dark:bg-[#12100E] space-y-1 rounded-[1px]">
           <span className="text-3xl font-black text-[#1E4D38] dark:text-[#52B788]">
-            {totalDonorsAll}
+            {hasCampaignData ? totalDonorsAll : '—'}
           </span>
           <span className="block text-[10px] text-zinc-500 uppercase font-bold">{t('common.patrons')}</span>
         </div>
@@ -83,8 +90,8 @@ export const FoundationDashboardPage: React.FC<FoundationDashboardPageProps> = (
 
         {campaigns.length === 0 ? (
           <EmptyState
-            title={t('common.empty', 'No campaigns yet')}
-            description={t('campaigns.emptyDescription', 'Campaigns will appear here once they are available.')}
+            title={t('common.empty')}
+            description={t('campaigns.emptyDescription')}
           />
         ) : (
           <div className="space-y-4">

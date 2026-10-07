@@ -10,7 +10,7 @@ export interface LinksPaymentVerificationRequest {
 
 export interface LinksPaymentVerificationResponse {
   verified: boolean;
-  status: 'completed' | 'failed' | 'pending';
+  status: 'completed' | 'failed';
   transactionId: string;
   railReference: string;
   settledAmount: number;
@@ -28,7 +28,7 @@ export interface LinksReceiptVerificationRequest {
 
 export interface LinksReceiptVerificationResponse {
   verified: boolean;
-  status: 'completed' | 'failed' | 'pending';
+  status: 'completed' | 'failed';
   amount: number;
   sender: string;
   receiver: string;

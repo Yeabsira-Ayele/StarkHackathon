@@ -138,7 +138,7 @@ export const AdminErrorState: React.FC<{
       <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">{text}</p>
       {onRetry && (
         <AdminButton className="mt-4" tone="red" onClick={onRetry}>
-          {t('adminUi.retry', 'Retry')}
+          {t('common.retry')}
         </AdminButton>
       )}
     </div>
@@ -149,7 +149,7 @@ export const AdminLoadingState: React.FC<{ label?: string }> = ({ label }) => {
   const { t } = useTranslation();
   return (
     <div role="status" className="rounded-md border border-[#26211C]/20 dark:border-[#9A7432]/30 bg-[#FCF9F2] dark:bg-[#1E1A17] p-6 text-sm text-zinc-600 dark:text-zinc-300">
-      {label || t('adminUi.loadingData', 'Loading admin data…')}
+      {label || t('common.loading')}
     </div>
   );
 };
@@ -160,6 +160,7 @@ const BADGE: Record<string, string> = {
   reviewed: 'bg-sky-100 text-sky-800 border-sky-300 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800',
   approved: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800',
   confirmed: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800',
+  successful: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800',
   resolved: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800',
   active: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800',
   completed: 'bg-[#9A7432]/15 text-[#7F5F26] border-[#9A7432]/50 dark:text-[#D8B066]',

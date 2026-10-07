@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ShieldCheck, Mic, Sun, Moon, Globe, Heart } from 'lucide-react';
 import { ACTIVE_UI_LANGUAGES, changeLanguage, type AppLanguage } from '../i18n/index.ts';
+import { APP_NAME } from '../data/content.ts';
 
 interface NavbarProps {
   currentView?: string;
@@ -9,8 +10,8 @@ interface NavbarProps {
   onOpenVoice?: () => void;
   isDark?: boolean;
   onToggleTheme?: () => void;
-  language?: 'am' | 'en' | 'om';
-  onLanguageChange?: (lng: 'am' | 'en' | 'om') => void;
+  language?: AppLanguage;
+  onLanguageChange?: (lng: AppLanguage) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -19,7 +20,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenVoice,
   isDark = false,
   onToggleTheme,
-  language = 'am',
   onLanguageChange,
 }) => {
   const { t, i18n } = useTranslation();
@@ -42,14 +42,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div>
             <div className="flex items-center gap-1.5">
               <span className="font-serif font-bold text-lg tracking-tight text-[#14110E] dark:text-[#F4EFE6]">
-                {t('common.appName', 'ለወገን')}
+                <span className="notranslate">{APP_NAME}</span>
               </span>
               <span className="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-[#9A7432]/15 text-[#9A7432] dark:bg-[#C9A24D]/15 dark:text-[#C9A24D]">
                 ET
               </span>
             </div>
             <p className="text-[10px] text-[#73685B] dark:text-[#A89E90] -mt-0.5 line-clamp-1">
-              {t('common.appTagline', 'የኢትዮጵያ የሕዝብ ትብብርና ድጋፍ ሰነድ')}
+              {t('common.appTagline')}
             </p>
           </div>
         </div>
@@ -63,7 +63,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 : 'text-[#5A5046] dark:text-[#B8AEA0] hover:text-[#14110E] dark:hover:text-white'
             }`}
           >
-            {t('nav.overview', 'ዋና ገጽ')}
+            {t('nav.overview')}
           </button>
           <button
             onClick={() => onNavigate?.('explore')}
@@ -73,7 +73,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 : 'text-[#5A5046] dark:text-[#B8AEA0] hover:text-[#14110E] dark:hover:text-white'
             }`}
           >
-            {t('nav.explore', 'ምክንያቶች')}
+            {t('nav.explore')}
           </button>
           <button
             onClick={() => onNavigate?.('create')}
@@ -83,7 +83,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 : 'text-[#5A5046] dark:text-[#B8AEA0] hover:text-[#14110E] dark:hover:text-white'
             }`}
           >
-            {t('common.create', 'አዲስ ምክንያት ይጀምሩ')}
+            {t('common.create')}
           </button>
         </nav>
 
@@ -123,7 +123,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={onToggleTheme}
               className="p-2 rounded-xl bg-[#EBE3D3]/70 dark:bg-[#1E1A16] text-[#5A5046] dark:text-[#B8AEA0] hover:text-[#14110E] dark:hover:text-white border border-[#D5C8B2]/50 dark:border-[#2E2822] transition-colors cursor-pointer"
-              title={isDark ? t('nav.lightMode', 'Light mode') : t('nav.darkMode', 'Dark mode')}
+              title={isDark ? t('nav.lightMode') : t('nav.darkMode')}
             >
               {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
             </button>

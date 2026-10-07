@@ -25,35 +25,26 @@ approved campaigns.
 The endpoint returns an empty `accounts` array when no valid receiving account
 was saved. Public campaign list/detail payloads do not include payout details.
 
-## Create a pending donation
+## Submit and verify a donation
 
-`POST /api/donations/drafts`
+`POST /api/donations/:campaignId`
 
 ```json
 {
-  "campaignId": "campaign id",
   "amount": 500,
+  "receiptUrl": "actual receipt URL issued by the payment provider",
   "donorName": "Donor name",
+  "donorEmail": "optional email",
   "anonymous": false,
   "bankId": "bankId from the campaign account response",
   "message": "Optional message"
 }
 ```
 
-The backend requires a valid account saved for this campaign and returns a
-pending donation draft.
-
-## Verify a completed transfer
-
-`POST /api/donations/records/:donationId/verify`
-
-```json
-{
-  "receiptUrl": "actual receipt URL issued by the payment provider"
-}
-```
-
-The server validates the receipt host, checks the amount and campaign account
-holder, prevents duplicate receipt use, and only then records the contribution
-and issues a certificate. Verification errors are returned to the client; the
-frontend must keep the donation pending until verification succeeds.
+The backend validates the campaign account and receipt URL, asks Links.et to
+verify the receipt, and checks the verified recipient and amount before saving.
+A successful transfer creates a completed donation and certificate. A
+definitive receipt rejection or amount mismatch creates a final failed
+donation; invalid input or an unavailable Links.et service creates no record.
+Admin approval is not part of the payment flow. There are no donation draft or
+separate receipt-verification endpoints.

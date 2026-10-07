@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Check, Copy, Heart } from 'lucide-react';
 import type { ContributionCertificate } from '../../types/index.ts';
-import { useCampaignPayoutAccounts, useCreateDonation, useSubmitReceiptVerification } from '../../features/donations/hooks/useDonations';
+import { useCampaignPayoutAccounts, useCreateDonation } from '../../features/donations/hooks/useDonations';
 import { isValidReceiptUrl } from '../../services/payment/linksetService.ts';
 
 export interface DonateFormProps {
@@ -25,19 +25,17 @@ export const DonateForm: React.FC<DonateFormProps> = ({
     refetch: retryAccounts,
   } = useCampaignPayoutAccounts(campaignId);
   const createDonation = useCreateDonation();
-  const verifyReceipt = useSubmitReceiptVerification();
   const [selectedBankId, setSelectedBankId] = useState('');
   const [amount, setAmount] = useState('500');
   const [donorName, setDonorName] = useState('');
   const [anonymous, setAnonymous] = useState(false);
   const [message, setMessage] = useState('');
   const [receiptUrl, setReceiptUrl] = useState('');
-  const [pendingDonationId, setPendingDonationId] = useState<string | null>(null);
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
   const [formError, setFormError] = useState<string | null>(null);
 
   const account = accounts.find((item) => item.bankId === selectedBankId);
-  const submitting = createDonation.isPending || verifyReceipt.isPending;
+  const submitting = createDonation.isPending;
 
   const handleCopy = async () => {
     if (!account) return;
@@ -68,21 +66,25 @@ export const DonateForm: React.FC<DonateFormProps> = ({
 
     setFormError(null);
     try {
-      const donationId = pendingDonationId || (await createDonation.mutateAsync({
-          campaignId,
-          amount: numericAmount,
-          donorName: anonymous ? 'Anonymous' : donorName.trim() || 'Anonymous',
-          anonymous,
-          bankId: account.bankId,
-          message: message.trim() || undefined,
-        })).id;
-      setPendingDonationId(donationId);
-      const donation = await verifyReceipt.mutateAsync({
-        donationId,
-        payload: { donationId, receiptUrl: receiptUrl.trim() },
+      const donation = await createDonation.mutateAsync({
+        campaignId,
+        amount: numericAmount,
+        receiptUrl: receiptUrl.trim(),
+        donorName: anonymous ? 'Anonymous' : donorName.trim() || 'Anonymous',
+        anonymous,
+        bankId: account.bankId,
+        message: message.trim() || undefined,
       });
+      if (donation.status !== 'successful' || !donation.certificateId) {
+        setFormError(
+          donation.verification?.failureReason
+            || donation.verifiedPayment?.failureReason
+            || 'Links.et did not return a successful verification result.',
+        );
+        return;
+      }
       onDonationSuccess({
-        certificateId: donation.certificateId || '',
+        certificateId: donation.certificateId,
         donationId: donation.id,
         campaignId,
         campaignTitle,
@@ -97,7 +99,6 @@ export const DonateForm: React.FC<DonateFormProps> = ({
       });
       setReceiptUrl('');
       setMessage('');
-      setPendingDonationId(null);
     } catch (error) {
       setFormError(error instanceof Error ? error.message : 'Could not submit the donation. Please try again.');
     }
@@ -129,7 +130,6 @@ export const DonateForm: React.FC<DonateFormProps> = ({
             <span className="font-semibold text-primary">Campaign receiving account</span>
             <select
               required
-              disabled={Boolean(pendingDonationId)}
               value={selectedBankId}
               onChange={(event) => setSelectedBankId(event.target.value)}
               className="w-full rounded-lg border border-border bg-surface p-3 text-primary"
@@ -153,19 +153,19 @@ export const DonateForm: React.FC<DonateFormProps> = ({
           )}
           <label className="block space-y-1">
             <span className="font-semibold text-primary">Contribution amount (ETB)</span>
-            <input required disabled={Boolean(pendingDonationId)} type="number" min="50" step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} className="w-full rounded-lg border border-border bg-surface p-3 text-primary disabled:opacity-50" />
+            <input required type="number" min="50" step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} className="w-full rounded-lg border border-border bg-surface p-3 text-primary" />
           </label>
           <label className="block space-y-1">
             <span className="font-semibold text-primary">Donor name</span>
-            <input value={donorName} disabled={anonymous || Boolean(pendingDonationId)} onChange={(event) => setDonorName(event.target.value)} className="w-full rounded-lg border border-border bg-surface p-3 text-primary disabled:opacity-50" />
+            <input value={donorName} disabled={anonymous} onChange={(event) => setDonorName(event.target.value)} className="w-full rounded-lg border border-border bg-surface p-3 text-primary disabled:opacity-50" />
           </label>
           <label className="flex items-center gap-2">
-            <input type="checkbox" disabled={Boolean(pendingDonationId)} checked={anonymous} onChange={(event) => setAnonymous(event.target.checked)} />
+            <input type="checkbox" checked={anonymous} onChange={(event) => setAnonymous(event.target.checked)} />
             Donate anonymously
           </label>
           <label className="block space-y-1">
             <span className="font-semibold text-primary">Message (optional)</span>
-            <input disabled={Boolean(pendingDonationId)} maxLength={500} value={message} onChange={(event) => setMessage(event.target.value)} className="w-full rounded-lg border border-border bg-surface p-3 text-primary disabled:opacity-50" />
+            <input maxLength={500} value={message} onChange={(event) => setMessage(event.target.value)} className="w-full rounded-lg border border-border bg-surface p-3 text-primary" />
           </label>
           <label className="block space-y-1">
             <span className="font-semibold text-primary">Actual payment receipt URL</span>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { APP_NAME } from '../data/content.ts';
 import { Campaign, CampaignCategory } from '../types/index.ts';
 import { Input } from '../components/ui/Input.tsx';
 import { Select } from '../components/ui/Select.tsx';
@@ -129,7 +130,7 @@ export const CreateCampaign: React.FC<CreateCampaignProps> = ({
           <span>Curated Philanthropic Publishing</span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-display font-bold text-primary">
-          Publish a Community Cause on Lewegene
+          Publish a Community Cause on {APP_NAME}
         </h1>
         <p className="text-xs sm:text-sm text-zinc-500">
           Craft your cause, transparent budget, and target impact before publishing to the public feed

@@ -5,6 +5,7 @@ import { ArrowLeft, ExternalLink, Flag, FlaskConical, Moon, Sun } from 'lucide-r
 import { LanguageSwitcher } from '../../components/common/LanguageSwitcher.tsx';
 import type { AdminReport } from '../admin/types/admin.types.ts';
 import { useAuthStore } from '../auth/store/auth.store.ts';
+import { APP_NAME } from '../../data/content.ts';
 
 const MyReportsPage = () => {
   const { t } = useTranslation();
@@ -39,25 +40,25 @@ const MyReportsPage = () => {
               className="inline-flex items-center gap-1.5 border border-[#26211C]/35 bg-[#FFFDF9] px-3 py-1.5 font-black text-[#1E4D38] transition-colors hover:border-[#1E4D38] dark:border-[#9A7432]/45 dark:bg-[#1C1814] dark:text-[#52B788]"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
-              <span>{t('nav.home', 'Home')}</span>
+              <span>{t('nav.home')}</span>
             </Link>
             <Link
               to="/fundraising"
               className="px-2.5 py-1.5 text-[#201C18] transition-colors hover:text-[#1E4D38] dark:text-[#E8DEC8] dark:hover:text-[#52B788]"
             >
-              {t('nav.myFundraisers', 'My Fundraisers')}
+              {t('nav.myFundraisers')}
             </Link>
             <Link
               to="/contributions"
               className="px-2.5 py-1.5 text-[#201C18] transition-colors hover:text-[#1E4D38] dark:text-[#E8DEC8] dark:hover:text-[#52B788]"
             >
-              {t('nav.myContributions', 'My Contributions')}
+              {t('nav.myContributions')}
             </Link>
             <Link
               to="/profile"
               className="px-2.5 py-1.5 text-[#201C18] transition-colors hover:text-[#1E4D38] dark:text-[#E8DEC8] dark:hover:text-[#52B788]"
             >
-              {t('nav.myProfile', 'My Profile')}
+              {t('nav.myProfile')}
             </Link>
           </div>
           <div className="flex items-center gap-2">
@@ -65,8 +66,8 @@ const MyReportsPage = () => {
             <button
               type="button"
               onClick={() => setIsDark((prev) => !prev)}
-              aria-label={t('nav.toggleTheme', 'Toggle Parchment / Midnight Ink')}
-              title={t('nav.toggleTheme', 'Toggle Parchment / Midnight Ink')}
+              aria-label={t('nav.toggleTheme')}
+              title={t('nav.toggleTheme')}
               className="p-2 border border-[#9A7432]/50 bg-[#F2ECE1] hover:bg-[#9A7432]/15 text-[#201C18] dark:bg-[#1C1814] dark:text-[#D8B066] transition-colors cursor-pointer"
             >
               {isDark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
@@ -75,7 +76,7 @@ const MyReportsPage = () => {
         </div>
         <header className="mt-6 flex flex-wrap items-end justify-between gap-4 border-b border-[#9A7432]/30 pb-5">
           <div>
-            <p className="font-mono text-[10px] font-black uppercase tracking-[.2em] text-[#9A7432]">Your Lewegene space</p>
+            <p className="font-mono text-[10px] font-black uppercase tracking-[.2em] text-[#9A7432]">{t('profile.space', { appName: APP_NAME })}</p>
             <h1 className="mt-2 font-serif text-3xl font-black sm:text-4xl">My Reports</h1>
           </div>
           <span className="inline-flex items-center gap-2 border border-[#9A7432]/40 px-3 py-2 font-mono text-[10px] font-bold uppercase">

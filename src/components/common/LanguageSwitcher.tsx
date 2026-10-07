@@ -29,7 +29,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
     return (
       <div
         role="group"
-        aria-label={t('nav.language', 'Language')}
+        aria-label={t('nav.language')}
         className={`flex items-center gap-0.5 rounded-md border border-[var(--admin-border)] p-0.5 ${className}`}
       >
         {ACTIVE_UI_LANGUAGES.map((option) => {
@@ -58,7 +58,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
   return (
     <div
       role="group"
-      aria-label={t('nav.language', 'Language')}
+      aria-label={t('nav.language')}
       className={`flex items-center border border-[#9A7432]/40 rounded-[1px] overflow-hidden text-[10px] font-mono font-bold ${className}`}
     >
       {ACTIVE_UI_LANGUAGES.map((option) => {

@@ -117,10 +117,6 @@ export const adminApi = {
     return unavailable('Admin activity logging');
   },
 
-  async decideDonation(_id: string, _decision: 'confirmed' | 'rejected', _note?: string): Promise<AdminSnapshot> {
-    return unavailable('Donation moderation');
-  },
-
   async updateReport(_id: string, _status: AdminReport['status'], _note?: string): Promise<AdminSnapshot> {
     return unavailable('Report moderation');
   },

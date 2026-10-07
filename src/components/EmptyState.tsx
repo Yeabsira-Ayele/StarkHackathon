@@ -29,7 +29,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         {icon || <Inbox className="w-6 h-6 stroke-[1.75]" />}
       </div>
       <h3 className="text-base font-semibold text-[#26211C] dark:text-[#F4EFE6] tracking-tight">
-        {title || t('common.empty', 'ምንም መረጃ አልተገኘም')}
+        {title || t('common.empty')}
       </h3>
       {description && (
         <p className="text-xs text-[#73685B] dark:text-[#A89E90] mt-1.5 max-w-sm mx-auto leading-relaxed">

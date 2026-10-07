@@ -62,6 +62,8 @@ interface BackendCampaign {
   updates?: CampaignUpdate[];
 }
 
+type BackendCampaignCollection = BackendCampaign[] | { campaigns: BackendCampaign[] };
+
 function normalizeCampaign(campaign: BackendCampaign): Campaign {
   return {
     ...campaign,
@@ -77,6 +79,10 @@ function normalizeCampaign(campaign: BackendCampaign): Campaign {
       createdAt: new Date(update.createdAt).toISOString(),
     })),
   };
+}
+
+function normalizeCampaignCollection(data: BackendCampaignCollection): Campaign[] {
+  return (Array.isArray(data) ? data : data.campaigns).map(normalizeCampaign);
 }
 
 interface BackendOrganization {
@@ -149,8 +155,8 @@ export const backendCampaignApi = {
   },
 
   async getAllCampaigns(): Promise<Campaign[]> {
-    const response = await api.get<BackendCampaign[]>('/admin/campaigns', { params: { status: 'all' } });
-    return response.data.map(normalizeCampaign);
+    const response = await api.get<BackendCampaignCollection>('/admin/campaigns', { params: { status: 'all' } });
+    return normalizeCampaignCollection(response.data);
   },
 
   async getCampaignById(id: string): Promise<Campaign> {
@@ -209,8 +215,8 @@ export const backendCampaignApi = {
   },
 
   async getAdminCampaigns(): Promise<Campaign[]> {
-    const response = await api.get<BackendCampaign[]>('/admin/campaigns', { params: { status: 'pending' } });
-    return response.data.map(normalizeCampaign);
+    const response = await api.get<BackendCampaignCollection>('/admin/campaigns', { params: { status: 'pending' } });
+    return normalizeCampaignCollection(response.data);
   },
 
   async updateCampaignStatus(id: string, status: CampaignStatus): Promise<Campaign> {

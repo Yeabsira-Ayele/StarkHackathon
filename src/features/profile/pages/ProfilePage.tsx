@@ -4,7 +4,6 @@ import { useProfile } from '../hooks/useProfile';
 import { ProfileCard } from '../components/ProfileCard';
 import { BadgesList } from '../components/BadgesList';
 import { ActivityTimeline } from '../components/ActivityTimeline';
-import { Loading } from '../../../components/Loading';
 import { ErrorState } from '../../../components/ErrorState';
 import { EmptyState } from '../../../components/EmptyState';
 
@@ -21,28 +20,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 }) => {
   const { t } = useTranslation();
   const { profile, isLoading, error, refetch } = useProfile();
-
-  if (isLoading) {
-    return <Loading variant="full" message="የለጋሽ መረጃ በመጫን ላይ..." />;
-  }
-
-  if (error) {
-    return (
-      <ErrorState
-        message={error instanceof Error ? error.message : 'የለጋሽ መረጃን መጫን አልተቻለም'}
-        onRetry={() => void refetch()}
-      />
-    );
-  }
-
-  if (!profile) {
-    return (
-      <EmptyState
-        title="የተጠቃሚ መረጃ አልተገኘም"
-        description="እባክዎ መጀመሪያ ወደ መለያዎ ይግቡ"
-      />
-    );
-  }
+  const recentActivities = profile?.recentActivities;
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-8 space-y-6">
@@ -57,23 +35,42 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
         </div>
       </div>
 
-      <ProfileCard profile={profile} onEdit={onNavigateSettings} />
+      {isLoading && (
+        <p role="status" className="text-xs text-zinc-500">የለጋሽ መረጃ በመጫን ላይ...</p>
+      )}
+      {error && (
+        <ErrorState
+          message={error instanceof Error ? error.message : 'የለጋሽ መረጃን መጫን አልተቻለም'}
+          onRetry={() => void refetch()}
+        />
+      )}
+      {!isLoading && !error && !profile && (
+        <EmptyState
+          title="የተጠቃሚ መረጃ አልተገኘም"
+          description="እባክዎ መጀመሪያ ወደ መለያዎ ይግቡ"
+        />
+      )}
 
-      <BadgesList badges={profile.badges} />
+      {profile && (
+        <>
+          <ProfileCard profile={profile} onEdit={onNavigateSettings} />
+          <BadgesList badges={profile.badges} />
+        </>
+      )}
 
-      {profile.recentActivities === undefined ? (
+      {profile && recentActivities === undefined ? (
         <p className="p-4 text-xs text-zinc-500">Activity history is unavailable.</p>
-      ) : profile.recentActivities.length > 0 ? (
+      ) : recentActivities && recentActivities.length > 0 ? (
         <ActivityTimeline
-          activities={profile.recentActivities}
+          activities={recentActivities}
           onViewCertificate={onViewCertificate}
         />
-      ) : (
+      ) : profile ? (
         <EmptyState
           title="ምንም የቅርብ ጊዜ ልገሳ አልተመዘገበም"
           description="ምክንያቶችን በመደገፍ የመጀመሪያዎን ዲጂታል ሰነድ ያግኙ"
         />
-      )}
+      ) : null}
     </div>
   );
 };

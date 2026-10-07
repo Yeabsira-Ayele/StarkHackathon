@@ -18,7 +18,7 @@ export const ImpactSummaryCard: React.FC<ImpactSummaryCardProps> = ({ overview }
           <span className="text-[10px] font-bold uppercase tracking-wider">የተላለፈ ድምር</span>
         </div>
         <p className="text-xl font-serif font-bold text-[#14110E] dark:text-[#FAF6EE]">
-          {(overview.totalDisbursedETB / 1000000).toFixed(2)}M {t('common.currency', 'ብር')}
+          {(overview.totalDisbursedETB / 1000000).toFixed(2)}M {t('common.currency')}
         </p>
         <p className="text-[10px] text-[#73685B] dark:text-[#A89E90] mt-0.5">100% ቀጥታ ለፕሮጀክት</p>
       </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { APP_NAME } from '../../data/content.ts';
 
 interface BanknoteLivingBackgroundProps {
   isDark?: boolean;
@@ -57,7 +58,7 @@ export const BanknoteLivingBackground: React.FC<BanknoteLivingBackgroundProps> =
       <div className="absolute top-0 bottom-0 left-[6%] sm:left-[8%] w-[3px] pointer-events-none flex flex-col justify-between items-center z-1 opacity-60 dark:opacity-45 select-none">
         <div className="absolute inset-y-0 w-[1px] bg-[#8A6534] dark:bg-[#A88147] opacity-60" />
         {Array.from({ length: 22 }).map((_, i) => {
-          const labels = ['1 BIRR', 'LEWEGENE', '፩ ETB', 'NBE'];
+          const labels = ['1 BIRR', APP_NAME.toUpperCase(), '፩ ETB', 'NBE'];
           const label = labels[i % labels.length];
           return (
             <div

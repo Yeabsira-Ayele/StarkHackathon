@@ -1,6 +1,7 @@
 import React from 'react';
 import { Mic, X, Sparkles, Send, ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { resolveLanguage } from '../../../i18n/index.ts';
 import { VoiceVisualizer } from './VoiceVisualizer';
 import { VOXIDE_PRESET_PROMPTS } from '../data/voxide.data';
 import { VoxideExtraction } from '../types/voxide.types';
@@ -31,7 +32,7 @@ export const VoiceTranscriptDrawer: React.FC<VoiceTranscriptDrawerProps> = ({
   isProcessing,
 }) => {
   const { i18n } = useTranslation();
-  const lang = (i18n.language as 'am' | 'en' | 'om') || 'am';
+  const lang = resolveLanguage(i18n.language);
 
   if (!isOpen) return null;
 

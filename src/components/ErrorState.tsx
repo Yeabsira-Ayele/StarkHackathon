@@ -25,7 +25,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
         <AlertTriangle className="w-6 h-6 stroke-[1.75]" />
       </div>
       <h3 className="text-sm font-semibold text-red-900 dark:text-red-200">
-        {title || t('common.error', 'ስህተት ተከስቷል')}
+        {title || t('common.error')}
       </h3>
       <p className="text-xs text-red-700 dark:text-red-400 mt-1 max-w-sm mx-auto leading-relaxed">
         {message || 'መረጃዎችን ለመጫን አልተቻለም። እባክዎ ጥቂት ቆይተው እንደገና ይሞክሩ።'}
@@ -36,7 +36,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
           className="mt-4 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-red-600 hover:bg-red-700 text-white transition-colors cursor-pointer"
         >
           <RefreshCw className="w-3.5 h-3.5" />
-          {t('common.retry', 'እንደገና ይሞክሩ')}
+          {t('common.retry')}
         </button>
       )}
     </div>

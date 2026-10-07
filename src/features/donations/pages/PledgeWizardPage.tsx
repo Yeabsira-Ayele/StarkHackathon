@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Campaign } from '../../../types/index.ts';
 import { useDonationStore } from '../store/donation.store';
-import { useCampaignPayoutAccounts, useCreateDonation, useSubmitReceiptVerification, useSubmitReference } from '../hooks/useDonations';
+import { useCampaignPayoutAccounts, useCreateDonation } from '../hooks/useDonations';
 import { DonationAmountSelector } from '../components/DonationAmountSelector';
 import { DonorInfoForm } from '../components/DonorInfoForm';
 import BankSelector from '../components/BankSelector';
@@ -46,8 +46,6 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
     donorMessage,
     selectedBankId,
     receiptUrl,
-    reference,
-    proofUrl,
     createdDonation,
     setStep,
     setAmount,
@@ -58,44 +56,25 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
     setDonorMessage,
     setSelectedBankId,
     setReceiptUrl,
-    setReference,
-    setProofUrl,
     setCreatedDonation,
     resetWizard,
   } = useDonationStore();
 
   const [generalError, setGeneralError] = useState<string | null>(null);
   const createDonationMutation = useCreateDonation();
-  const submitReceiptMutation = useSubmitReceiptVerification();
-  const submitReferenceMutation = useSubmitReference();
 
   const selectedAccount = payoutAccounts.find((account) => account.bankId === selectedBankId);
 
   // Advance from Bank Selection to Account Details
-  const handleProceedToAccountDetails = async () => {
+  const handleProceedToAccountDetails = () => {
     if (!selectedAccount) return;
     setGeneralError(null);
-    try {
-      const res = await createDonationMutation.mutateAsync({
-        campaignId: campaign.id,
-        amount,
-        donorName: isAnonymous ? 'Anonymous Patron' : (donorName.trim() || 'Anonymous Patron'),
-        donorEmail: donorEmail.trim() || undefined,
-        anonymous: isAnonymous,
-        bankId: selectedAccount.bankId,
-        message: donorMessage.trim() || undefined,
-      });
-
-      setCreatedDonation(res);
-      setStep(4);
-    } catch (err: any) {
-      setGeneralError(err.message || 'Failed to initialize donation record');
-    }
+    setStep(4);
   };
 
   // Submit payment receipt verification (primary flow)
   const handleSubmitReceiptVerification = async (submittedUrl?: string) => {
-    if (!createdDonation) return;
+    if (!selectedAccount) return;
     const targetUrl = (submittedUrl || receiptUrl || '').trim();
     if (!targetUrl) {
       setGeneralError('Please paste your payment receipt link to continue.');
@@ -103,20 +82,21 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
     }
     setGeneralError(null);
     try {
-      const updated = await submitReceiptMutation.mutateAsync({
-        donationId: createdDonation.id,
-        payload: {
-          donationId: createdDonation.id,
-          receiptUrl: targetUrl,
-          proofUrl,
-          reference: reference.trim() || undefined,
-        },
+      const updated = await createDonationMutation.mutateAsync({
+        campaignId: campaign.id,
+        amount,
+        receiptUrl: targetUrl,
+        donorName: isAnonymous ? 'Anonymous Patron' : (donorName.trim() || 'Anonymous Patron'),
+        donorEmail: donorEmail.trim() || undefined,
+        anonymous: isAnonymous,
+        bankId: selectedAccount.bankId,
+        message: donorMessage.trim() || undefined,
       });
 
       setCreatedDonation(updated);
       setStep(6);
 
-      if (onCertificateIssued && updated.certificateId) {
+      if (onCertificateIssued && updated.status === 'successful' && updated.certificateId) {
         onCertificateIssued({
           certificateId: updated.certificateId,
           donationId: updated.id,
@@ -161,7 +141,7 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
             className="px-4 py-2 border-2 border-[#26211C]/30 bg-[#FFFDF9] dark:bg-[#12100E] font-mono text-xs font-bold uppercase flex items-center gap-2 hover:bg-[#F2ECE1] dark:hover:bg-[#1C1814] transition-colors cursor-pointer rounded-[1px]"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>{step === 6 ? t('nav.returnToCampaign', 'Return to Campaign') : t('common.back')}</span>
+            <span>{step === 6 ? t('nav.returnToCampaign') : t('common.back')}</span>
           </button>
           {step === 6 && (
             <button
@@ -172,7 +152,7 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
               }}
               className="px-4 py-2 border border-[#1E4D38]/50 dark:border-[#52B788]/50 bg-transparent font-mono text-xs font-bold uppercase text-[#1E4D38] dark:text-[#52B788] hover:bg-[#1E4D38]/10 transition-colors cursor-pointer rounded-[1px]"
             >
-              {t('common.explore', 'Explore Causes')}
+              {t('common.explore')}
             </button>
           )}
         </div>
@@ -322,17 +302,11 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
             <button
               type="button"
               onClick={handleProceedToAccountDetails}
-              disabled={createDonationMutation.isPending || !selectedAccount || accountsUnavailable || payoutAccounts.length === 0}
+              disabled={!selectedAccount || accountsUnavailable || payoutAccounts.length === 0}
               className="py-3 px-8 border-2 border-[#1E4D38] bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706] font-mono text-xs font-black tracking-widest uppercase hover:bg-[#163E2C] transition-all cursor-pointer flex items-center gap-2 shadow-xs disabled:opacity-50"
             >
-              {createDonationMutation.isPending ? (
-                <span>INITIALIZING CONTRIBUTION...</span>
-              ) : (
-                <>
-                  <span>PROCEED TO PAYMENT</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
+              <span>PROCEED TO PAYMENT</span>
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -359,12 +333,8 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
             amount={amount}
             donorName={isAnonymous ? 'Anonymous Patron' : (donorName || 'Anonymous Patron')}
             receiptUrl={receiptUrl}
-            reference={reference}
-            proofUrl={proofUrl}
-            isSubmitting={submitReceiptMutation.isPending || submitReferenceMutation.isPending}
+            isSubmitting={createDonationMutation.isPending}
             onChangeReceiptUrl={setReceiptUrl}
-            onChangeReference={setReference}
-            onChangeProofUrl={setProofUrl}
             onSubmit={handleSubmitReceiptVerification}
             onBack={() => setStep(4)}
           />}
@@ -389,6 +359,10 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
           }}
           onStartNew={() => {
             resetWizard();
+          }}
+          onRetryReference={() => {
+            setCreatedDonation(null);
+            setStep(5);
           }}
         />
       )}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { APP_NAME } from '../data/content.ts';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Campaign, Donation, Organization } from '../types/index.ts';
@@ -119,7 +120,7 @@ export const FoundationDashboard: React.FC<FoundationDashboardProps> = ({
               className="gap-1.5"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>{t('nav.backToHome', 'Back to Home')}</span>
+              <span>{t('nav.backToHome')}</span>
             </Button>
             <Button
               variant="ghost"
@@ -127,11 +128,11 @@ export const FoundationDashboard: React.FC<FoundationDashboardProps> = ({
               type="button"
               onClick={() => navigate('/discover')}
             >
-              {t('nav.backToExplore', 'Back to Explore')}
+              {t('nav.backToExplore')}
             </Button>
           </div>
           <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-            {t('nav.orgDashboard', 'Organization Hub')}
+            {t('nav.orgDashboard')}
           </span>
         </div>
 
@@ -327,7 +328,7 @@ export const FoundationDashboard: React.FC<FoundationDashboardProps> = ({
           <div className="space-y-1">
             <p className="font-bold">Fundraising &amp; Cause Publishing Locked</p>
             <p className="text-[11px] leading-relaxed">
-              Per Lewegene platform governance and regulatory guidelines, foundations cannot create live cause plates, initiate public fundraisers, or accept donor funds until official ACSO accreditation is verified.
+              Per {APP_NAME} platform governance and regulatory guidelines, foundations cannot create live cause plates, initiate public fundraisers, or accept donor funds until official ACSO accreditation is verified.
             </p>
           </div>
         </div>
@@ -474,7 +475,7 @@ export const FoundationDashboard: React.FC<FoundationDashboardProps> = ({
             className="gap-1.5"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>{t('nav.backToHome', 'Back to Home')}</span>
+            <span>{t('nav.backToHome')}</span>
           </Button>
           <Button
             variant="ghost"
@@ -482,11 +483,11 @@ export const FoundationDashboard: React.FC<FoundationDashboardProps> = ({
             type="button"
             onClick={() => navigate('/discover')}
           >
-            {t('nav.backToExplore', 'Back to Explore')}
+            {t('nav.backToExplore')}
           </Button>
         </div>
         <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-          {t('nav.orgDashboard', 'Organization Hub')}
+          {t('nav.orgDashboard')}
         </span>
       </div>
 

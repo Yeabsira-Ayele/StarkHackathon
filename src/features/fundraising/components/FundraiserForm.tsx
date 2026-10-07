@@ -228,7 +228,7 @@ export const FundraiserForm: React.FC<Props> = ({
               { value: '', label: t('fundraiser.form.chooseCategory') },
               ...categories.map((c) => ({
                 value: c.id,
-                label: t(`fundraiser.form.categories.${c.id}`, { defaultValue: c.name }),
+                label: t(`categories.${c.id}`),
               })),
             ]}
           />
@@ -380,7 +380,7 @@ export const FundraiserForm: React.FC<Props> = ({
         )}
 
         {isCommunity && organizationsQuery.isLoading && (
-          <Loading message={t('common.loading', 'Loading organizations…')} />
+          <Loading message={t('common.loading')} />
         )}
         {isCommunity && organizationsQuery.error && (
           <ErrorState
@@ -390,8 +390,8 @@ export const FundraiserForm: React.FC<Props> = ({
         )}
         {isCommunity && !organizationsQuery.isLoading && !organizationsQuery.error && orgs.length === 0 && (
           <EmptyState
-            title={t('fundraiser.form.communityOrganization', 'Organizations')}
-            description={t('common.empty', 'No approved organizations are available yet.')}
+            title={t('fundraiser.form.communityOrganization')}
+            description={t('common.empty')}
           />
         )}
         {isCommunity && !organizationsQuery.isLoading && !organizationsQuery.error && orgs.length > 0 && (

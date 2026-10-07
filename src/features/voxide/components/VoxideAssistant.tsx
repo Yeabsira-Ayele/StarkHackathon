@@ -56,13 +56,13 @@ export function VoxideAssistant() {
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2 text-[#D97706] dark:text-[#FBBF24] font-semibold text-xs">
               <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{t('voxide.title', 'Voice Assistant')}</span>
+              <span>{t('voxide.title')}</span>
             </div>
             <button
               type="button"
               onClick={() => setShowMicPrompt(false)}
               className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-0.5 cursor-pointer"
-              aria-label={t('voxide.messages.dismiss', 'Dismiss')}
+              aria-label={t('voxide.messages.dismiss')}
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -70,8 +70,7 @@ export function VoxideAssistant() {
 
           <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
             {t(
-              'voxide.messages.micPermissionRequired',
-              'Microphone access is required for voice commands. Please allow microphone permission in your browser.'
+              'voxide.messages.micPermissionRequired'
             )}
           </p>
 
@@ -81,7 +80,7 @@ export function VoxideAssistant() {
               onClick={() => setShowMicPrompt(false)}
               className="px-3 py-1.5 text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 font-medium cursor-pointer"
             >
-              {t('voxide.messages.dismiss', 'Dismiss')}
+              {t('voxide.messages.dismiss')}
             </button>
             <button
               type="button"
@@ -92,8 +91,8 @@ export function VoxideAssistant() {
               <Mic className="w-3.5 h-3.5" />
               <span>
                 {isRequesting
-                  ? t('common.loading', 'Loading...')
-                  : t('voxide.messages.grantMicPermission', 'Enable Microphone')}
+                  ? t('common.loading')
+                  : t('voxide.messages.grantMicPermission')}
               </span>
             </button>
           </div>

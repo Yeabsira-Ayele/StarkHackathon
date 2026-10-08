@@ -18,6 +18,7 @@ Success responses use `{ success: true, message, data }`. Errors use `{ success:
 ## Auth
 
 Admin-only routes require a bearer token for an active account whose database role is `ADMIN` or `SUPER_ADMIN`.
+Admin account management routes require the `SUPER_ADMIN` database role; `ADMIN` tokens do not authorize these operations.
 
 ### User authentication
 
@@ -29,11 +30,19 @@ Admin-only routes require a bearer token for an active account whose database ro
 
 ### Admin dashboard and reports
 
-- `GET /api/admin/dashboard` returns `{ success, message, data }`. The `data` object contains `users`, `donations`, `reports`, and `organizations` arrays shaped for the frontend admin snapshot, as well as empty `activity` and `admins` arrays and `currentAdminId`. User and donation/report records are read from their persisted MongoDB collections; empty collections return empty arrays, not unavailable data.
-- The dashboard currently identifies `activity`, `admins`, and `profile` in `unavailableSections`; `users`, `donations`, and `reports` are available and are not marked unavailable.
+- `GET /api/admin/dashboard` returns aggregate counts and totals in `data`.
+- `GET /api/admin/reports` requires an admin role and returns persisted reports in `{ reports, items, total }`, including reporter and campaign display fields.
 - `POST /api/reports` requires authentication and accepts `{ campaignId, category, details, evidence? }`. Categories are `False Information`, `Fraud / Scam`, `Misleading Content`, and `Other`. The authenticated user is recorded as the reporter.
 - `GET /api/reports/me` returns the signed-in user's reports.
 - `PATCH /api/admin/reports/:id` requires an admin role and accepts `{ status, note? }`, where status is `reviewed`, `resolved`, or `dismissed`.
+- `GET /api/admin/admins` returns all non-deleted administrator accounts and their basic information; Super Admin only.
+- `GET /api/admin/admin-candidates` returns paginated active regular users eligible for admin access; Super Admin only.
+- `POST /api/admin/admins` accepts `{ userId }` for an existing active regular user, promotes that account to `ADMIN`, and invalidates its existing tokens; Super Admin only.
+- `DELETE /api/admin/admins/:id` removes `ADMIN` access by demoting the account to `USER` and invalidating its existing tokens; Super Admin only. Super Admin accounts cannot be removed through this endpoint.
+- `GET /api/admin/users` omits administrator accounts for regular admins. Looking up an administrator through `GET /api/admin/users/:id` is also restricted to Super Admins.
+- `GET /api/reports/transparency` returns totals and campaign-grouped summaries derived from completed donation records for publicly visible pending or approved campaigns. These are donation totals, not disbursements or independent audit records.
+- `GET /api/reports/audits/:id` returns the completed-donation summary for one publicly visible campaign using `{ success, data: { record } }`. Despite the legacy route name, it does not represent an audit or disbursement.
+- `GET /api/users/me` and `PATCH /api/users/me` return/load and update the signed-in user's profile. `PATCH /api/users/me/password` requires `{ currentPassword, newPassword }` and returns a replacement token after a successful password change.
 
 ## Rate limits
 

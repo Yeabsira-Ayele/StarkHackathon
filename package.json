@@ -20,6 +20,7 @@
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
     "framer-motion": "^13.4.4",
+    "html-to-image": "^1.11.13",
     "i18next": "^26.4.2",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",

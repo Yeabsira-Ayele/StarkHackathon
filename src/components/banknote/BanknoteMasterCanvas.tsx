@@ -1206,66 +1206,67 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   />
                 </div>
 
-                {/* Filter Tabs */}
-                <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-[#26211C]/15 dark:border-[#4A3E33]">
-                  {/* Sector Categories */}
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase mr-1">
-                      SECTOR:
-                    </span>
-                    {categories.map((cat) => (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => setSelectedCategory(cat.id)}
-                        className={`px-3 py-1 border text-xs font-mono font-bold uppercase transition-all cursor-pointer ${
-                          selectedCategory === cat.id
-                            ? 'border-[#1E4D38] bg-[#1E4D38] text-white shadow-xs'
-                            : 'border-[#26211C]/25 bg-[#FAF6EC] dark:bg-[#201B16] text-[#201C18] dark:text-[#E8DEC8] hover:border-[#1E4D38]'
-                        }`}
-                      >
-                        {cat.label}
-                      </button>
-                    ))}
+                {/* Filter Selectors: Sector, Status, Location */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-2 border-t border-[#26211C]/15 dark:border-[#4A3E33]">
+                  <div className="flex flex-col gap-0.5">
+                    <label htmlFor="filter-sector-select" className="text-[10px] font-mono font-bold tracking-wider text-zinc-600 dark:text-zinc-400 uppercase flex items-center justify-between">
+                      <span>SECTOR:</span>
+                      {selectedCategory !== 'all' && <span className="text-[9px] text-[#1E4D38] dark:text-[#52B788] font-bold">ACTIVE</span>}
+                    </label>
+                    <select id="filter-sector-select" value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="w-full appearance-none px-3 py-1.5 border border-[#26211C]/30 dark:border-[#4A3E33] bg-[#FAF6EC] dark:bg-[#12100E] font-mono text-xs font-bold uppercase text-[#201C18] dark:text-[#F4EFE6] focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788] cursor-pointer shadow-xs transition-colors">
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id} className="bg-[#FAF6EC] dark:bg-[#12100E] text-[#201C18] dark:text-[#F4EFE6]">{cat.label}</option>
+                      ))}
+                    </select>
                   </div>
 
-                  {/* Funding Status Tabs */}
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase mr-1">
-                      STATUS &amp; LOCATION:
-                    </span>
-                    {[
-                      { id: 'all', labelKey: 'common.all' },
-                      { id: 'ending_soon', labelKey: 'banknote.status.ending_soon' },
-                      { id: 'started_now', labelKey: 'banknote.status.started_now' },
-                      { id: 'ongoing', labelKey: 'banknote.status.ongoing' },
-                    ].map((status) => (
-                      <button
-                        key={status.id}
-                        type="button"
-                        onClick={() => setFundingStatusFilter(status.id as typeof fundingStatusFilter)}
-                        className={`px-2.5 py-1 border text-[10px] font-mono font-bold uppercase transition-all cursor-pointer ${
-                          fundingStatusFilter === status.id
-                            ? 'border-[#26211C] bg-[#26211C] text-white dark:border-[#9A7432] dark:bg-[#9A7432] dark:text-[#080706]'
-                            : 'border-[#26211C]/25 bg-[#EAE1CF] dark:bg-[#161411] text-zinc-700 dark:text-zinc-300 hover:border-[#26211C]'
-                        }`}
-                      >
-                        {t(status.labelKey)}
-                      </button>
-                    ))}
-                    <label className="flex items-center gap-1.5">
-                      <span className="sr-only">{t('banknote.filterByLocation')}</span>
-                      <select
-                        value={selectedLocation}
-                        onChange={(event) => setSelectedLocation(event.target.value)}
-                        className="px-2.5 py-1 border border-[#26211C]/25 bg-[#FAF6EC] dark:bg-[#201B16] text-[10px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300 cursor-pointer"
-                      >
-                        <option value="all">{t('banknote.allLocations')}</option>
-                        {ETHIOPIAN_REGIONS.map((location) => <option key={location} value={location}>{location}</option>)}
-                      </select>
+                  <div className="flex flex-col gap-0.5">
+                    <label htmlFor="filter-status-select" className="text-[10px] font-mono font-bold tracking-wider text-zinc-600 dark:text-zinc-400 uppercase flex items-center justify-between">
+                      <span>STATUS:</span>
+                      {fundingStatusFilter !== 'all' && <span className="text-[9px] text-[#1E4D38] dark:text-[#52B788] font-bold">ACTIVE</span>}
                     </label>
+                    <select id="filter-status-select" value={fundingStatusFilter} onChange={(e) => setFundingStatusFilter(e.target.value as typeof fundingStatusFilter)} className="w-full appearance-none px-3 py-1.5 border border-[#26211C]/30 dark:border-[#4A3E33] bg-[#FAF6EC] dark:bg-[#12100E] font-mono text-xs font-bold uppercase text-[#201C18] dark:text-[#F4EFE6] focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788] cursor-pointer shadow-xs transition-colors">
+                      {[
+                        { id: 'all', label: t('common.all') },
+                        { id: 'ending_soon', label: t('banknote.status.ending_soon') },
+                        { id: 'started_now', label: t('banknote.status.started_now') },
+                        { id: 'ongoing', label: t('banknote.status.ongoing') },
+                      ].map((status) => (
+                        <option key={status['id']} value={status['id']} className="bg-[#FAF6EC] dark:bg-[#12100E] text-[#201C18] dark:text-[#F4EFE6]">{status['label']}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col gap-0.5">
+                    <label htmlFor="filter-location-select" className="text-[10px] font-mono font-bold tracking-wider text-zinc-600 dark:text-zinc-400 uppercase flex items-center justify-between">
+                      <span>LOCATION:</span>
+                      {selectedLocation !== 'all' && <span className="text-[9px] text-[#1E4D38] dark:text-[#52B788] font-bold">ACTIVE</span>}
+                    </label>
+                    <select id="filter-location-select" value={selectedLocation} onChange={(event) => setSelectedLocation(event.target.value)} className="w-full appearance-none px-3 py-1.5 border border-[#26211C]/30 dark:border-[#4A3E33] bg-[#FAF6EC] dark:bg-[#12100E] font-mono text-xs font-bold uppercase text-[#201C18] dark:text-[#F4EFE6] focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788] cursor-pointer shadow-xs transition-colors">
+                      <option value="all">{t('banknote.allLocations')}</option>
+                      {ETHIOPIAN_REGIONS.map((location) => (
+                        <option key={location} value={location} className="bg-[#FAF6EC] dark:bg-[#12100E] text-[#201C18] dark:text-[#F4EFE6]">{location}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
+
+                {(selectedCategory !== 'all' || fundingStatusFilter !== 'all' || selectedLocation !== 'all' || searchQuery.trim() !== '') && (
+                  <div className="flex items-center justify-end pt-2 text-[10px] font-mono border-t border-[#26211C]/10 dark:border-[#4A3E33]/60">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedCategory('all');
+                        setFundingStatusFilter('all');
+                        setSelectedLocation('all');
+                        setSearchQuery('');
+                      }}
+                      className="text-[#1E4D38] dark:text-[#52B788] hover:underline font-bold uppercase cursor-pointer"
+                    >
+                      RESET ALL FILTERS
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Causes Grid with Money Progress & Quick Pledge Actions */}
@@ -1385,67 +1386,67 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 />
               </div>
 
-              {/* Filter Tabs */}
-              <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-[#26211C]/15 dark:border-[#4A3E33]">
-                {/* Sector Categories */}
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase mr-1">
-                    {t('explore.sectorLabel')}
-                  </span>
-                  {categories.map((cat) => (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setSelectedCategory(cat.id)}
-                      className={`px-3 py-1.5 border text-xs font-mono font-bold uppercase transition-all cursor-pointer ${
-                        selectedCategory === cat.id
-                          ? 'border-[#1E4D38] bg-[#1E4D38] text-white'
-                          : 'border-[#26211C]/25 bg-[#F7F2E7] dark:bg-[#26201B] text-[#201C18] dark:text-[#E8DEC8] hover:border-[#1E4D38]'
-                      }`}
-                    >
-                      {cat.label}
-                    </button>
-                  ))}
+              {/* Filter Selectors: Sector, Status, Location */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-2 border-t border-[#26211C]/15 dark:border-[#4A3E33]">
+                <div className="flex flex-col gap-0.5">
+                  <label htmlFor="filter-sector-select" className="text-[10px] font-mono font-bold tracking-wider text-zinc-600 dark:text-zinc-400 uppercase flex items-center justify-between">
+                    <span>{t('explore.sectorLabel')}</span>
+                    {selectedCategory !== 'all' && <span className="text-[9px] text-[#1E4D38] dark:text-[#52B788] font-bold">ACTIVE</span>}
+                  </label>
+                  <select id="filter-sector-select" value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="w-full appearance-none px-3 py-1.5 border border-[#26211C]/30 dark:border-[#4A3E33] bg-[#FAF6EC] dark:bg-[#12100E] font-mono text-xs font-bold uppercase text-[#201C18] dark:text-[#F4EFE6] focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788] cursor-pointer shadow-xs transition-colors">
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id} className="bg-[#FAF6EC] dark:bg-[#12100E] text-[#201C18] dark:text-[#F4EFE6]">{cat.label}</option>
+                    ))}
+                  </select>
                 </div>
 
-                {/* Funding Status Tabs */}
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase mr-1">
-                    {t('explore.statusLabel')}
-                  </span>
-                  {[
-                    { id: 'all', label: t('explore.statusAll') },
-                    { id: 'ending_soon', label: t('explore.statusEndingSoon') },
-                    { id: 'started_now', label: t('explore.statusStartedNow') },
-                    { id: 'ongoing', label: t('explore.statusOngoing') },
-                  ].map((status) => (
-                    <button
-                      key={status.id}
-                      type="button"
-                      onClick={() => setFundingStatusFilter(status.id as typeof fundingStatusFilter)}
-                      className={`px-2.5 py-1.5 border text-[10px] font-mono font-bold uppercase transition-all cursor-pointer ${
-                        fundingStatusFilter === status.id
-                          ? 'border-[#26211C] bg-[#26211C] text-white dark:border-[#9A7432] dark:bg-[#9A7432] dark:text-[#080706]'
-                          : 'border-[#26211C]/25 bg-[#EAE1CF] dark:bg-[#161411] text-zinc-700 dark:text-zinc-300 hover:border-[#26211C]'
-                      }`}
-                    >
-                      {status.label}
-                    </button>
-                  ))}
-                  <label className="flex items-center gap-1.5">
-                    <span className="sr-only">{t('explore.filterByLocation')}</span>
-                    <select
-                      value={selectedLocation}
-                      onChange={(event) => setSelectedLocation(event.target.value)}
-                      className="px-2.5 py-1.5 border border-[#26211C]/25 bg-[#EAE1CF] dark:bg-[#161411] text-[10px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300 cursor-pointer"
-                    >
-                      <option value="all">{t('explore.allLocations')}</option>
-                      {ETHIOPIAN_REGIONS.map((location) => <option key={location} value={location}>{location}</option>)}
-                    </select>
+                <div className="flex flex-col gap-0.5">
+                  <label htmlFor="filter-status-select" className="text-[10px] font-mono font-bold tracking-wider text-zinc-600 dark:text-zinc-400 uppercase flex items-center justify-between">
+                    <span>{t('explore.statusLabel')}</span>
+                    {fundingStatusFilter !== 'all' && <span className="text-[9px] text-[#1E4D38] dark:text-[#52B788] font-bold">ACTIVE</span>}
                   </label>
+                  <select id="filter-status-select" value={fundingStatusFilter} onChange={(e) => setFundingStatusFilter(e.target.value as typeof fundingStatusFilter)} className="w-full appearance-none px-3 py-1.5 border border-[#26211C]/30 dark:border-[#4A3E33] bg-[#FAF6EC] dark:bg-[#12100E] font-mono text-xs font-bold uppercase text-[#201C18] dark:text-[#F4EFE6] focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788] cursor-pointer shadow-xs transition-colors">
+                    {[
+                      { id: 'all', label: t('explore.statusAll') },
+                      { id: 'ending_soon', label: t('explore.statusEndingSoon') },
+                      { id: 'started_now', label: t('explore.statusStartedNow') },
+                      { id: 'ongoing', label: t('explore.statusOngoing') },
+                    ].map((status) => (
+                      <option key={status['id']} value={status['id']} className="bg-[#FAF6EC] dark:bg-[#12100E] text-[#201C18] dark:text-[#F4EFE6]">{status['label']}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-0.5">
+                  <label htmlFor="filter-location-select" className="text-[10px] font-mono font-bold tracking-wider text-zinc-600 dark:text-zinc-400 uppercase flex items-center justify-between">
+                    <span>{t('banknote.filterByLocation')}</span>
+                    {selectedLocation !== 'all' && <span className="text-[9px] text-[#1E4D38] dark:text-[#52B788] font-bold">ACTIVE</span>}
+                  </label>
+                  <select id="filter-location-select" value={selectedLocation} onChange={(event) => setSelectedLocation(event.target.value)} className="w-full appearance-none px-3 py-1.5 border border-[#26211C]/30 dark:border-[#4A3E33] bg-[#FAF6EC] dark:bg-[#12100E] font-mono text-xs font-bold uppercase text-[#201C18] dark:text-[#F4EFE6] focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788] cursor-pointer shadow-xs transition-colors">
+                    <option value="all">{t('explore.allLocations')}</option>
+                    {ETHIOPIAN_REGIONS.map((location) => (
+                      <option key={location} value={location} className="bg-[#FAF6EC] dark:bg-[#12100E] text-[#201C18] dark:text-[#F4EFE6]">{location}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
+              {(selectedCategory !== 'all' || fundingStatusFilter !== 'all' || selectedLocation !== 'all' || searchQuery.trim() !== '') && (
+                <div className="flex items-center justify-end pt-2 text-[10px] font-mono border-t border-[#26211C]/10 dark:border-[#4A3E33]/60">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategory('all');
+                      setFundingStatusFilter('all');
+                      setSelectedLocation('all');
+                      setSearchQuery('');
+                    }}
+                    className="text-[#1E4D38] dark:text-[#52B788] hover:underline font-bold uppercase cursor-pointer"
+                  >
+                    RESET ALL FILTERS
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Widescreen 3-Column Causes Grid (Breathable Banknote Plates) */}

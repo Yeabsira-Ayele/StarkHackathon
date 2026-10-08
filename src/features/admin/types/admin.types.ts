@@ -163,8 +163,10 @@ export interface AdminSnapshot {
 }
 
 export interface FundraiserReviewInfo {
-  beneficiary: { name: string; relation: string; phone: string };
+  beneficiary: { name: string; relation: string; phone: string; info: string };
   receiving: { bank: string; accountNumber: string; accountName: string };
+  deadline: string;
+  images: string[];
   documents: { name: string; kind: string; url?: string }[];
   verificationNotes: string;
 }

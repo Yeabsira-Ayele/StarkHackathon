@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Award, ShieldCheck, MapPin, Mail, Phone, Edit2 } from 'lucide-react';
+import { MapPin, Mail, Edit2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UserProfileData } from '../types/profile.types';
 
@@ -23,10 +23,6 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({ profile, onEdit }) => 
               <h2 className="text-lg font-serif font-bold text-[#14110E] dark:text-[#FAF6EE]">
                 {profile.name}
               </h2>
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
-                <ShieldCheck className="w-3 h-3" />
-                የተረጋገጠ ለጋሽ
-              </span>
             </div>
             {profile.bio && (
               <p className="text-xs text-[#73685B] dark:text-[#A89E90] mt-1 max-w-md line-clamp-2">
@@ -56,7 +52,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({ profile, onEdit }) => 
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#EBE3D3] dark:bg-[#201C18] text-[#14110E] dark:text-[#FAF6EE] hover:bg-[#E0D5C1] dark:hover:bg-[#28231E] transition-colors cursor-pointer"
           >
             <Edit2 className="w-3.5 h-3.5" />
-            መረጃ አዘምን
+            {t('nav.editMyProfile')}
           </button>
         )}
       </div>

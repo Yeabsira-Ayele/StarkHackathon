@@ -187,17 +187,30 @@ export const AdminFundraisers: React.FC = () => {
                 [t('adminUi.location'), open.location],
                 [t('adminUi.goal'), fmtETB(open.goalAmount)],
                 [t('adminUi.raised'), fmtETB(open.raisedAmount)],
-                [t('adminFundraisers.deadline'), t('adminFundraisers.notSet')],
+                [t('adminFundraisers.deadline'), info.deadline ? fmtDate(info.deadline) : t('adminFundraisers.notSet')],
                 [t('adminUi.submitted'), fmtDate(open.createdAt)],
               ]} />
               <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mt-4 mb-1">{t('adminFundraisers.story')}</p>
               <p className="text-sm leading-relaxed text-[#201C18] dark:text-[#F4EFE6]">{open.story}</p>
+              {info.images.length > 0 && (
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {info.images.map((image, index) => (
+                    <a key={`${image}-${index}`} href={image} target="_blank" rel="noreferrer">
+                      <img
+                        src={image}
+                        alt={`${open.title} campaign image ${index + 1}`}
+                        className="w-full h-28 rounded-lg object-cover border border-[#26211C]/10 dark:border-[#9A7432]/15"
+                      />
+                    </a>
+                  ))}
+                </div>
+              )}
             </Panel>
 
             <Panel title={t('adminFundraisers.peopleAndReceiver')}>
               <div className="grid sm:grid-cols-3 gap-5">
                 <div><p className="font-mono text-[10px] font-black uppercase text-[#8B2626] mb-1">{t('adminUi.creator')}</p><p className="text-sm">{open.creatorName}</p>{open.organizationName && <p className="font-mono text-[10px] text-zinc-500">{open.organizationName}</p>}</div>
-                <div><p className="font-mono text-[10px] font-black uppercase text-[#8B2626] mb-1">{t('adminFundraisers.beneficiary')}</p><p className="text-sm">{info.beneficiary.name}</p><p className="font-mono text-[10px] text-zinc-500">{info.beneficiary.relation} · {info.beneficiary.phone}</p></div>
+                <div><p className="font-mono text-[10px] font-black uppercase text-[#8B2626] mb-1">{t('adminFundraisers.beneficiary')}</p><p className="text-sm">{info.beneficiary.name}</p><p className="font-mono text-[10px] text-zinc-500">{info.beneficiary.relation} · {info.beneficiary.phone}</p>{info.beneficiary.info && <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{info.beneficiary.info}</p>}</div>
                 <div><p className="font-mono text-[10px] font-black uppercase text-[#8B2626] mb-1">{t('adminFundraisers.receivingAccount')}</p><p className="text-sm">{info.receiving.accountName}</p><p className="font-mono text-[10px] text-zinc-500">{info.receiving.bank}<br />{info.receiving.accountNumber}</p></div>
               </div>
             </Panel>

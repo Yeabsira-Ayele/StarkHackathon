@@ -55,7 +55,6 @@ export const EditFundraiser: React.FC<PageProps & { id: string }> = ({ id, go, t
       <h1 className="text-3xl font-serif font-black uppercase text-[#14110E] dark:text-[#F4EFE6]">{t('fundraiser.form.editTitle')}</h1>
       <FundraiserForm
         initial={fundraiserToValues(f)}
-        lockSensitive={f.status === 'approved'}
         onBack={() => go(f.status === 'draft' ? { name: 'drafts' } : { name: 'manage', id: f.id })}
         onSaveDraft={
           f.status === 'draft'

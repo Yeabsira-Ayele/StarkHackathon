@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, ExternalLink, Flag, Moon, Sun } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Flag, Moon, RefreshCw, Sun } from 'lucide-react';
 import { LanguageSwitcher } from '../../components/common/LanguageSwitcher.tsx';
 import type { AdminReport } from '../admin/types/admin.types.ts';
 import { useAuthStore } from '../auth/store/auth.store.ts';
@@ -34,8 +34,8 @@ const MyReportsPage = () => {
 
   useEffect(() => {
     let active = true;
+    setReports([]);
     if (!user) {
-      setReports([]);
       setError(null);
       setLoading(false);
       return () => {
@@ -43,24 +43,42 @@ const MyReportsPage = () => {
       };
     }
 
-    setLoading(true);
-    setError(null);
-    reportsApi.getMyReports()
-      .then((items) => {
+    const loadReports = async (showLoading: boolean) => {
+      if (showLoading) setLoading(true);
+      setError(null);
+      try {
+        const items = await reportsApi.getMyReports();
         if (active) setReports(items);
-      })
-      .catch((cause: unknown) => {
-        if (active) {
-          setError(cause instanceof Error ? cause.message : 'Could not load your reports.');
-        }
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
+      } catch (cause: unknown) {
+        if (active) setError(cause instanceof Error ? cause.message : t('myReports.loadError'));
+      } finally {
+        if (active && showLoading) setLoading(false);
+      }
+    };
+
+    void loadReports(true);
+    const refreshReports = () => void loadReports(false);
+    const intervalId = window.setInterval(refreshReports, 30_000);
+    window.addEventListener('focus', refreshReports);
     return () => {
       active = false;
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', refreshReports);
     };
-  }, [user?.id, loadAttempt]);
+  }, [user?.id, loadAttempt, t]);
+
+  const statusTone: Record<AdminReport['status'], string> = {
+    pending: 'border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-300',
+    reviewed: 'border-blue-500/40 bg-blue-500/10 text-blue-800 dark:text-blue-300',
+    resolved: 'border-[#1E4D38]/40 bg-[#1E4D38]/10 text-[#1E4D38] dark:text-[#52B788]',
+    dismissed: 'border-zinc-500/40 bg-zinc-500/10 text-zinc-700 dark:text-zinc-300',
+  };
+  const categoryKey: Record<AdminReport['category'], string> = {
+    'False Information': 'falseInformation',
+    'Fraud / Scam': 'fraud',
+    'Misleading Content': 'misleading',
+    Other: 'other',
+  };
 
   return (
     <main className="min-h-screen bg-[#F7F2E7] px-4 py-8 text-[#201C18] dark:bg-[#12100E] dark:text-[#F4EFE6] sm:px-6 sm:py-10">
@@ -109,28 +127,29 @@ const MyReportsPage = () => {
         <header className="mt-6 flex flex-wrap items-end justify-between gap-4 border-b border-[#9A7432]/30 pb-5">
           <div>
             <p className="font-mono text-[10px] font-black uppercase tracking-[.2em] text-[#9A7432]">{t('profile.space', { appName: APP_NAME })}</p>
-            <h1 className="mt-2 font-serif text-3xl font-black sm:text-4xl">My Reports</h1>
+            <h1 className="mt-2 font-serif text-3xl font-black sm:text-4xl">{t('myReports.title')}</h1>
+            <p className="mt-2 max-w-xl text-sm text-zinc-600 dark:text-zinc-400">{t('myReports.subtitle')}</p>
           </div>
           <span className="inline-flex items-center gap-2 border border-[#9A7432]/40 px-3 py-2 font-mono text-[10px] font-bold uppercase">
-            <Flag className="h-3.5 w-3.5 text-[#9A7432]" /> ACSO Moderation Queue
+            <RefreshCw className="h-3.5 w-3.5 text-[#9A7432]" /> {t('myReports.autoRefresh')}
           </span>
         </header>
 
         {!user && (
           <p className="mt-6 border border-[#9A7432]/30 bg-white/60 p-5 text-sm dark:bg-white/[.03]">
-            Sign in to view your submitted cause reports.
+            {t('myReports.signInRequired')}
           </p>
         )}
-        {loading && <p className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">Loading your reports…</p>}
+        {loading && <p role="status" className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">{t('myReports.loading')}</p>}
         {error && (
           <div role="alert" className="mt-6 border border-red-700/30 bg-red-50 p-4 text-sm text-red-800 dark:bg-red-950/30 dark:text-red-200">
             <p>{error}</p>
-            <button type="button" className="mt-2 underline" onClick={() => setLoadAttempt((attempt) => attempt + 1)}>Retry</button>
+            <button type="button" className="mt-2 underline" onClick={() => setLoadAttempt((attempt) => attempt + 1)}>{t('common.retry')}</button>
           </div>
         )}
         {!loading && !error && user && reports.length === 0 && (
           <p className="mt-6 border border-[#9A7432]/30 bg-white/60 p-5 text-sm dark:bg-white/[.03]">
-            You have not submitted any cause reports from this account.
+            {t('myReports.empty')}
           </p>
         )}
 
@@ -143,19 +162,29 @@ const MyReportsPage = () => {
                     <Flag className="h-4 w-4 text-[#9A7432]" />
                   </span>
                   <div>
-                    <h2 className="font-serif text-lg font-bold">{report.category}</h2>
+                    <h2 className="font-serif text-lg font-bold">{t(`myReports.categories.${categoryKey[report.category]}`)}</h2>
                     <p className="mt-1 text-xs text-zinc-500">
-                      Submitted {new Date(report.createdAt).toLocaleDateString()} · Cause {report.campaignId}
+                      {t('myReports.submitted', { date: new Date(report.createdAt).toLocaleDateString() })}
                     </p>
                   </div>
                 </div>
-                <span className="border border-[#9A7432]/40 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider">
-                  {report.status.replaceAll('_', ' ')}
+                <span className={`border px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider ${statusTone[report.status]}`}>
+                  {t(`adminUi.status.${report.status}`)}
                 </span>
               </div>
               <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">{report.details}</p>
+              <div className="mt-4 border-l-2 border-[#9A7432] pl-3">
+                <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#9A7432]">{t('myReports.outcome')}</p>
+                <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">{t(`myReports.status.${report.status}`)}</p>
+              </div>
+              {report.resolutionNote && (
+                <div className="mt-4 border border-[#9A7432]/25 bg-[#F7F2E7]/70 p-3 dark:bg-[#12100E]/70">
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#9A7432]">{t('myReports.adminResponse')}</p>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-zinc-700 dark:text-zinc-300">{report.resolutionNote}</p>
+                </div>
+              )}
               <Link to={`/causes/${report.campaignId}`} className="mt-4 inline-flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-[#1E4D38] hover:underline dark:text-[#52B788]">
-                View cause <ExternalLink className="h-3 w-3" />
+                {t('myReports.viewCause')} <ExternalLink className="h-3 w-3" />
               </Link>
             </article>
           ))}

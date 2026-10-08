@@ -189,7 +189,12 @@
     "selected": "✓ ተመርጧል",
     "customAmountPlaceholder": "ለምሳሌ፡ 2500",
     "minimumDemo": "አነስተኛው የልገሳ መጠን {{min}} ብር ነው።",
-    "minimumContribution": "አነስተኛው የልገሳ መጠን {{min}} ብር ነው። 100% ልገሳዎ በቀጥታ ለምክንያቱ ይውላል።"
+    "minimumContribution": "አነስተኛው የልገሳ መጠን {{min}} ብር ነው። 100% ልገሳዎ በቀጥታ ለምክንያቱ ይውላል።",
+    "savedCausesTitle": "የተቀመጡ ምክንያቶች",
+    "savedCausesCount": "{{count}} ተቀምጠዋል",
+    "savedCausesLoading": "የተቀመጡ ምክንያቶችዎን በመጫን ላይ...",
+    "savedCausesLoadError": "የተቀመጡ ምክንያቶችን መጫን አልተቻለም።",
+    "savedCausesEmpty": "እስካሁን የተቀመጡ ምክንያቶች የሉም። ምክንያትን በምትመለከቱበት ጊዜ ዕልባት ያድርጉ፤ እዚህ ይታያል።"
   },
   "fundraiser": {
     "title": "አዲስ ማኅበራዊ ፕሮጀክት ይመዝግቡ",
@@ -307,12 +312,12 @@
     "name": "ስም",
     "email": "ኢሜይል",
     "phone": "ስልክ",
+    "phoneCannotChange": "የስልክ ቁጥርዎን ከመገለጫዎ መቀየር አይቻልም።",
     "changesNote": "የመገለጫ መረጃዎ ከንቁ ክፍለ ጊዜዎ ጋር ይመሳሰላል።",
     "cancel": "ይቅር",
     "saveProfile": "መገለጫን አስቀምጥ",
     "closeEditorAria": "የመገለጫ አርታዒን ዝጋ",
     "space": "የእርስዎ የ{{appName}} ገጽ",
-    "verifiedAccount": "የተረጋገጠ የዜጋ መለያ",
     "account": "መለያ",
     "roleDonor": "ለጋሽ",
     "roleFundraiser": "ገንዘብ አሰባሳቢ",
@@ -372,6 +377,31 @@
     "beneficiaries": "ተጠቃሚ ዜጎች",
     "donors": "ለጋሾች",
     "escrowAudit": "የኤስክሮ ኦዲት"
+  },
+  "myReports": {
+    "title": "የእኔ ሪፖርቶች",
+    "subtitle": "ያቀረቧቸውን የምክንያት ሪፖርቶች የግምገማ ሁኔታና ምላሽ ይከታተሉ።",
+    "autoRefresh": "ሁኔታው በራስ-ሰር ይዘምናል",
+    "signInRequired": "ያቀረቧቸውን የምክንያት ሪፖርቶች ለማየት ይግቡ።",
+    "loading": "ሪፖርቶችዎን በመጫን ላይ...",
+    "loadError": "ሪፖርቶችዎን መጫን አልተቻለም።",
+    "empty": "ከዚህ መለያ ምንም የምክንያት ሪፖርት አላቀረቡም።",
+    "submitted": "የቀረበበት ቀን {{date}}",
+    "outcome": "የግምገማ ውጤት",
+    "adminResponse": "የአስተዳዳሪ ምላሽ",
+    "viewCause": "ምክንያቱን ይመልከቱ",
+    "categories": {
+      "falseInformation": "የተሳሳተ መረጃ",
+      "fraud": "ማጭበርበር",
+      "misleading": "አሳሳች ይዘት",
+      "other": "ሌላ"
+    },
+    "status": {
+      "pending": "ሪፖርትዎ ቀርቧል፤ አስተዳዳሪ እስኪገመግመው በመጠባበቅ ላይ ነው።",
+      "reviewed": "አስተዳዳሪ ሪፖርትዎን ገምግሟል። ተጨማሪ እርምጃ በሂደት ላይ ሊሆን ይችላል።",
+      "resolved": "አስተዳዳሪ ሪፖርትዎን ፈትቷል። ከታች ያለውን ምላሽ ይመልከቱ።",
+      "dismissed": "ሪፖርትዎ ተገምግሟል፤ ነገር ግን ተጨማሪ እርምጃ አይወሰድም።"
+    }
   },
   "voxide": {
     "title": "ድምፅ ረዳት",
@@ -437,6 +467,22 @@
       "description": "በአካባቢ ማህበረሰቦች የሚመሩ እውነተኛ ፍላጎቶች። እያንዳንዱ ምክንያት ወደዚህ ገጽ ከመድረሱ በፊት ይረጋገጣል።",
       "browseAll": "ሁሉንም ምክንያቶች ይመልከቱ",
       "empty": "አዲስ ምክንያቶች በመዘጋጀት ላይ ናቸው። በቅርቡ ተመልሰው ይመልከቱ።"
+    },
+    "zeroCut": {
+      "eyebrow": "ያለ ቅናሽ የመለገስ ቃል ኪዳን",
+      "headline": "የመድረክ ቅናሽ 0%። 100% በቀጥታ ለምክንያቶች።",
+      "subhead": "የሚለግሱት እያንዳንዱ ብር ለታሰበለት ማኅበረሰብ ይደርሳል።",
+      "description": "ለወገን ከልግስናዎ ምንም አይቀንስም። አስተዋጽኦዎች ያለ የመድረክ ኮሚሽንና ያለ አስታላይ ቅናሽ በቀጥታ ወደ አካባቢያዊ የቴሌብርና የንግድ ባንክ ሂሳቦች ይገባሉ።",
+      "plateHeader": "ቀጥተኛ ክፍያ ዋስትና",
+      "passThrough": "100% በቀጥታ ይደርሳል",
+      "platformFeeLabel": "የመድረክ ኮሚሽን",
+      "platformFeeNote": "0.00 ብር አይቀነስም",
+      "directToCauseLabel": "ለምክንያቱ የሚደርስ",
+      "directToCauseNote": "እያንዳንዱ ብር ለማኅበረሰቡ ይደርሳል",
+      "flowDonor": "ለጋሽ የሚሰጠው፦ 1,000 ብር",
+      "flowLabel": "── 0% ክፍያ ──►",
+      "flowCause": "ምክንያቱ የሚደርሰው፦ 1,000 ብር",
+      "rails": "ቴሌብር · ሲቢኢ ብር · ቀጥተኛ ዝውውር"
     },
     "howItWorks": {
       "eyebrow": "እንዴት እንደሚሰራ",

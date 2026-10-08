@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle, MessageSquareWarning, XCircle, FileText, Eye } from 'lucide-react';
+import { CheckCircle, FileText, Eye, XCircle } from 'lucide-react';
 import { Campaign } from '../../../types/index.ts';
 import { useAdmin } from '../hooks/AdminContext.ts';
-import { getFundraiserReviewInfo } from '../data/admin.data.ts';
+import { adminApi } from '../api/admin.api.ts';
 import {
   AdminButton, DataTable, DetailDrawer, DetailGrid, EmptyState, FilterTabs, Panel, ReasonModal, SearchBox,
   SectionHeader, StatusBadge, Td, Tr, fmtDate, fmtDateTime, fmtETB, useAdminToast,
@@ -11,11 +11,9 @@ import {
 
 const TABS = [
   { id: 'all', match: () => true },
-  { id: 'pending', match: (c: Campaign) => c.status === 'pending' },
-  { id: 'approved', match: (c: Campaign) => c.status === 'approved' },
-  { id: 'needs_changes', match: (c: Campaign) => c.status === 'needs_changes' },
+  { id: 'verified', match: (c: Campaign) => c.status === 'approved' },
+  { id: 'unverified', match: (c: Campaign) => c.status !== 'approved' && c.status !== 'rejected' },
   { id: 'rejected', match: (c: Campaign) => c.status === 'rejected' },
-  { id: 'completed', match: (c: Campaign) => c.status === 'completed' },
 ];
 
 export const AdminFundraisers: React.FC = () => {
@@ -25,12 +23,16 @@ export const AdminFundraisers: React.FC = () => {
   const [tab, setTab] = useState('all');
   const [q, setQ] = useState('');
   const [openId, setOpenId] = useState<string | null>(focusId);
-  const [modal, setModal] = useState<null | 'changes' | 'reject'>(null);
+  const [rejecting, setRejecting] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [reviewInfo, setReviewInfo] = useState<Awaited<ReturnType<typeof adminApi.getFundraiserReviewInfo>> | null>(null);
+  const [reviewInfoLoading, setReviewInfoLoading] = useState(false);
+  const [reviewInfoError, setReviewInfoError] = useState<string | null>(null);
+  const [reviewInfoAttempt, setReviewInfoAttempt] = useState(0);
 
   useEffect(() => { if (focusId) setOpenId(focusId); }, [focusId]);
 
-  const all = store.campaigns;
+  const all = store.campaigns.filter((campaign) => campaign.status !== 'draft');
   const rows = useMemo(() => {
     const t = TABS.find((x) => x.id === tab)!;
     return all.filter(
@@ -38,8 +40,37 @@ export const AdminFundraisers: React.FC = () => {
     );
   }, [all, tab, q]);
 
-  const open = openId ? store.campaignById.get(openId) || null : null;
-  const info = open ? getFundraiserReviewInfo(open.id, open.creatorName) : null;
+  const selected = openId ? store.campaignById.get(openId) || null : null;
+  const open = selected?.status === 'draft' ? null : selected;
+  useEffect(() => {
+    let active = true;
+    if (!open) {
+      setReviewInfo(null);
+      setReviewInfoError(null);
+      setReviewInfoLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+    setReviewInfo(null);
+    setReviewInfoError(null);
+    setReviewInfoLoading(true);
+    adminApi.getFundraiserReviewInfo(open.id)
+      .then((info) => {
+        if (active) setReviewInfo(info);
+      })
+      .catch((cause: unknown) => {
+        if (active) setReviewInfoError(cause instanceof Error ? cause.message : 'Could not load fundraiser review details.');
+      })
+      .finally(() => {
+        if (active) setReviewInfoLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [open?.id, reviewInfoAttempt]);
+
+  const info = reviewInfo;
   const history = open
     ? [
         ...store.snapshot!.activity.filter((e) => e.refId === open.id).map((e) => ({ at: e.at, text: e.message, by: e.actor })),
@@ -47,15 +78,41 @@ export const AdminFundraisers: React.FC = () => {
       ].sort((a, b) => +new Date(b.at) - +new Date(a.at))
     : [];
 
-  const act = async (fn: () => Promise<void>, ok: string) => {
+  const verifyFundraiser = async () => {
+    if (!open) return;
     setBusy(true);
-    try { await fn(); notify(ok); } catch (e: any) { notify(e?.message || 'Action failed', 'err'); } finally { setBusy(false); }
+    try {
+      await store.actions.approveFundraiser(open);
+      notify(t('adminFundraisers.verifiedToast'));
+    } catch (error) {
+      notify(error instanceof Error ? error.message : t('adminFundraisers.verifyFailed'), 'err');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const rejectFundraiser = async (reason: string) => {
+    if (!open) return;
+    setBusy(true);
+    try {
+      await store.actions.rejectFundraiser(open, reason);
+      setRejecting(false);
+      notify(t('adminFundraisers.rejected'));
+    } catch (error) {
+      notify(error instanceof Error ? error.message : t('adminFundraisers.rejectFailed'), 'err');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
     <div>
       <SectionHeader title={t('adminFundraisers.title')} subtitle={t('adminFundraisers.description')} actions={<SearchBox value={q} onChange={setQ} placeholder={t('adminFundraisers.search')} />} />
-      <FilterTabs value={tab} onChange={setTab} tabs={TABS.map((filter) => ({ id: filter.id, label: t(filter.id === 'all' ? 'adminUi.all' : `adminUi.status.${filter.id}`), count: all.filter(filter.match).length }))} />
+      <FilterTabs value={tab} onChange={setTab} tabs={TABS.map((filter) => ({
+        id: filter.id,
+        label: t(filter.id === 'all' ? 'adminUi.all' : filter.id === 'rejected' ? 'adminFundraisers.rejectedStatus' : `adminFundraisers.${filter.id}`),
+        count: all.filter(filter.match).length,
+      }))} />
 
       {rows.length === 0 ? (
         <Panel><EmptyState title={t('adminFundraisers.empty')} text={t('adminUi.noMatches')} /></Panel>
@@ -83,19 +140,39 @@ export const AdminFundraisers: React.FC = () => {
         onClose={() => setOpenId(null)}
         title={open?.title || ''}
         subtitle={open && <div className="flex gap-2 items-center"><StatusBadge status={open.status} fundraiser /><span className="font-mono text-[10px] text-zinc-500">{open.serialCode || open.id}</span></div>}
-        footer={
-          open?.status === 'pending' ? (
-            <>
-              <AdminButton tone="gold" busy={busy} icon={<CheckCircle className="w-3.5 h-3.5" />} onClick={() => act(async () => { await store.actions.approveFundraiser(open); }, t('adminFundraisers.approvedToast'))}>{t('adminUi.approve')}</AdminButton>
-              <AdminButton busy={busy} icon={<MessageSquareWarning className="w-3.5 h-3.5" />} onClick={() => setModal('changes')}>{t('adminUi.requestChanges')}</AdminButton>
-              <AdminButton tone="red" busy={busy} icon={<XCircle className="w-3.5 h-3.5" />} onClick={() => setModal('reject')}>{t('adminUi.reject')}</AdminButton>
-            </>
-          ) : open ? (
-            <span className="font-mono text-[11px] text-zinc-500">{t('adminFundraisers.pendingActionsHint')}</span>
-          ) : null
-        }
+        footer={open?.status !== 'approved' && open?.status !== 'rejected' ? (
+          <>
+            <AdminButton
+              tone="gold"
+              busy={busy}
+              icon={<CheckCircle className="w-3.5 h-3.5" />}
+              onClick={() => void verifyFundraiser()}
+            >
+              {t('adminFundraisers.verify')}
+            </AdminButton>
+            <AdminButton
+              tone="red"
+              busy={busy}
+              icon={<XCircle className="w-3.5 h-3.5" />}
+              onClick={() => setRejecting(true)}
+            >
+              {t('adminFundraisers.reject')}
+            </AdminButton>
+          </>
+        ) : null}
       >
-        {open && !info && (
+        {open && reviewInfoLoading && (
+          <Panel title={t('adminFundraisers.fundraiser')}>
+            <p role="status" className="text-sm text-zinc-600 dark:text-zinc-400">Loading review details…</p>
+          </Panel>
+        )}
+        {open && reviewInfoError && (
+          <Panel title={t('adminFundraisers.detailsUnavailable')}>
+            <p role="alert" className="text-sm text-red-700 dark:text-red-300">{reviewInfoError}</p>
+            <AdminButton className="mt-3" onClick={() => setReviewInfoAttempt((attempt) => attempt + 1)}>Retry</AdminButton>
+          </Panel>
+        )}
+        {open && !info && !reviewInfoLoading && !reviewInfoError && (
           <Panel title={t('adminFundraisers.detailsUnavailable')}>
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
               {t('adminFundraisers.metadataUnavailable')}
@@ -128,7 +205,11 @@ export const AdminFundraisers: React.FC = () => {
             <Panel title={t('adminFundraisers.supportingInfo')}>
               <ul className="space-y-2 mb-3">
                 {info.documents.map((d) => (
-                  <li key={d.name} className="flex items-center gap-2 font-mono text-xs"><FileText className="w-4 h-4 text-[#9A7432]" /><span>{d.name}</span><span className="text-zinc-500">· {d.kind}</span></li>
+                  <li key={`${d.name}-${d.url || ''}`} className="flex items-center gap-2 font-mono text-xs">
+                    <FileText className="w-4 h-4 text-[#9A7432]" />
+                    {d.url ? <a href={d.url} target="_blank" rel="noreferrer" className="underline">{d.name}</a> : <span>{d.name}</span>}
+                    <span className="text-zinc-500">· {d.kind}</span>
+                  </li>
                 ))}
               </ul>
               <p className="text-sm text-zinc-600 dark:text-zinc-400">{info.verificationNotes}</p>
@@ -146,21 +227,12 @@ export const AdminFundraisers: React.FC = () => {
       </DetailDrawer>
 
       <ReasonModal
-        open={modal === 'changes'}
-        title={t('adminUi.requestChanges')}
-        description={t('adminFundraisers.requestDescription')}
-        confirmLabel={t('adminOrganizations.sendRequest')}
-        tone="gold"
-        onClose={() => setModal(null)}
-        onConfirm={(r) => act(async () => { await store.actions.requestFundraiserChanges(open!, r); setModal(null); }, t('adminFundraisers.changesRequested'))}
-      />
-      <ReasonModal
-        open={modal === 'reject'}
+        open={rejecting}
         title={t('adminFundraisers.rejectTitle')}
         description={t('adminFundraisers.rejectDescription')}
-        confirmLabel={t('adminFundraisers.rejectTitle')}
-        onClose={() => setModal(null)}
-        onConfirm={(r) => act(async () => { await store.actions.rejectFundraiser(open!, r); setModal(null); }, t('adminFundraisers.rejected'))}
+        confirmLabel={t('adminFundraisers.reject')}
+        onClose={() => setRejecting(false)}
+        onConfirm={(reason) => void rejectFundraiser(reason)}
       />
     </div>
   );

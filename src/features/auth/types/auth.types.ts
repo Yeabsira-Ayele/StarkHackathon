@@ -6,6 +6,7 @@ export interface User {
   email: string;
   phone?: string;
   role: UserRole;
+  isSuperAdmin?: boolean;
   avatarUrl?: string;
   verified: boolean;
   organizationId?: string;

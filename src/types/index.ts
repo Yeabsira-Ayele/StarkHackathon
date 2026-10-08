@@ -1,6 +1,6 @@
 export type CampaignCategory = 'medical' | 'education' | 'emergency' | 'business' | 'water' | 'environment' | 'community' | 'other';
 
-export type CampaignStatus = 'pending' | 'approved' | 'rejected' | 'completed' | 'paused' | 'needs_changes';
+export type CampaignStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'completed' | 'paused' | 'needs_changes';
 
 export type PaymentStatus = 'completed' | 'failed';
 

@@ -170,15 +170,19 @@ const BADGE: Record<string, string> = {
   suspended: 'bg-rose-100 text-[#8B2626] border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-900',
   disabled: 'bg-zinc-200 text-zinc-700 border-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700',
   paused: 'bg-zinc-200 text-zinc-700 border-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700',
+  verified: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800',
+  unverified: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800',
+  rejectedStatus: 'bg-rose-100 text-[#8B2626] border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-900',
 };
-// Fundraiser status names shown to admins (internal values stay unchanged).
-const FUNDRAISER_LABELS: Record<string, string> = { pending: 'Pending Review', approved: 'Active', needs_changes: 'Needs Changes' };
 
 export const StatusBadge: React.FC<{ status: string; fundraiser?: boolean }> = ({ status, fundraiser }) => {
   const { t } = useTranslation();
+  const displayStatus = fundraiser
+    ? status === 'approved' ? 'verified' : status === 'rejected' ? 'rejectedStatus' : 'unverified'
+    : status;
   return (
-  <span className={`admin-status-tag inline-flex items-center px-2 py-0.5 border font-mono text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${BADGE[status] || BADGE.dismissed}`}>
-    {t(`adminUi.status.${fundraiser ? FUNDRAISER_LABELS[status] ? status : 'unknown' : status}`, { defaultValue: (fundraiser && FUNDRAISER_LABELS[status]) || status.replace(/_/g, ' ') })}
+  <span className={`admin-status-tag inline-flex items-center px-2 py-0.5 border font-mono text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${BADGE[displayStatus] || BADGE.dismissed}`}>
+    {t(fundraiser ? `adminFundraisers.${displayStatus}` : `adminUi.status.${displayStatus}`, { defaultValue: displayStatus.replace(/_/g, ' ') })}
   </span>
   );
 };

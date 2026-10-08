@@ -1,6 +1,5 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
-import { ShieldCheck, FileSpreadsheet, Download } from 'lucide-react';
+import { HandCoins } from 'lucide-react';
 import { useReports } from '../hooks/useReports';
 import { ImpactSummaryCard } from '../components/ImpactSummaryCard';
 import { FinancialBreakdownChart } from '../components/FinancialBreakdownChart';
@@ -15,13 +14,12 @@ interface TransparencyReportsPageProps {
 export const TransparencyReportsPage: React.FC<TransparencyReportsPageProps> = ({
   onSelectRecord,
 }) => {
-  const { t } = useTranslation();
   const { overview, isLoading, error, refetch, selectedSector, setSelectedSector, setSelectedRecord } = useReports();
 
   const filteredRecords = overview
     ? selectedSector
-      ? overview.auditRecords.filter((r) => r.campaignTitle.toLowerCase().includes(selectedSector))
-      : overview.auditRecords
+      ? overview.contributionRecords.filter((r) => r.sector === selectedSector)
+      : overview.contributionRecords
     : [];
 
   return (
@@ -29,23 +27,23 @@ export const TransparencyReportsPage: React.FC<TransparencyReportsPageProps> = (
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-[#1E4D38] dark:text-[#52B788] mb-1">
-            <ShieldCheck className="w-5 h-5" />
+            <HandCoins className="w-5 h-5" />
             <span className="text-[11px] font-bold uppercase tracking-wider">
-              100% የህዝብ ግልጽነትና ኦዲት (Public Escrow Transparency)
+              የተረጋገጡ ልገሳዎች (Verified Contributions)
             </span>
           </div>
           <h1 className="text-2xl font-serif font-bold text-[#14110E] dark:text-[#FAF6EE]">
-            የፋይናንስና የማኅበራዊ ተጽዕኖ ሪፖርት
+            የልገሳ እና የማኅበራዊ ተጽዕኖ ሪፖርት
           </h1>
           <p className="text-xs text-[#73685B] dark:text-[#A89E90] mt-1">
-            በለወገን መድረክ በህዝብ የተሰበሰበ እና ለተጠቃሚዎች የተላለፈ የገንዘብ ዝውውር መዝገብ
+            በመድረኩ የተመዘገቡ እና የተረጋገጡ ልገሳዎች ማጠቃለያ፤ የገንዘብ ማስተላለፍ ኦዲት አይደለም።
           </p>
         </div>
       </div>
 
       {isLoading && (
         <p role="status" className="font-mono text-xs text-zinc-500">
-          የግልጽነትና ኦዲት መረጃዎችን በመጫን ላይ...
+          የተረጋገጡ ልገሳዎችን በመጫን ላይ...
         </p>
       )}
       {error && (
@@ -69,7 +67,7 @@ export const TransparencyReportsPage: React.FC<TransparencyReportsPageProps> = (
         </>
       )}
 
-      {/* Audit Table */}
+      {/* Verified contribution table */}
       {overview && filteredRecords.length > 0 ? (
         <TransparencyAuditTable
           records={filteredRecords}
@@ -80,15 +78,15 @@ export const TransparencyReportsPage: React.FC<TransparencyReportsPageProps> = (
         />
       ) : overview ? (
         <EmptyState
-          title={selectedSector ? 'ለተመረጠው ዘርፍ የኦዲት መዝገብ አልተገኘም' : 'ምንም የኦዲት መዝገብ የለም'}
-          description={selectedSector ? undefined : 'የኦዲት መዝገቦች ሲገኙ እዚህ ይታያሉ።'}
+          title={selectedSector ? 'በዚህ ዘርፍ ልገሳ የተመዘገበ ዘመቻ አልተገኘም' : 'ገና የተረጋገጠ ልገሳ አልተመዘገበም'}
+          description={selectedSector ? undefined : 'የተጠናቀቁ የልገሳ መዝገቦች ሲኖሩ እዚህ ይታያሉ።'}
           actionLabel={selectedSector ? 'ማጣሪያዎችን ዳግም አስጀምር' : undefined}
           onAction={selectedSector ? () => setSelectedSector(null) : undefined}
         />
       ) : !isLoading && !error ? (
         <EmptyState
-          title="የኦዲት መዝገቦች የሉም"
-          description="የግልጽነት መረጃ ሲገኝ እዚህ ይታያል።"
+          title="የልገሳ መዝገቦች አልተገኙም"
+          description="የተረጋገጡ ልገሳዎች ሲኖሩ እዚህ ይታያሉ።"
         />
       ) : null}
     </div>

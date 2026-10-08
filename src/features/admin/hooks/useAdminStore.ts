@@ -11,7 +11,9 @@ const EMPTY_ADMIN_SNAPSHOT: AdminSnapshot = {
   organizations: [],
   activity: [],
   admins: [],
+  adminCandidates: [],
   currentAdminId: '',
+  isSuperAdmin: false,
   unavailableSections: ['users', 'donations', 'reports', 'organizations', 'activity', 'admins', 'profile'],
 };
 
@@ -117,9 +119,12 @@ export function useAdminStore({ onApproveCampaign, onRejectCampaign }: AdminStor
       // Users
       setUserStatus: (id: string, status: 'active' | 'suspended') => run(() => adminApi.setUserStatus(id, status)),
       // Admins
-      addAdmin: (a: Parameters<typeof adminApi.addAdmin>[0]) => run(() => adminApi.addAdmin(a)),
+      addAdmin: (userId: string) => run(() => adminApi.addAdmin(userId)),
+      removeAdmin: (id: string) => run(() => adminApi.removeAdmin(id)),
       updateAdmin: (id: string, patch: Parameters<typeof adminApi.updateAdmin>[1], message?: string) =>
         run(() => adminApi.updateAdmin(id, patch, message)),
+      changePassword: (currentPassword: string, newPassword: string) =>
+        adminApi.changePassword(currentPassword, newPassword),
     }),
     [refresh, run, onApproveCampaign, onRejectCampaign]
   );

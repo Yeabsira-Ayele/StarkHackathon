@@ -34,6 +34,8 @@ const ProfilePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
   const [fundraisers, setFundraisers] = useState<Fundraiser[]>([]);
   const [message, setMessage] = useState('');
   const [messageIsError, setMessageIsError] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(Boolean(user));
+  const [profileError, setProfileError] = useState<string | null>(null);
   const [collectionsLoading, setCollectionsLoading] = useState(false);
   const [collectionsError, setCollectionsError] = useState<string | null>(null);
   const [loadAttempt, setLoadAttempt] = useState(0);
@@ -60,6 +62,42 @@ const ProfilePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
     setEmail(user?.email || '');
     setPhone(user?.phone || '');
   }, [user?.id, user?.name, user?.email, user?.phone]);
+
+  useEffect(() => {
+    let active = true;
+    if (!user) {
+      setProfileLoading(false);
+      setProfileError(null);
+      return () => {
+        active = false;
+      };
+    }
+    setProfileLoading(true);
+    setProfileError(null);
+    profileApi.getProfile()
+      .then((profile) => {
+        if (!active) return;
+        setName(profile.name);
+        setEmail(profile.email);
+        setPhone(profile.phone || '');
+        setUser({
+          ...user,
+          name: profile.name,
+          email: profile.email,
+          phone: profile.phone,
+          preferredLanguage: profile.preferredLanguage,
+        }, token);
+      })
+      .catch((cause: unknown) => {
+        if (active) setProfileError(cause instanceof Error ? cause.message : t('profile.loadError'));
+      })
+      .finally(() => {
+        if (active) setProfileLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     let active = true;
@@ -104,7 +142,7 @@ const ProfilePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
     setMessage('');
     setMessageIsError(false);
     try {
-      await profileApi.updateProfile({
+      const updatedProfile = await profileApi.updateProfile({
         name: name.trim(),
         email: email.trim(),
         phone: phone.trim(),
@@ -112,9 +150,10 @@ const ProfilePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
       });
       setUser({
         ...user,
-        name: name.trim(),
-        email: email.trim(),
-        preferredLanguage: i18n.language === 'en' ? 'en' : 'am',
+        name: updatedProfile.name,
+        email: updatedProfile.email,
+        phone: updatedProfile.phone,
+        preferredLanguage: updatedProfile.preferredLanguage,
       }, token);
       setMessage(t('profile.updated'));
     } catch (error) {
@@ -190,6 +229,8 @@ const ProfilePage: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => 
 
         {user ? (
           <div className="mt-7 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(260px,.7fr)]">
+            {profileLoading && <p role="status" className="lg:col-span-2 text-sm text-zinc-500">Loading your profile…</p>}
+            {profileError && <p role="alert" className="lg:col-span-2 border border-red-700/30 bg-red-50 p-4 text-sm text-red-800 dark:bg-red-950/30 dark:text-red-200">{profileError}</p>}
             <section className="border border-[#9A7432]/30 bg-white/60 p-5 dark:bg-white/[.03] sm:p-7">
               <div className="mb-5 flex items-center gap-3">
                 <span className="grid h-12 w-12 place-items-center rounded-full border border-[#9A7432]/40 bg-[#F2EADA] dark:bg-[#201B16]"><UserRound className="h-5 w-5 text-[#1E4D38] dark:text-[#52B788]" /></span>

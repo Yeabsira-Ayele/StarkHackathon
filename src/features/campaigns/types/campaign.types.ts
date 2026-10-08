@@ -8,7 +8,7 @@ export type CampaignCategory =
   | 'community'
   | 'other';
 
-export type CampaignStatus = 'pending' | 'approved' | 'needs_changes' | 'rejected' | 'completed' | 'paused';
+export type CampaignStatus = 'draft' | 'pending' | 'approved' | 'needs_changes' | 'rejected' | 'completed' | 'paused';
 
 export interface BudgetItem {
   item: string;

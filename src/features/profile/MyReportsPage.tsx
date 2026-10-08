@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, ExternalLink, Flag, FlaskConical, Moon, Sun } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Flag, Moon, Sun } from 'lucide-react';
 import { LanguageSwitcher } from '../../components/common/LanguageSwitcher.tsx';
 import type { AdminReport } from '../admin/types/admin.types.ts';
 import { useAuthStore } from '../auth/store/auth.store.ts';
 import { APP_NAME } from '../../data/content.ts';
+import { reportsApi } from '../reports/api/reports.api.ts';
 
 const MyReportsPage = () => {
   const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
-  const reports: AdminReport[] = [];
-  const error = 'Report history is not available from the backend yet.';
-  const loading = false;
+  const [reports, setReports] = useState<AdminReport[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [isDark, setIsDark] = useState<boolean>(() => {
     try {
       return localStorage.getItem('lewegene_theme') === 'dark';
@@ -29,6 +31,36 @@ const MyReportsPage = () => {
       // ignore
     }
   }, [isDark]);
+
+  useEffect(() => {
+    let active = true;
+    if (!user) {
+      setReports([]);
+      setError(null);
+      setLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+
+    setLoading(true);
+    setError(null);
+    reportsApi.getMyReports()
+      .then((items) => {
+        if (active) setReports(items);
+      })
+      .catch((cause: unknown) => {
+        if (active) {
+          setError(cause instanceof Error ? cause.message : 'Could not load your reports.');
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [user?.id, loadAttempt]);
 
   return (
     <main className="min-h-screen bg-[#F7F2E7] px-4 py-8 text-[#201C18] dark:bg-[#12100E] dark:text-[#F4EFE6] sm:px-6 sm:py-10">
@@ -90,7 +122,12 @@ const MyReportsPage = () => {
           </p>
         )}
         {loading && <p className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">Loading your reports…</p>}
-        {error && <p role="alert" className="mt-6 border border-red-700/30 bg-red-50 p-4 text-sm text-red-800 dark:bg-red-950/30 dark:text-red-200">{error}</p>}
+        {error && (
+          <div role="alert" className="mt-6 border border-red-700/30 bg-red-50 p-4 text-sm text-red-800 dark:bg-red-950/30 dark:text-red-200">
+            <p>{error}</p>
+            <button type="button" className="mt-2 underline" onClick={() => setLoadAttempt((attempt) => attempt + 1)}>Retry</button>
+          </div>
+        )}
         {!loading && !error && user && reports.length === 0 && (
           <p className="mt-6 border border-[#9A7432]/30 bg-white/60 p-5 text-sm dark:bg-white/[.03]">
             You have not submitted any cause reports from this account.

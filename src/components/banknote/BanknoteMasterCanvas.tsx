@@ -57,6 +57,7 @@ import {
 } from 'lucide-react';
 import { toGeezNumber } from '../../services/utils/currencyUtils.ts';
 import { adminApi } from '../../features/admin/api/admin.api.ts';
+import { campaignApi } from '../../services/api/campaignApi.ts';
 import { useAuthStore } from '../../features/auth/store/auth.store.ts';
 import { DISCOVER_LOCATIONS } from '../../services/lookupService.ts';
 import { CAMPAIGN_CATEGORIES } from '../../mock-data/categories/categories.data.ts';
@@ -445,6 +446,8 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
   const [zoomMode, setZoomMode] = useState<BanknoteZoomMode>(initialMode);
   const [activePlateIndex, setActivePlateIndex] = useState<number>(0);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [campaignDetailLoading, setCampaignDetailLoading] = useState(false);
+  const [campaignDetailError, setCampaignDetailError] = useState<string | null>(null);
   const [isReportFormOpen, setIsReportFormOpen] = useState<boolean>(false);
   const [reportReason, setReportReason] = useState<string>('');
   const [reportDetails, setReportDetails] = useState<string>('');
@@ -483,12 +486,50 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
   }, [initialMode]);
 
   useEffect(() => {
-    if (initialCampaignId) {
-      setSelectedCampaign(campaigns.find((campaign) => campaign.id === initialCampaignId) || campaigns[0] || null);
-    } else if (initialMode === 'detail' || initialMode === 'pledge') {
-      setSelectedCampaign(campaigns[0] || null);
+    let active = true;
+    setCampaignDetailError(null);
+    if (!initialCampaignId) {
+      setCampaignDetailLoading(false);
+      if (initialMode === 'detail' || initialMode === 'pledge') {
+        setSelectedCampaign(campaigns[0] || null);
+      }
+      return () => {
+        active = false;
+      };
     }
-  }, [campaigns, initialCampaignId, initialMode]);
+
+    const listedCampaign = campaigns.find((campaign) => campaign.id === initialCampaignId);
+    if (listedCampaign) {
+      setSelectedCampaign(listedCampaign);
+      setCampaignDetailLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+    if (isDataLoading) {
+      setSelectedCampaign(null);
+      setCampaignDetailLoading(true);
+      return () => {
+        active = false;
+      };
+    }
+
+    setSelectedCampaign(null);
+    setCampaignDetailLoading(true);
+    campaignApi.getCampaignById(initialCampaignId)
+      .then((campaign) => {
+        if (active) setSelectedCampaign(campaign);
+      })
+      .catch((cause: unknown) => {
+        if (active) setCampaignDetailError(cause instanceof Error ? cause.message : 'Could not load this campaign.');
+      })
+      .finally(() => {
+        if (active) setCampaignDetailLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [campaigns, initialCampaignId, initialMode, isDataLoading]);
 
   const openVault = () => {
     if (!isAuthenticated) {
@@ -1562,11 +1603,11 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                         {t('campaigns.title')}
                       </h2>
                       <p className="font-mono text-sm text-zinc-600 dark:text-zinc-400">
-                        {isDataLoading
+                        {campaignDetailLoading || isDataLoading
                           ? t('common.loading')
-                          : dataError || t('campaigns.emptyDescription')}
+                          : campaignDetailError || dataError || t('campaigns.emptyDescription')}
                       </p>
-                      {!isDataLoading && dataError && onRetryData && (
+                      {!campaignDetailLoading && !isDataLoading && (campaignDetailError || dataError) && onRetryData && (
                         <button
                           type="button"
                           onClick={onRetryData}

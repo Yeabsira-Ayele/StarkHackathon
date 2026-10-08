@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, ShieldCheck, FileCheck, CheckCircle2, Building2, Calendar, Hash } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, CheckCircle2, Building2, Calendar, HandCoins } from 'lucide-react';
 import { useReports } from '../hooks/useReports';
 import { EmptyState } from '../../../components/EmptyState';
 
@@ -40,7 +40,7 @@ export const CampaignReportDetailPage: React.FC<CampaignReportDetailPageProps> =
         <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
           <ShieldCheck className="w-5 h-5" />
           <span className="text-[11px] font-bold uppercase tracking-wider">
-            የተረጋገጠ የኦዲት ማህደር (Verified Audit Trail)
+            የተረጋገጡ የልገሳ መዝገቦች (Verified Contributions)
           </span>
         </div>
 
@@ -49,7 +49,7 @@ export const CampaignReportDetailPage: React.FC<CampaignReportDetailPageProps> =
             {selectedRecord.campaignTitle}
           </h1>
           <p className="text-xs text-[#73685B] dark:text-[#A89E90] mt-1">
-            ኦፊሴላዊ የገንዘብ ማስተላለፍ እና የኤስክሮ ማረጋገጫ ሰነድ
+            Completed donation totals reported by the backend for this campaign
           </p>
         </div>
 
@@ -66,30 +66,32 @@ export const CampaignReportDetailPage: React.FC<CampaignReportDetailPageProps> =
 
           <div className="space-y-1">
             <span className="text-[10px] text-[#73685B] dark:text-[#A89E90] uppercase font-semibold">
-              የተላለፈ መጠን
+              የተሰበሰበ መጠን
             </span>
             <p className="font-mono font-bold text-base text-[#1E4D38] dark:text-[#52B788]">
-              {selectedRecord.disbursedAmount.toLocaleString()} {t('common.currency')}
+              {selectedRecord.totalRaisedETB.toLocaleString()} {t('common.currency')}
             </p>
           </div>
 
           <div className="space-y-1">
             <span className="text-[10px] text-[#73685B] dark:text-[#A89E90] uppercase font-semibold">
-              የኤስክሮ መለያ ቁጥር (Escrow Ref)
+              የልገሳ ብዛት
             </span>
             <p className="font-mono font-semibold text-[#14110E] dark:text-[#FAF6EE] flex items-center gap-1.5">
-              <Hash className="w-3.5 h-3.5 text-[#9A7432]" />
-              {selectedRecord.escrowReference}
+              <HandCoins className="w-3.5 h-3.5 text-[#9A7432]" />
+              {selectedRecord.contributionCount.toLocaleString()}
             </p>
           </div>
 
           <div className="space-y-1">
             <span className="text-[10px] text-[#73685B] dark:text-[#A89E90] uppercase font-semibold">
-              የተላለፈበት ቀን
+              የመጨረሻ ልገሳ ቀን
             </span>
             <p className="font-medium text-[#14110E] dark:text-[#FAF6EE] flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-[#73685B]" />
-              {selectedRecord.disbursementDate}
+              {selectedRecord.lastContributionAt
+                ? new Date(selectedRecord.lastContributionAt).toLocaleDateString()
+                : '—'}
             </p>
           </div>
         </div>
@@ -97,7 +99,7 @@ export const CampaignReportDetailPage: React.FC<CampaignReportDetailPageProps> =
         <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-800 dark:text-emerald-300 flex items-start gap-3">
           <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
           <p className="leading-relaxed">
-            ይህ የገንዘብ ዝውውር በኢ.ፌ.ዲ.ሪ ሲቪል ማኅበራት ድርጅቶች ባለስልጣን እና በኢትዮጵያ ብሔራዊ ባንክ ኤስክሮ ህግጋት መሰረት ኦዲት ተደርጎ ጸድቋል።
+            These totals include completed donations recorded by the platform. They do not represent a disbursement or an independent audit.
           </p>
         </div>
       </div>

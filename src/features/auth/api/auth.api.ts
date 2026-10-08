@@ -46,6 +46,7 @@ export function mapBackendUser(user: BackendUser, organization?: BackendOrganiza
     email: user.email || '',
     phone: user.phone,
     role: roles[user.role],
+    isSuperAdmin: user.role === 'SUPER_ADMIN',
     avatarUrl: user.profilePhoto,
     verified: user.role === 'ORGANIZATION'
       ? organization?.verificationStatus === 'approved'

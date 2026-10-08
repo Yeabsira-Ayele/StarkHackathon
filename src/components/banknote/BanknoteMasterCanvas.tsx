@@ -1352,7 +1352,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 className="px-4 py-2 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#F2EADA] dark:bg-[#0E0D0B] font-mono text-xs font-bold uppercase flex items-center gap-2 hover:bg-[#DFD3BC] transition-colors cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>← {t('explore.backHome')}</span>
+                <span>{t('explore.backHome')}</span>
               </button>
 
               <div className="text-center">
@@ -1419,7 +1419,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
 
                 <div className="flex flex-col gap-0.5">
                   <label htmlFor="filter-location-select" className="text-[10px] font-mono font-bold tracking-wider text-zinc-600 dark:text-zinc-400 uppercase flex items-center justify-between">
-                    <span>{t('banknote.filterByLocation')}</span>
+                    <span>{t('campaigns.location')}:</span>
                     {selectedLocation !== 'all' && <span className="text-[9px] text-[#1E4D38] dark:text-[#52B788] font-bold">ACTIVE</span>}
                   </label>
                   <select id="filter-location-select" value={selectedLocation} onChange={(event) => setSelectedLocation(event.target.value)} className="w-full appearance-none px-3 py-1.5 border border-[#26211C]/30 dark:border-[#4A3E33] bg-[#FAF6EC] dark:bg-[#12100E] font-mono text-xs font-bold uppercase text-[#201C18] dark:text-[#F4EFE6] focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788] cursor-pointer shadow-xs transition-colors">
@@ -1522,7 +1522,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 className="px-4 py-2 border border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-xs font-black tracking-widest uppercase flex items-center gap-2 hover:bg-[#163E2C] transition-colors cursor-pointer shadow-xs"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>← {t('banknote.backToCauses')}</span>
+                <span>{t('banknote.backToCauses')}</span>
               </button>
 
               <div className="flex items-center gap-3">

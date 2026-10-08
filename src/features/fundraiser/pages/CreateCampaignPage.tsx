@@ -53,7 +53,7 @@ export const CreateCampaignPage: React.FC<CreateCampaignPageProps> = ({
           className="px-4 py-2 border-2 border-[#26211C]/30 bg-[#FFFDF9] dark:bg-[#12100E] font-mono text-xs font-bold uppercase flex items-center gap-2 hover:bg-[#F2ECE1] transition-colors cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>← {t('common.back')}</span>
+          <span>{t('common.back')}</span>
         </button>
 
         <span className="font-mono text-xs font-black text-[#1E4D38] dark:text-[#52B788]">

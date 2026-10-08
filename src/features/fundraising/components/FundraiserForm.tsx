@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Card, FieldError, Input, Label, Select, fieldClass } from './bn.tsx';
-import { ArrowLeft, ArrowRight, Save, Trash2, Upload, Plus, Building2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Save, Trash2, Upload, Plus } from 'lucide-react';
 import type { BeneficiaryType, DocumentKind, FormErrors, FundraiserFormValues, BankAccount } from '../types/fundraiser.types.ts';
 import { validate } from '../schemas/fundraiser.schema.ts';
 import { useBanks } from '../hooks/useBanks.ts';
@@ -451,7 +451,6 @@ export const FundraiserForm: React.FC<Props> = ({
                     >
                       <div className="flex items-center justify-between pb-2 border-b border-[#26211C]/10 dark:border-[#9A7432]/20">
                         <div className="flex items-center gap-2">
-                          <Building2 className="w-4 h-4 text-[#1E4D38] dark:text-[#52B788]" />
                           <span className="font-serif font-bold text-sm text-[#14110E] dark:text-[#F4EFE6]">
                             {bankMeta?.name || item.bankId}
                           </span>

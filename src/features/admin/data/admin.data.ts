@@ -1,4 +1,4 @@
-import { AdminPermission, AdminRoleName, AdminStats, AuditLog, FundraiserReviewInfo } from '../types/admin.types';
+import { AdminPermission, AdminRoleName, AdminStats, AuditLog } from '../types/admin.types';
 
 export const INITIAL_ADMIN_STATS: AdminStats = {
   pendingCount: 0,
@@ -21,19 +21,10 @@ export const ADMIN_ALL_PERMISSIONS: AdminPermission[] = [
 
 export const ADMIN_ROLE_LABELS: Record<AdminRoleName, string> = {
   super_admin: 'Super admin',
-  moderator: 'Moderator',
-  finance: 'Finance',
+  admin: 'Admin',
 };
 
 export const ADMIN_ROLE_DEFAULT_PERMISSIONS: Record<AdminRoleName, AdminPermission[]> = {
   super_admin: [...ADMIN_ALL_PERMISSIONS],
-  moderator: ['fundraisers', 'reports', 'users', 'organizations'],
-  finance: ['donations', 'reports'],
-};
-
-export const getFundraiserReviewInfo = (
-  _fundraiserId: string,
-  _creatorName: string,
-): FundraiserReviewInfo | null => {
-  return null;
+  admin: ['fundraisers', 'reports', 'donations', 'users', 'organizations'],
 };

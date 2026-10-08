@@ -3,12 +3,16 @@ import { useTranslation } from 'react-i18next';
 import { Camera, LogOut, Save } from 'lucide-react';
 import { Avatar } from '../../../components/ui/Avatar.tsx';
 import { useAdmin } from '../hooks/AdminContext.ts';
+import { useAuthStore } from '../../auth/store/auth.store.ts';
 import { ADMIN_ROLE_LABELS } from '../data/admin.data.ts';
 import { AdminButton, AdminErrorState, Panel, SectionHeader, inputCls, labelCls, useAdminToast } from '../components/AdminUI.tsx';
 
 export const AdminProfile: React.FC = () => {
   const { t } = useTranslation();
   const { store, onExit } = useAdmin();
+  const authUser = useAuthStore((state) => state.user);
+  const authToken = useAuthStore((state) => state.token);
+  const setAuthUser = useAuthStore((state) => state.setUser);
   const { notify } = useAdminToast();
   const snapshot = store.snapshot!;
   const me = snapshot.admins.find((a) => a.id === snapshot.currentAdminId);
@@ -19,7 +23,7 @@ export const AdminProfile: React.FC = () => {
   const fileRef = useRef<HTMLInputElement>(null);
 
   if (snapshot.unavailableSections?.includes('profile') || !me) {
-    return <div className="max-w-3xl"><SectionHeader title={t('adminProfile.title')} subtitle={t('adminProfile.subtitle')} /><AdminErrorState title="Admin profile is unavailable" text="The admin backend does not currently provide profile records or profile management." onRetry={() => void store.actions.refresh()} /></div>;
+    return <div className="max-w-3xl"><SectionHeader title={t('adminProfile.title')} subtitle={t('adminProfile.subtitle')} /><AdminErrorState title="Admin profile is unavailable" text="Could not load the signed-in administrator profile. Retry to load it again." onRetry={() => void store.actions.refresh()} /></div>;
   }
 
   const emailOk = /^\S+@\S+\.\S+$/.test(email);
@@ -39,7 +43,11 @@ export const AdminProfile: React.FC = () => {
     if (!f.type.startsWith('image/')) return notify(t('adminProfile.imageOnly'), 'err');
     if (f.size > 1_500_000) return notify(t('adminProfile.imageTooLarge'), 'err');
     const reader = new FileReader();
-    reader.onload = () => run(async () => { await store.actions.updateAdmin(me.id, { photo: String(reader.result) }, 'Admin {name} changed profile photo'); }, t('adminProfile.photoUpdated'));
+    reader.onload = () => run(async () => {
+      const photo = String(reader.result);
+      await store.actions.updateAdmin(me.id, { photo }, 'Admin {name} changed profile photo');
+      if (authUser) setAuthUser({ ...authUser, avatarUrl: photo }, authToken);
+    }, t('adminProfile.photoUpdated'));
     reader.readAsDataURL(f);
   };
 
@@ -64,7 +72,10 @@ export const AdminProfile: React.FC = () => {
           </div>
           <div className="flex justify-end mt-4">
             <AdminButton tone="red" busy={busy} disabled={!profileDirty || !name.trim() || !emailOk} icon={<Save className="w-3.5 h-3.5" />}
-              onClick={() => run(async () => { await store.actions.updateAdmin(me.id, { name: name.trim(), email: email.trim() }, 'Admin profile updated: {name}'); }, t('adminProfile.profileSaved'))}>{t('adminProfile.saveProfile')}</AdminButton>
+              onClick={() => run(async () => {
+                await store.actions.updateAdmin(me.id, { name: name.trim(), email: email.trim() }, 'Admin profile updated: {name}');
+                if (authUser) setAuthUser({ ...authUser, name: name.trim(), email: email.trim() }, authToken);
+              }, t('adminProfile.profileSaved'))}>{t('adminProfile.saveProfile')}</AdminButton>
           </div>
         </Panel>
 
@@ -77,7 +88,11 @@ export const AdminProfile: React.FC = () => {
           {pwErr && <p className="font-mono text-[10px] text-[#8B2626] mt-2">{pwErr}</p>}
           <div className="flex justify-end mt-4">
             <AdminButton tone="red" busy={busy} disabled={!pw.current || pw.next.length < 8 || pw.next !== pw.confirm}
-              onClick={() => run(async () => { await store.actions.updateAdmin(me.id, {}, 'Admin {name} changed password'); setPw({ current: '', next: '', confirm: '' }); }, t('adminProfile.passwordUpdated'))}>{t('adminProfile.updatePassword')}</AdminButton>
+              onClick={() => run(async () => {
+                const nextToken = await store.actions.changePassword(pw.current, pw.next);
+                setAuthUser(authUser, nextToken);
+                setPw({ current: '', next: '', confirm: '' });
+              }, t('adminProfile.passwordUpdated'))}>{t('adminProfile.updatePassword')}</AdminButton>
           </div>
         </Panel>
 

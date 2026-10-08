@@ -11,23 +11,23 @@ export interface SectorBreakdown {
   color: string;
 }
 
-export interface TransparencyAuditRecord {
+export interface TransparencyContributionRecord {
   id: string;
   campaignTitle: string;
+  sector: string;
   organization: string;
-  disbursedAmount: number;
-  beneficiaryCount: number;
-  disbursementDate: string;
-  escrowReference: string;
-  verificationReportUrl?: string;
-  status: 'fully_audited' | 'in_disbursement' | 'verified_complete';
+  totalRaisedETB: number;
+  contributionCount: number;
+  lastContributionAt: string | null;
+  status: string;
 }
 
 export interface TransparencyOverview {
-  totalDisbursedETB: number;
-  totalBeneficiaries: number;
-  totalDonors: number;
-  activeProjectsAudited: number;
+  totalRaisedETB: number;
+  totalContributions: number;
+  supportedCampaigns: number;
   sectorBreakdowns: SectorBreakdown[];
-  auditRecords: TransparencyAuditRecord[];
+  contributionRecords: TransparencyContributionRecord[];
 }
+
+export type TransparencyAuditRecord = TransparencyContributionRecord;

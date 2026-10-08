@@ -30,10 +30,10 @@ export const FinancialBreakdownChart: React.FC<FinancialBreakdownChartProps> = (
   return (
     <div className="p-6 rounded-3xl bg-[#FAF6EE] dark:bg-[#14110E] border border-[#D5C8B2]/80 dark:border-[#2E2822]">
       <h3 className="text-sm font-serif font-bold text-[#14110E] dark:text-[#FAF6EE] mb-1">
-        የልገሳ ድልድል በዘርፍ (Disbursement Allocation)
+        የተረጋገጡ ልገሳዎች በዘርፍ (Verified Contributions by Sector)
       </h3>
       <p className="text-xs text-[#73685B] dark:text-[#A89E90] mb-4">
-        በማኅበራዊ ዘርፎች የተሰራጨው የተጣራ የልገሳ በጀት
+        Completed donation amounts for campaigns grouped by sector
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-6">

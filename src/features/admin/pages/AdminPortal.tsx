@@ -55,6 +55,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme,
   const { t } = useTranslation();
   const store = useAdminStore({ onApproveCampaign, onRejectCampaign });
   const authUser = useAuthStore((state) => state.user);
+  const isSuperAdmin = store.snapshot?.isSuperAdmin ?? false;
   const logout = useAuthStore((state) => state.logout);
   const [section, setSection] = useState<AdminSection>('dashboard');
   const [focusId, setFocusId] = useState<string | null>(null);
@@ -110,6 +111,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme,
   }, [search, snap, store.campaigns]);
 
   const page = () => {
+    if (section === 'admins' && !isSuperAdmin) return <AdminDashboard />;
     switch (section) {
       case 'dashboard': return <AdminDashboard />;
       case 'fundraisers': return <AdminFundraisers />;
@@ -122,6 +124,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme,
       case 'profile': return <AdminProfile />;
     }
   };
+  const navGroups = NAV_GROUPS
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => item.id !== 'admins' || isSuperAdmin),
+    }))
+    .filter((group) => group.items.length > 0);
 
   const sidebar = (
     <nav aria-label="Admin navigation" className="flex h-full flex-col">
@@ -133,7 +141,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isDark, onToggleTheme,
         <span className="grid h-9 w-9 place-items-center border border-[var(--admin-gold)] font-display text-xl font-black text-[var(--admin-green)] xl:hidden">L</span>
       </div>
       <div className="admin-sidebar-scroll flex-1 overflow-y-auto py-3">
-        {NAV_GROUPS.map((group) => (
+        {navGroups.map((group) => (
           <section key={group.label} className="mb-2">
             <h2 className="hidden px-5 pb-1 pt-2 font-mono text-[10px] font-semibold text-[var(--admin-muted)] xl:block">{t(group.labelKey, group.label)}</h2>
             <ul>

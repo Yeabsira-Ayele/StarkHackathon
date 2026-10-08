@@ -36,7 +36,7 @@ export const AdminReports: React.FC = () => {
   const v = open ? view(open) : null;
 
   if (s.unavailableSections?.includes('reports')) {
-    return <div><SectionHeader title={t('adminReports.title')} subtitle={t('adminReports.description')} /><AdminErrorState title="Report records are unavailable" text="The admin backend does not currently provide report records, so no empty or sample list is shown." onRetry={() => void store.actions.refresh()} /></div>;
+    return <div><SectionHeader title={t('adminReports.title')} subtitle={t('adminReports.description')} /><AdminErrorState title="Report records are unavailable" text="Could not load report records from the backend. Retry to load them again." onRetry={() => void store.actions.refresh()} /></div>;
   }
 
   const act = async (fn: () => Promise<void>, ok: string) => {

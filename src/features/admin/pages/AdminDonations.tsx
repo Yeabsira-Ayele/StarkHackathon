@@ -8,7 +8,7 @@ import {
   SectionHeader, StatusBadge, Td, Tr, fmtDateTime, fmtETB,
 } from '../components/AdminUI.tsx';
 
-const TABS = ['all', 'successful', 'failed'] as const;
+const TABS = ['all', 'successful', 'pending', 'failed'] as const;
 
 export const AdminDonations: React.FC = () => {
   const { t } = useTranslation();

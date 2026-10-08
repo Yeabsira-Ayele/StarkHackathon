@@ -31,7 +31,7 @@ export type AdminSection =
   | 'admins'
   | 'profile';
 
-export type AdminRoleName = 'super_admin' | 'moderator' | 'finance';
+export type AdminRoleName = 'super_admin' | 'admin';
 
 export type AdminPermission =
   | 'fundraisers'
@@ -45,6 +45,7 @@ export interface AdminAccount {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   role: AdminRoleName;
   permissions: AdminPermission[];
   status: 'active' | 'disabled';
@@ -63,7 +64,7 @@ export interface PlatformUser {
   fundraisers: { id: string; title: string; status: string }[];
 }
 
-export type DonationStatus = 'successful' | 'failed';
+export type DonationStatus = 'successful' | 'failed' | 'pending';
 
 export interface AdminDonation {
   id: string;
@@ -155,13 +156,15 @@ export interface AdminSnapshot {
   organizations: OrgApplication[];
   activity: ActivityEvent[];
   admins: AdminAccount[];
+  adminCandidates: PlatformUser[];
   currentAdminId: string;
+  isSuperAdmin: boolean;
   unavailableSections?: AdminSection[];
 }
 
 export interface FundraiserReviewInfo {
   beneficiary: { name: string; relation: string; phone: string };
   receiving: { bank: string; accountNumber: string; accountName: string };
-  documents: { name: string; kind: string }[];
+  documents: { name: string; kind: string; url?: string }[];
   verificationNotes: string;
 }

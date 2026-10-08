@@ -1,9 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Building2, Check, Flag, HandCoins, Users, TrendingUp, ArrowRight, Clock3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAdmin } from '../hooks/AdminContext.ts';
 import { ActivityList } from './AdminActivity.tsx';
-import { AdminButton, AdminErrorState, fmtDateTime, useAdminToast } from '../components/AdminUI.tsx';
+import { AdminButton, AdminErrorState, fmtDateTime } from '../components/AdminUI.tsx';
 import type { AdminDonation } from '../types/admin.types.ts';
 
 const formatETB = (value: number, locale: string) => `ETB ${new Intl.NumberFormat(locale).format(value)}`;
@@ -94,8 +94,6 @@ function DonationsChart({ donations }: { donations: AdminDonation[] }) {
 export const AdminDashboard: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { store, go } = useAdmin();
-  const { notify } = useAdminToast();
-  const [busyId, setBusyId] = useState<string | null>(null);
   const snapshot = store.snapshot!;
   const unavailable = new Set(snapshot.unavailableSections ?? []);
   const usersAvailable = !unavailable.has('users');
@@ -132,25 +130,13 @@ export const AdminDashboard: React.FC = () => {
     const submittedAt = new Date(organization.submittedAt).getTime();
     return submittedAt >= previousMonth && submittedAt < thisMonth;
   }).length;
-  const pendingFundraisers = fundraisersAvailable ? store.campaigns.filter((campaign) => campaign.status === 'pending') : [];
+  const unverifiedFundraisers = fundraisersAvailable
+    ? store.campaigns.filter((campaign) => !['approved', 'rejected', 'draft'].includes(campaign.status))
+    : [];
   const pendingReports = snapshot.reports.filter((report) => report.status === 'pending');
   const donationsByDay = weeklyValues(successful, (donation) => donation.createdAt, (donation) => donation.amount);
   const usersByDay = weeklyValues(snapshot.users, (user) => user.joinedAt, () => 1);
   const organizationsByDay = weeklyValues(snapshot.organizations, (organization) => organization.submittedAt, () => 1);
-
-  const approve = async (id: string) => {
-    const campaign = store.campaignById.get(id);
-    if (!campaign) return;
-    setBusyId(id);
-    try {
-      await store.actions.approveFundraiser(campaign);
-      notify(t('adminDashboard.approved'));
-    } catch (error) {
-      notify(error instanceof Error ? error.message : t('adminDashboard.approveFailed'), 'err');
-    } finally {
-      setBusyId(null);
-    }
-  };
 
   const stats = [
     { label: 'adminDashboard.totalUsers', value: usersAvailable ? snapshot.users.length.toLocaleString(locale) : t('adminDashboard.notAvailable'), trend: usersAvailable ? trendText(monthlyUsers, previousUsers) : t('adminDashboard.notAvailable'), icon: <Users className="h-4 w-4" />, spark: usersAvailable ? usersByDay : [], goTo: 'users' as const },
@@ -181,12 +167,12 @@ export const AdminDashboard: React.FC = () => {
               <p className="text-xs text-[var(--admin-muted)]">{t(reportsAvailable ? 'adminDashboard.pendingAttention' : 'adminDashboard.pendingFundraisers')}</p>
             </div>
           </div>
-          <span className="rounded-full bg-[var(--admin-red)] px-2.5 py-1 font-mono text-[10px] font-bold text-white">{pendingFundraisers.length + (reportsAvailable ? pendingReports.length : 0)} {t('adminDashboard.waiting')}</span>
+          <span className="rounded-full bg-[var(--admin-red)] px-2.5 py-1 font-mono text-[10px] font-bold text-white">{unverifiedFundraisers.length + (reportsAvailable ? pendingReports.length : 0)} {t('adminDashboard.waiting')}</span>
         </div>
         {!reportsAvailable && <p className="border-b border-[var(--admin-border)] px-5 py-3 text-xs text-[var(--admin-muted)]">{t('adminDashboard.reportsUnavailable')}</p>}
         {!fundraisersAvailable && !reportsAvailable ? (
           <p className="px-5 py-7 text-center text-sm text-[var(--admin-muted)]">{t('adminDashboard.dataUnavailable')}</p>
-        ) : pendingFundraisers.length === 0 && (!reportsAvailable || pendingReports.length === 0) ? (
+        ) : unverifiedFundraisers.length === 0 && (!reportsAvailable || pendingReports.length === 0) ? (
           <div className="px-5 py-7 text-center">
             <Check className="mx-auto h-6 w-6 text-[var(--admin-green)]" />
             <p className="mt-2 text-sm font-semibold">{t('adminDashboard.caughtUp')}</p>
@@ -196,26 +182,23 @@ export const AdminDashboard: React.FC = () => {
           <div className="grid divide-y divide-[var(--admin-border)] lg:grid-cols-2 lg:divide-x lg:divide-y-0">
             {fundraisersAvailable && <section className="p-4 sm:p-5">
               <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-sm font-semibold">{t('adminDashboard.pendingFundraisers')}</h3>
-                <span className="rounded-full bg-[var(--admin-red)]/10 px-2 py-0.5 font-mono text-[10px] font-bold text-[var(--admin-red)]">{pendingFundraisers.length}</span>
+                <h3 className="text-sm font-semibold">{t('adminFundraisers.unverified')}</h3>
+                <span className="rounded-full bg-[var(--admin-red)]/10 px-2 py-0.5 font-mono text-[10px] font-bold text-[var(--admin-red)]">{unverifiedFundraisers.length}</span>
               </div>
-              {pendingFundraisers.length ? (
+              {unverifiedFundraisers.length ? (
                 <ul className="space-y-2">
-                  {pendingFundraisers.slice(0, 3).map((campaign) => (
+                  {unverifiedFundraisers.slice(0, 3).map((campaign) => (
                     <li key={campaign.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-[var(--admin-border)] p-3 transition-colors hover:bg-[var(--admin-green)]/[0.04]">
                       <button type="button" onClick={() => go('fundraisers', campaign.id)} className="min-w-0 flex-1 text-left">
                         <span className="block truncate text-sm font-medium">{campaign.title}</span>
                         <span className="mt-0.5 block truncate font-mono text-[10px] text-[var(--admin-muted)]">{campaign.creatorName} · {campaign.id}</span>
                       </button>
-                      <div className="flex gap-2">
-                        <button type="button" disabled={busyId === campaign.id} onClick={() => void approve(campaign.id)} className="rounded-md bg-[var(--admin-green)] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50">{busyId === campaign.id ? t('adminDashboard.approving') : t('adminDashboard.approve')}</button>
-                        <button type="button" onClick={() => go('fundraisers', campaign.id)} className="rounded-md border border-[var(--admin-border)] px-3 py-1.5 text-xs font-semibold hover:bg-[var(--admin-green)]/10">{t('adminDashboard.review')}</button>
-                      </div>
+                      <button type="button" onClick={() => go('fundraisers', campaign.id)} className="rounded-md border border-[var(--admin-border)] px-3 py-1.5 text-xs font-semibold hover:bg-[var(--admin-green)]/10">{t('adminUi.open')}</button>
                     </li>
                   ))}
                 </ul>
-              ) : <p className="rounded-md bg-[var(--admin-cream)] px-3 py-4 text-sm text-[var(--admin-muted)]">{t('adminDashboard.noPendingFundraisers')}</p>}
-              {pendingFundraisers.length > 3 && <button type="button" onClick={() => go('fundraisers')} className="mt-3 text-xs font-semibold text-[var(--admin-green)] hover:underline">{t('adminDashboard.viewAllFundraisers', { count: pendingFundraisers.length })}</button>}
+              ) : <p className="rounded-md bg-[var(--admin-cream)] px-3 py-4 text-sm text-[var(--admin-muted)]">{t('adminDashboard.noUnverifiedFundraisers')}</p>}
+              {unverifiedFundraisers.length > 3 && <button type="button" onClick={() => go('fundraisers')} className="mt-3 text-xs font-semibold text-[var(--admin-green)] hover:underline">{t('adminDashboard.viewAllFundraisers', { count: unverifiedFundraisers.length })}</button>}
             </section>}
             {reportsAvailable && (
               <section className="p-4 sm:p-5">

@@ -69,8 +69,8 @@ export const VoiceDonationModal: React.FC<VoiceDonationModalProps> = ({
       setError('Please select a verified campaign for this donation.');
       return;
     }
-    if (amount < 50) {
-      setError('Donation amount must be at least 50 ETB.');
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setError('Donation amount must be greater than 0 ETB.');
       return;
     }
     setError(null);
@@ -145,6 +145,8 @@ export const VoiceDonationModal: React.FC<VoiceDonationModalProps> = ({
               <Input
                 label="Amount (ETB)"
                 type="number"
+                min={1}
+                step="any"
                 value={amount}
                 onChange={(e) => setAmount(Number(e.target.value))}
                 suffix="ETB"

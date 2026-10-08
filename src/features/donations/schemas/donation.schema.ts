@@ -4,7 +4,6 @@ export const amountSchema = z.object({
   amount: z
     .number()
     .positive({ message: 'Amount must be greater than 0 ETB' })
-    .min(50, { message: 'Minimum contribution amount is 50 ETB' })
     .max(1000000, { message: 'Maximum single contribution is 1,000,000 ETB' }),
 });
 
@@ -37,7 +36,6 @@ export const donationSchema = z.object({
   amount: z
     .number()
     .positive({ message: 'Amount must be greater than 0 ETB' })
-    .min(50, { message: 'Minimum contribution amount is 50 ETB' })
     .max(1000000, { message: 'Maximum single contribution is 1,000,000 ETB' }),
   donorName: z.string().default('Anonymous Patron'),
   donorEmail: z.string().email().optional().or(z.literal('')),

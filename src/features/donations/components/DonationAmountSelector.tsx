@@ -16,7 +16,7 @@ export const DonationAmountSelector: React.FC<DonationAmountSelectorProps> = ({
   customAmount,
   onSelectPreset,
   onChangeCustom,
-  minAmount = 50,
+  minAmount = 1,
 }) => {
   const { t } = useTranslation();
   const presets = PRESET_DONATION_AMOUNTS;
@@ -83,7 +83,7 @@ export const DonationAmountSelector: React.FC<DonationAmountSelectorProps> = ({
             type="number"
             min={minAmount}
             max="1000000"
-            step="50"
+            step="any"
             value={customAmount ?? ''}
             onChange={(e) => onChangeCustom(e.target.value)}
             placeholder={t('donations.customAmountPlaceholder')}

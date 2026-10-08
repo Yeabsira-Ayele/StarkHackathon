@@ -55,8 +55,8 @@ export const DonateForm: React.FC<DonateFormProps> = ({
       setFormError('Choose a saved receiving account for this fundraiser.');
       return;
     }
-    if (!Number.isFinite(numericAmount) || numericAmount < 50) {
-      setFormError('The minimum contribution is 50 ETB.');
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      setFormError('Contribution amount must be greater than 0 ETB.');
       return;
     }
     if (!isValidReceiptUrl(receiptUrl.trim())) {
@@ -156,7 +156,7 @@ export const DonateForm: React.FC<DonateFormProps> = ({
           )}
           <label className="block space-y-1">
             <span className="font-semibold text-primary">Contribution amount (ETB)</span>
-            <input required type="number" min="50" step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} className="w-full rounded-lg border border-border bg-surface p-3 text-primary" />
+            <input required type="number" min="1" step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} className="w-full rounded-lg border border-border bg-surface p-3 text-primary" />
           </label>
           <label className="block space-y-1">
             <span className="font-semibold text-primary">Donor name</span>

@@ -206,14 +206,16 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
           <DonationAmountSelector
             selectedAmount={amount}
             customAmount={customAmountStr}
+            minAmount={1}
             onSelectPreset={(amt) => {
               setAmount(amt);
               setCustomAmountStr(String(amt));
             }}
             onChangeCustom={(val) => {
               setCustomAmountStr(val);
-              const parsed = parseInt(val, 10);
+              const parsed = parseFloat(val);
               if (!isNaN(parsed) && parsed > 0) setAmount(parsed);
+              else if (val === '') setAmount(0);
             }}
           />
 
@@ -221,7 +223,7 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
             <button
               type="button"
               onClick={() => setStep(2)}
-              disabled={amount < 50}
+              disabled={amount < 1}
               className="py-3 px-8 border-2 border-[#1E4D38] bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706] font-mono text-xs font-black tracking-widest uppercase hover:bg-[#163E2C] transition-all cursor-pointer flex items-center gap-2 shadow-xs disabled:opacity-50"
             >
               <span>CONTINUE TO DONOR INFO</span>

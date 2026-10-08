@@ -9,6 +9,7 @@ export type PaymentRail = 'telebirr' | 'cbe_birr' | 'bank_card' | 'chapa' | 'cbe
 export type DonationStatus = 'successful' | 'failed';
 
 export interface CampaignPayoutAccount {
+  accountId: string;
   bankId: string;
   bankName: string;
   accountNumber: string;
@@ -94,6 +95,7 @@ export interface CreateDonationPayload {
   campaignId: string;
   amount: number;
   receiptUrl: string;
+  payoutAccountId: string;
   donorName?: string;
   donorEmail?: string;
   donorPhone?: string;

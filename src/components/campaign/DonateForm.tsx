@@ -25,7 +25,7 @@ export const DonateForm: React.FC<DonateFormProps> = ({
     refetch: retryAccounts,
   } = useCampaignPayoutAccounts(campaignId);
   const createDonation = useCreateDonation();
-  const [selectedBankId, setSelectedBankId] = useState('');
+  const [selectedAccountId, setSelectedAccountId] = useState('');
   const [amount, setAmount] = useState('500');
   const [donorName, setDonorName] = useState('');
   const [anonymous, setAnonymous] = useState(false);
@@ -34,7 +34,7 @@ export const DonateForm: React.FC<DonateFormProps> = ({
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
   const [formError, setFormError] = useState<string | null>(null);
 
-  const account = accounts.find((item) => item.bankId === selectedBankId);
+  const account = accounts.find((item) => item.accountId === selectedAccountId);
   const submitting = createDonation.isPending;
 
   const handleCopy = async () => {
@@ -70,6 +70,7 @@ export const DonateForm: React.FC<DonateFormProps> = ({
         campaignId,
         amount: numericAmount,
         receiptUrl: receiptUrl.trim(),
+        payoutAccountId: account.accountId,
         donorName: anonymous ? 'Anonymous' : donorName.trim() || 'Anonymous',
         anonymous,
         bankId: account.bankId,
@@ -130,13 +131,15 @@ export const DonateForm: React.FC<DonateFormProps> = ({
             <span className="font-semibold text-primary">Campaign receiving account</span>
             <select
               required
-              value={selectedBankId}
-              onChange={(event) => setSelectedBankId(event.target.value)}
+              value={selectedAccountId}
+              onChange={(event) => setSelectedAccountId(event.target.value)}
               className="w-full rounded-lg border border-border bg-surface p-3 text-primary"
             >
               <option value="">Select an account</option>
               {accounts.map((item) => (
-                <option key={item.bankId} value={item.bankId}>{item.bankName} — {item.accountName}</option>
+                <option key={item.accountId} value={item.accountId}>
+                  {item.bankName} — {item.accountName} ({item.accountNumber})
+                </option>
               ))}
             </select>
           </label>

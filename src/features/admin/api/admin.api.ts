@@ -153,8 +153,9 @@ function unavailable(feature: string): never {
   throw new Error(`${feature} is not yet supported by the MongoDB backend.`);
 }
 
-function normalizeDonation(item: Record<string, unknown>): AdminDonation {
-  const status = String(item.paymentStatus ?? item.status ?? 'completed').toLowerCase();
+function normalizeDonation(item: Record<string, unknown>): AdminDonation | null {
+  const status = String(item.paymentStatus ?? item.status ?? '').toLowerCase();
+  if (status !== 'completed' && status !== 'successful') return null;
   const amount = Number(item.amount ?? 0);
   const campaignId = readRelatedId(item.campaignId);
   const reference = String(item.reference ?? item.transactionId ?? item.receiptKey ?? item.certificateId ?? '');
@@ -170,7 +171,7 @@ function normalizeDonation(item: Record<string, unknown>): AdminDonation {
     bank: String(item.bank ?? item.paymentMethod ?? 'Bank transfer'),
     accountNumber: String(item.accountNumber ?? ''),
     reference,
-    status: status === 'failed' || status === 'rejected' ? 'failed' : status === 'pending' || status === 'processing' ? 'pending' : 'successful',
+    status: 'successful',
     createdAt: String(item.createdAt ?? new Date().toISOString()),
   };
 }
@@ -270,7 +271,11 @@ async function getSnapshot(): Promise<AdminSnapshot> {
   ]);
 
   const users = usersResult.status === 'fulfilled' ? usersResult.value.map(normalizeUser) : [];
-  const donations = donationsResult.status === 'fulfilled' ? donationsResult.value.map(normalizeDonation) : [];
+  const donations = donationsResult.status === 'fulfilled'
+    ? donationsResult.value
+        .map(normalizeDonation)
+        .filter((donation): donation is AdminDonation => donation !== null)
+    : [];
   const organizations = organizationsResult.status === 'fulfilled'
     ? organizationsResult.value.map((organization) => toOrgApplication(organization as unknown as BackendOrganization))
     : [];

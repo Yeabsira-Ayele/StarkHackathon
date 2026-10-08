@@ -18,7 +18,7 @@ interface DonationWizardState {
   donorMessage: string;
 
   // Step 3: Bank
-  selectedBankId: string;
+  selectedAccountId: string;
 
   // Step 4: Account Details & Copy
   accountCopied: boolean;
@@ -38,7 +38,7 @@ interface DonationWizardState {
   setDonorEmail: (email: string) => void;
   setIsAnonymous: (anon: boolean) => void;
   setDonorMessage: (msg: string) => void;
-  setSelectedBankId: (bankId: string) => void;
+  setSelectedAccountId: (accountId: string) => void;
   setAccountCopied: (copied: boolean) => void;
   setReceiptUrl: (url: string) => void;
   setCreatedDonation: (donation: Donation | null) => void;
@@ -62,7 +62,7 @@ export const useDonationStore = create<DonationWizardState>((set, get) => ({
   donorEmail: '',
   isAnonymous: false,
   donorMessage: '',
-  selectedBankId: 'bank_cbe',
+  selectedAccountId: '',
   accountCopied: false,
   receiptUrl: '',
   createdDonation: null,
@@ -76,7 +76,7 @@ export const useDonationStore = create<DonationWizardState>((set, get) => ({
   setDonorEmail: (email) => set({ donorEmail: email }),
   setIsAnonymous: (anon) => set({ isAnonymous: anon }),
   setDonorMessage: (msg) => set({ donorMessage: msg }),
-  setSelectedBankId: (bankId) => set({ selectedBankId: bankId }),
+  setSelectedAccountId: (accountId) => set({ selectedAccountId: accountId }),
   setAccountCopied: (copied) => set({ accountCopied: copied }),
   setReceiptUrl: (url) => set({ receiptUrl: url }),
   setCreatedDonation: (donation) => set({ createdDonation: donation }),
@@ -93,7 +93,7 @@ export const useDonationStore = create<DonationWizardState>((set, get) => ({
       donorEmail: '',
       isAnonymous: false,
       donorMessage: '',
-      selectedBankId: 'bank_cbe',
+      selectedAccountId: '',
       accountCopied: false,
       receiptUrl: '',
       createdDonation: null,

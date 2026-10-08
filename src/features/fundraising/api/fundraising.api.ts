@@ -103,7 +103,7 @@ export const fundraisingApi = {
           goalAmount: fundraiserData.goalAmount,
           category: fundraiserData.category,
           location: fundraiserData.location,
-          imageUrl: fundraiserData.images?.[0],
+          imageUrl: fundraiserData.images?.[0] ?? null,
           fundraiserData,
         })
       : await api.post<BackendFundraiser>('/campaigns/drafts', { fundraiserData });

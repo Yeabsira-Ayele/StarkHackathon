@@ -58,6 +58,7 @@ import {
 import { toGeezNumber } from '../../services/utils/currencyUtils.ts';
 import { adminApi } from '../../features/admin/api/admin.api.ts';
 import { campaignApi } from '../../services/api/campaignApi.ts';
+import { savedCausesApi } from '../../services/api/savedCausesApi.ts';
 import { useAuthStore } from '../../features/auth/store/auth.store.ts';
 import { DISCOVER_LOCATIONS } from '../../services/lookupService.ts';
 import { CAMPAIGN_CATEGORIES } from '../../mock-data/categories/categories.data.ts';
@@ -231,7 +232,9 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
               {/* Plate Header */}
               <div className="relative z-10 flex items-center justify-between border-b border-[#26211C]/20 dark:border-[#9A7432]/30 pb-2.5 mb-5 font-mono text-[10px] font-bold uppercase tracking-widest text-[#5A4E3E] dark:text-[#9E9383]">
                 <span>{t('home.zeroCut.plateHeader', 'DIRECT SETTLEMENT GUARANTEE')}</span>
-                <span className="text-[#1E4D38] dark:text-[#52B788]">100% PASS-THROUGH</span>
+                <span className="text-[#1E4D38] dark:text-[#52B788]">
+                  {t('home.zeroCut.passThrough', '100% PASS-THROUGH')}
+                </span>
               </div>
 
               {/* Dual Engraved Numerals: 0% Platform Cut vs 100% Direct to Cause */}
@@ -265,7 +268,7 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
               <div className="relative z-10 py-4 space-y-2">
                 <div className="flex items-center justify-between font-mono text-[10px] font-bold uppercase tracking-wider text-[#201C18] dark:text-[#F4EFE6]">
                   <span>{t('home.zeroCut.flowDonor', 'Donor Pledge: 1,000 ETB')}</span>
-                  <span className="text-[#9A7432]">── 0% CUT ──►</span>
+                  <span className="text-[#9A7432]">{t('home.zeroCut.flowLabel', '── 0% CUT ──►')}</span>
                   <span className="text-[#1E4D38] dark:text-[#52B788]">
                     {t('home.zeroCut.flowCause', 'Cause Receives: 1,000 ETB')}
                   </span>
@@ -518,7 +521,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
     setProfilePhone(authUser.phone || '');
   }, [isProfileEditorOpen, authUser]);
 
-  const hasReports = false;
+  const hasReports = Boolean(authUser);
   const hasFundraisers = false;
 
   // Navigation State
@@ -534,14 +537,40 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
   const [reportFeedback, setReportFeedback] = useState<
     { key: string } | { error: unknown; fallbackKey: string } | null
   >(null);
-  const [savedCauseIds, setSavedCauseIds] = useState<string[]>(() => {
-    try {
-      const saved: unknown = JSON.parse(localStorage.getItem('lewegene_saved_causes') || '[]');
-      return Array.isArray(saved) ? saved.filter((id): id is string => typeof id === 'string') : [];
-    } catch {
-      return [];
+  const [savedCauseIds, setSavedCauseIds] = useState<string[]>([]);
+  const [savedCausesLoading, setSavedCausesLoading] = useState(false);
+  const [isSavingCause, setIsSavingCause] = useState(false);
+  const [savedCauseError, setSavedCauseError] = useState<{ cause: unknown } | null>(null);
+  const [savedCauseLoadAttempt, setSavedCauseLoadAttempt] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    setSavedCauseIds([]);
+    setSavedCauseError(null);
+    if (!authUser) {
+      setSavedCausesLoading(false);
+      return () => {
+        active = false;
+      };
     }
-  });
+
+    setSavedCausesLoading(true);
+    savedCausesApi.getSavedCauses()
+      .then(({ campaignIds }) => {
+        if (active) setSavedCauseIds(campaignIds);
+      })
+      .catch((error: unknown) => {
+        console.error('Could not load saved causes.', error);
+        if (active) setSavedCauseError({ cause: error });
+      })
+      .finally(() => {
+        if (active) setSavedCausesLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [authUser?.id, savedCauseLoadAttempt]);
   const navigateToMode = (mode: BanknoteZoomMode, path?: string) => {
     setZoomMode(mode);
     const modePaths: Record<BanknoteZoomMode, string> = {
@@ -775,16 +804,26 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
     }
   };
 
-  const toggleSavedCause = (campaign: Campaign) => {
+  const toggleSavedCause = async (campaign: Campaign) => {
+    if (!authUser) {
+      onRequireLogin?.('save');
+      return;
+    }
+    if (isSavingCause || savedCausesLoading) return;
+
+    const next = savedCauseIds.includes(campaign.id)
+      ? savedCauseIds.filter((id) => id !== campaign.id)
+      : [...savedCauseIds, campaign.id];
+    setIsSavingCause(true);
+    setSavedCauseError(null);
     try {
-      const next = savedCauseIds.includes(campaign.id)
-        ? savedCauseIds.filter((id) => id !== campaign.id)
-        : [...savedCauseIds, campaign.id];
-      localStorage.setItem('lewegene_saved_causes', JSON.stringify(next));
-      setSavedCauseIds(next);
+      const persistedIds = await savedCausesApi.replaceSavedCauses(next);
+      setSavedCauseIds(persistedIds);
     } catch (error) {
       console.error('Failed to update saved causes', error);
-      setReportFeedback({ error, fallbackKey: 'errors.savedCauseFailed' });
+      setSavedCauseError({ cause: error });
+    } finally {
+      setIsSavingCause(false);
     }
   };
 
@@ -1654,12 +1693,22 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                     toggleSavedCause(selectedCampaign);
                   }}
                   aria-pressed={savedCauseIds.includes(selectedCampaign.id)}
-                  className="inline-flex items-center gap-2 border border-[#9A7432]/50 bg-[#F2EADA] px-4 py-2 font-mono text-xs font-bold uppercase text-[#201C18] transition hover:bg-[#E6D9C1] dark:bg-[#161411] dark:text-[#F4EFE6] dark:hover:bg-[#201B16]"
+                  disabled={savedCausesLoading || isSavingCause || Boolean(savedCauseError)}
+                  className="inline-flex items-center gap-2 border border-[#9A7432]/50 bg-[#F2EADA] px-4 py-2 font-mono text-xs font-bold uppercase text-[#201C18] transition hover:bg-[#E6D9C1] disabled:cursor-wait disabled:opacity-60 dark:bg-[#161411] dark:text-[#F4EFE6] dark:hover:bg-[#201B16]"
                 >
                   <Bookmark className={`h-3.5 w-3.5 ${savedCauseIds.includes(selectedCampaign.id) ? 'fill-current' : ''}`} />
                   {savedCauseIds.includes(selectedCampaign.id) ? t('explore.savedCause') : t('explore.saveCause')}
                 </button>
               </div>
+              {savedCausesLoading && <p role="status" className="text-xs text-zinc-500">{t('donations.savedCausesLoading')}</p>}
+              {savedCauseError !== null && (
+                <div role="alert" className="flex flex-wrap items-center gap-2 text-xs text-red-700 dark:text-red-300">
+                  <span>{localizeErrorMessage(t, savedCauseError.cause, 'errors.savedCauseFailed')}</span>
+                  <button type="button" onClick={() => setSavedCauseLoadAttempt((attempt) => attempt + 1)} className="font-bold underline">
+                    {t('common.retry')}
+                  </button>
+                </div>
+              )}
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h3 className="font-serif text-lg font-bold text-[#201C18] dark:text-[#F4EFE6]">{t('explore.reportCause')}</h3>

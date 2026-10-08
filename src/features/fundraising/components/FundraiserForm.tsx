@@ -56,8 +56,6 @@ const LOCATION_KEYS: Record<DiscoverLocation, string> = {
 
 interface Props {
   initial: FundraiserFormValues;
-  /** Approved fundraisers cannot change money-related fields. */
-  lockSensitive?: boolean;
   /** Leave undefined to hide the "Save draft" button. */
   onSaveDraft?: (values: FundraiserFormValues) => Promise<void>;
   onContinue: (values: FundraiserFormValues) => Promise<void>;
@@ -77,7 +75,6 @@ const Section: React.FC<{ title: string; hint?: string; children: React.ReactNod
 
 export const FundraiserForm: React.FC<Props> = ({
   initial,
-  lockSensitive = false,
   onSaveDraft,
   onContinue,
   continueLabel = 'fundraiser.form.continue',
@@ -268,8 +265,6 @@ export const FundraiserForm: React.FC<Props> = ({
             suffix="ETB"
             value={values.goalAmount}
             error={errors.goalAmount ? t(errors.goalAmount) : undefined}
-            disabled={lockSensitive}
-            helperText={lockSensitive ? t('fundraiser.form.goalLocked') : undefined}
             onChange={(e) => set('goalAmount', e.target.value)}
           />
           <Input
@@ -278,7 +273,6 @@ export const FundraiserForm: React.FC<Props> = ({
             type="date"
             value={values.deadline}
             error={errors.deadline ? t(errors.deadline) : undefined}
-            disabled={lockSensitive}
             helperText={t('fundraiser.form.deadlineHint')}
             onChange={(e) => set('deadline', e.target.value)}
           />
@@ -425,7 +419,6 @@ export const FundraiserForm: React.FC<Props> = ({
                   error={errors['bank.bankId'] || errors.banks
                     ? t(errors['bank.bankId'] || errors.banks || '')
                     : undefined}
-                  disabled={lockSensitive}
                   onChange={(e) => {
                     if (e.target.value) handleAddBank(e.target.value);
                   }}
@@ -455,7 +448,7 @@ export const FundraiserForm: React.FC<Props> = ({
                             {bankMeta?.name || item.bankId}
                           </span>
                         </div>
-                        {selectedBanks.length > 1 && !lockSensitive && (
+                        {selectedBanks.length > 1 && (
                           <button
                             type="button"
                             onClick={() => handleRemoveBank(index)}
@@ -473,7 +466,6 @@ export const FundraiserForm: React.FC<Props> = ({
                           inputMode="numeric"
                           value={item.accountNumber}
                           error={accountNumError ? t(accountNumError) : undefined}
-                          disabled={lockSensitive}
                           placeholder={t('fundraiser.form.accountNumberPlaceholder')}
                           onChange={(e) => handleUpdateBank(index, { accountNumber: e.target.value })}
                         />
@@ -482,7 +474,6 @@ export const FundraiserForm: React.FC<Props> = ({
                           label={t('fundraiser.form.accountName')}
                           value={item.accountName}
                           error={accountNameError ? t(accountNameError) : undefined}
-                          disabled={lockSensitive}
                           placeholder={t('fundraiser.form.accountNamePlaceholder')}
                           onChange={(e) => handleUpdateBank(index, { accountName: e.target.value })}
                         />
@@ -492,7 +483,7 @@ export const FundraiserForm: React.FC<Props> = ({
                 })}
 
                 {/* Option to add more banks */}
-                {availableUnselectedBanks.length > 0 && !lockSensitive && (
+                {availableUnselectedBanks.length > 0 && (
                   <div className="pt-2">
                     <Select
                       id="field-add-bank"
@@ -511,7 +502,6 @@ export const FundraiserForm: React.FC<Props> = ({
               </div>
             )}
             {errors.banks && <p className="text-xs text-[#1E4D38] dark:text-[#52B788] font-medium">{t(errors.banks)}</p>}
-            {lockSensitive && <p className="text-xs text-zinc-500">{t('fundraiser.form.bankLocked')}</p>}
           </div>
         </Section>
       )}

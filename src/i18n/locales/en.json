@@ -189,7 +189,12 @@
     "selected": "✓ SELECTED",
     "customAmountPlaceholder": "e.g. 2500",
     "minimumDemo": "Minimum contribution is {{min}} ETB.",
-    "minimumContribution": "Minimum contribution is {{min}} ETB. 100% of your contribution goes directly to the cause."
+    "minimumContribution": "Minimum contribution is {{min}} ETB. 100% of your contribution goes directly to the cause.",
+    "savedCausesTitle": "Saved causes",
+    "savedCausesCount": "{{count}} saved",
+    "savedCausesLoading": "Loading your saved causes...",
+    "savedCausesLoadError": "Saved causes could not be loaded.",
+    "savedCausesEmpty": "No saved causes yet. Bookmark a cause while exploring and it will appear here."
   },
   "fundraiser": {
     "title": "Publish Social Project",
@@ -307,12 +312,12 @@
     "name": "Name",
     "email": "Email",
     "phone": "Phone",
+    "phoneCannotChange": "Your phone number cannot be changed from your profile.",
     "changesNote": "Profile details are synced across your active session.",
     "cancel": "Cancel",
     "saveProfile": "Save Profile",
     "closeEditorAria": "Close profile editor",
     "space": "Your {{appName}} space",
-    "verifiedAccount": "Verified citizen account",
     "account": "account",
     "roleDonor": "Donor",
     "roleFundraiser": "Fundraiser",
@@ -372,6 +377,31 @@
     "beneficiaries": "Beneficiaries",
     "donors": "Patrons",
     "escrowAudit": "Escrow Audit"
+  },
+  "myReports": {
+    "title": "My Reports",
+    "subtitle": "Track the review status and any response to the cause reports you have submitted.",
+    "autoRefresh": "Status refreshes automatically",
+    "signInRequired": "Sign in to view your submitted cause reports.",
+    "loading": "Loading your reports...",
+    "loadError": "Could not load your reports.",
+    "empty": "You have not submitted any cause reports from this account.",
+    "submitted": "Submitted {{date}}",
+    "outcome": "Review outcome",
+    "adminResponse": "Admin response",
+    "viewCause": "View cause",
+    "categories": {
+      "falseInformation": "False information",
+      "fraud": "Fraud / scam",
+      "misleading": "Misleading content",
+      "other": "Other"
+    },
+    "status": {
+      "pending": "Your report has been submitted and is waiting for an administrator to review it.",
+      "reviewed": "An administrator has reviewed your report. Further action may still be in progress.",
+      "resolved": "An administrator has resolved your report. See any response below.",
+      "dismissed": "Your report was reviewed, but no further action will be taken."
+    }
   },
   "voxide": {
     "title": "Voice Assistant",
@@ -437,6 +467,22 @@
       "description": "Real needs, led by local communities. Every cause is reviewed before it reaches this page.",
       "browseAll": "Browse all causes",
       "empty": "New causes are being prepared. Check back soon or explore our community."
+    },
+    "zeroCut": {
+      "eyebrow": "A promise of giving with no deductions",
+      "headline": "0% Platform Cut. 100% Direct to Causes.",
+      "subhead": "Every Birr you give reaches the community it was meant for.",
+      "description": "Lewegene takes nothing from your generosity. Contributions go directly to local Telebirr and CBE Birr accounts, with no platform commissions or middleman deductions.",
+      "plateHeader": "DIRECT SETTLEMENT GUARANTEE",
+      "passThrough": "100% PASSED THROUGH",
+      "platformFeeLabel": "Platform commission",
+      "platformFeeNote": "0.00 ETB deducted",
+      "directToCauseLabel": "Delivered to the cause",
+      "directToCauseNote": "Every Birr reaches the community",
+      "flowDonor": "Donor gives: 1,000 ETB",
+      "flowLabel": "── 0% FEE ──►",
+      "flowCause": "Cause receives: 1,000 ETB",
+      "rails": "TELEBIRR · CBE BIRR · DIRECT TRANSFERS"
     },
     "howItWorks": {
       "eyebrow": "How it works",

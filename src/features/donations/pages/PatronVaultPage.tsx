@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import {
   ShieldCheck,
@@ -15,6 +15,7 @@ import {
   Printer,
   Eye,
   AlertTriangle,
+  Bookmark,
 } from 'lucide-react';
 import { useMyContributions } from '../hooks/useDonations';
 import { EmptyState } from '../../../components/ui/EmptyState';
@@ -22,6 +23,8 @@ import { ErrorState } from '../../../components/ErrorState';
 import { Donation, DonationStatus, ContributionCertificate } from '../types/donation.types';
 import { toGeezNumber } from '../api/donation.api';
 import { DonationDetailsModal } from '../components/DonationDetailsModal';
+import { savedCausesApi, SavedCause } from '../../../services/api/savedCausesApi.ts';
+import { useAuthStore } from '../../auth/store/auth.store.ts';
 
 type StatusFilterValue = 'all' | DonationStatus;
 
@@ -36,10 +39,42 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const currentUserId = useAuthStore((state) => state.user?.id);
   const { data, isLoading, isError, error, refetch } = useMyContributions();
 
   const [statusFilter, setStatusFilter] = useState<StatusFilterValue>('all');
   const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
+  const [savedCauses, setSavedCauses] = useState<SavedCause[]>([]);
+  const [savedCausesLoading, setSavedCausesLoading] = useState(true);
+  const [savedCausesError, setSavedCausesError] = useState<string | null>(null);
+  const [savedCausesAttempt, setSavedCausesAttempt] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    setSavedCauses([]);
+    if (!currentUserId) {
+      setSavedCausesLoading(false);
+      setSavedCausesError(null);
+      return () => {
+        active = false;
+      };
+    }
+    setSavedCausesLoading(true);
+    setSavedCausesError(null);
+    savedCausesApi.getSavedCauses()
+      .then(({ campaigns }) => {
+        if (active) setSavedCauses(campaigns);
+      })
+      .catch((cause: unknown) => {
+        if (active) setSavedCausesError(cause instanceof Error ? cause.message : t('donations.savedCausesLoadError'));
+      })
+      .finally(() => {
+        if (active) setSavedCausesLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [currentUserId, savedCausesAttempt, t]);
 
   const donations = data?.donations ?? [];
   const stats = data?.stats ?? {
@@ -151,6 +186,49 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
           onRetry={() => void refetch()}
         />
       )}
+
+      <section className="border border-[#9A7432]/30 bg-[#FFFDF9] p-4 dark:bg-[#12100E] sm:p-5" aria-labelledby="saved-causes-title">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h3 id="saved-causes-title" className="flex items-center gap-2 font-serif text-lg font-bold text-[#14110E] dark:text-white">
+            <Bookmark className="h-4 w-4 text-[#9A7432]" />
+            {t('donations.savedCausesTitle')}
+          </h3>
+          {!savedCausesLoading && !savedCausesError && (
+            <span className="font-mono text-[10px] font-bold uppercase tracking-wide text-zinc-500">
+              {t('donations.savedCausesCount', { count: savedCauses.length })}
+            </span>
+          )}
+        </div>
+        {savedCausesLoading ? (
+          <p role="status" className="text-xs text-zinc-500">{t('donations.savedCausesLoading')}</p>
+        ) : savedCausesError ? (
+          <div role="alert" className="flex flex-wrap items-center gap-3 text-xs text-red-700 dark:text-red-300">
+            <span>{savedCausesError}</span>
+            <button type="button" onClick={() => setSavedCausesAttempt((attempt) => attempt + 1)} className="font-bold underline">
+              {t('common.retry')}
+            </button>
+          </div>
+        ) : savedCauses.length ? (
+          <ul className="flex flex-wrap gap-2">
+            {savedCauses.map((cause) => (
+              <li key={cause.id}>
+                <Link
+                  to={`/causes/${cause.id}`}
+                  className="group inline-flex max-w-full items-center gap-2 border border-[#1E4D38]/25 bg-white px-3 py-2 text-left transition-colors hover:border-[#1E4D38] hover:bg-[#1E4D38]/5 dark:border-[#9A7432]/35 dark:bg-[#181512] dark:hover:border-[#52B788]"
+                >
+                  <span className="max-w-[15rem] truncate font-serif text-sm font-bold text-[#1E4D38] group-hover:underline dark:text-[#52B788]">
+                    {cause.title}
+                  </span>
+                  {cause.location && <span className="hidden max-w-32 truncate font-mono text-[10px] text-zinc-500 sm:inline">{cause.location}</span>}
+                  <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[#9A7432]" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-xs text-zinc-500">{t('donations.savedCausesEmpty')}</p>
+        )}
+      </section>
 
       {/* Aggregate Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 font-mono text-center">

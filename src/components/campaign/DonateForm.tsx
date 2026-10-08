@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, Copy, Heart } from 'lucide-react';
+import { ArrowRight, Check, Copy, Heart, ShieldCheck } from 'lucide-react';
 import type { ContributionCertificate } from '../../types/index.ts';
 import { useCampaignPayoutAccounts, useCreateDonation } from '../../features/donations/hooks/useDonations';
 import { isValidReceiptUrl } from '../../services/payment/linksetService.ts';
@@ -177,13 +177,34 @@ export const DonateForm: React.FC<DonateFormProps> = ({
         </>
       )}
       {formError && <p role="alert" className="rounded border border-red-500/40 bg-red-500/10 p-3 text-red-700">{formError}</p>}
-      <button
-        disabled={submitting || isLoading || isError || accounts.length === 0}
-        type="submit"
-        className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {submitting ? 'Verifying donation…' : 'Submit donation'}
-      </button>
+      <div className="space-y-2 border-t border-border-subtle pt-4">
+        <button
+          disabled={submitting || isLoading || isError || accounts.length === 0}
+          type="submit"
+          aria-busy={submitting}
+          className="group relative flex min-h-16 w-full items-center justify-between gap-3 overflow-hidden rounded-xl border border-[#B88B45] bg-[#173C32] px-4 py-3 text-left text-[#F7F4EB] shadow-[0_5px_14px_rgba(23,60,50,0.18),inset_0_0_0_1px_rgba(255,255,255,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#1E4D38] hover:shadow-[0_9px_18px_rgba(23,60,50,0.22)] active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B88B45] focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:translate-y-0"
+        >
+          <span aria-hidden="true" className="pointer-events-none absolute inset-[3px] rounded-[9px] border border-[#D8B066]/35" />
+          <span className="relative flex min-w-0 items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#D8B066]/50 bg-white/5 text-[#D8B066] transition-transform duration-200 group-hover:scale-105">
+              <Heart className="h-5 w-5" />
+            </span>
+            <span className="min-w-0">
+              <span className="block font-display text-sm font-bold tracking-wide sm:text-base">
+                {submitting ? 'Verifying your donation…' : 'Complete donation'}
+              </span>
+              <span className="mt-0.5 block text-[11px] text-[#F7F4EB]/75">
+                Secure receipt verification
+              </span>
+            </span>
+          </span>
+          <ArrowRight aria-hidden="true" className="relative h-5 w-5 shrink-0 text-[#D8B066] transition-transform duration-200 group-hover:translate-x-1" />
+        </button>
+        <p className="flex items-center justify-center gap-1.5 text-[11px] text-ink-muted">
+          <ShieldCheck aria-hidden="true" className="h-3.5 w-3.5 text-accent" />
+          Your receipt is verified before your donation is recorded.
+        </p>
+      </div>
     </form>
   );
 };

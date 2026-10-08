@@ -337,16 +337,21 @@ export const adminApi = {
         name: String(beneficiaryRecord?.name ?? record.beneficiaryName ?? record.fundraiserName ?? '—'),
         relation: String(beneficiaryRecord?.relation ?? 'Campaign owner'),
         phone: String(beneficiaryRecord?.phone ?? record.phone ?? ''),
+        info: String(beneficiaryRecord?.info ?? ''),
       },
       receiving: {
         bank: String(receivingRecord?.bank ?? receivingRecord?.bankName ?? ''),
         accountNumber: String(receivingRecord?.accountNumber ?? ''),
         accountName: String(receivingRecord?.accountName ?? receivingRecord?.accountHolderName ?? ''),
       },
+      deadline: String(record.deadline ?? ''),
+      images: Array.isArray(record.images)
+        ? record.images.filter((image): image is string => typeof image === 'string')
+        : [],
       documents: documents.map((value, index) => {
         const document = asRecord(value);
         return {
-          name: String(document?.name ?? document?.url ?? value ?? `Document ${index + 1}`),
+          name: String(document?.name ?? document?.fileName ?? document?.url ?? value ?? `Document ${index + 1}`),
           kind: String(document?.kind ?? document?.type ?? 'Supporting document'),
           url: typeof document?.url === 'string' ? document.url : undefined,
         };

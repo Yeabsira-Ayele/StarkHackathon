@@ -106,7 +106,7 @@ export const donationApi = {
   async createDonation(payload: CreateDonationPayload): Promise<Donation> {
     const { campaignId, ...donationPayload } = payload;
     const response = await api.post<DonationResponse>(`/donations/${campaignId}`, donationPayload, {
-      timeout: 90_000,
+      timeout: 190_000,
     });
     return toDonation(response.data.donation);
   },

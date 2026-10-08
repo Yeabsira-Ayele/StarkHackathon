@@ -4,6 +4,7 @@ import { Search } from 'lucide-react';
 import { useCampaignStore } from '../store/campaign.store';
 import { CAMPAIGN_CATEGORIES } from '../data/categories.data';
 import { CampaignCategory, CampaignFilterStatus } from '../types/campaign.types';
+import { DISCOVER_LOCATIONS } from '../../../services/lookupService.ts';
 
 export const CampaignFilter: React.FC = () => {
   const { t } = useTranslation();
@@ -12,9 +13,12 @@ export const CampaignFilter: React.FC = () => {
     searchQuery,
     selectedCategory,
     filterStatus,
+    selectedLocation,
     setSearchQuery,
     setSelectedCategory,
     setFilterStatus,
+    setSelectedLocation,
+    resetFilters,
   } = useCampaignStore();
 
   const statusOptions: { id: CampaignFilterStatus; labelKey: string }[] = [
@@ -23,6 +27,12 @@ export const CampaignFilter: React.FC = () => {
     { id: 'nearly_funded', labelKey: 'common.nearly_funded' },
     { id: 'completed', labelKey: 'common.completed' },
   ];
+
+  const hasActiveFilters =
+    selectedCategory !== 'all' ||
+    filterStatus !== 'all' ||
+    selectedLocation !== 'all' ||
+    searchQuery.trim() !== '';
 
   return (
     <div className="p-4 sm:p-5 border-2 border-[#1E4D38]/25 dark:border-[#9A7432]/35 bg-[#FFFDF9]/95 dark:bg-[#141210]/95 space-y-4 shadow-sm rounded-[1px]">
@@ -38,58 +48,91 @@ export const CampaignFilter: React.FC = () => {
         />
       </div>
 
-      {/* Filter Options */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-[#26211C]/15 dark:border-[#4A3E33]">
-        {/* Sector Category Buttons */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase mr-1">
-            {t('campaigns.sector')}:
-          </span>
-          {CAMPAIGN_CATEGORIES.map((cat) => {
-            const isSelected = selectedCategory === cat.id;
-
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setSelectedCategory(cat.id as CampaignCategory | 'all')}
-                className={`px-3 py-1 border text-xs font-mono font-bold uppercase transition-all cursor-pointer ${
-                  isSelected
-                    ? 'border-[#1E4D38] bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706] shadow-xs'
-                    : 'border-[#26211C]/25 bg-[#FAF6EC] dark:bg-[#201B16] text-[#201C18] dark:text-[#E8DEC8] hover:border-[#1E4D38]'
-                }`}
-              >
-                {t(`categories.${cat.id}`)}
-              </button>
-            );
-          })}
+      {/* Filter Options: Sector next to Status next to Location */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-2 border-t border-[#26211C]/15 dark:border-[#4A3E33]">
+        {/* 1. SECTOR SELECTOR */}
+        <div className="flex flex-col gap-0.5">
+          <label htmlFor="sector-filter-select" className="text-[10px] font-mono font-bold text-zinc-500 uppercase flex items-center justify-between">
+            <span>{t('campaigns.sector')}:</span>
+            {selectedCategory !== 'all' && (
+              <span className="text-[9px] text-[#1E4D38] dark:text-[#52B788] font-bold">{t('campaigns.filterActive')}</span>
+            )}
+          </label>
+          <select
+            id="sector-filter-select"
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value as CampaignCategory | 'all')}
+            className="w-full appearance-none px-3 py-1.5 border border-[#26211C]/30 dark:border-[#9A7432]/40 bg-[#FAF6EC] dark:bg-[#1C1814] font-mono text-xs font-bold uppercase text-[#201C18] dark:text-[#F4EFE6] focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788] cursor-pointer shadow-xs"
+          >
+            {CAMPAIGN_CATEGORIES.map((cat) => {
+              return (
+                <option key={cat.id} value={cat.id} className="bg-[#FAF6EC] dark:bg-[#1C1814] text-[#201C18] dark:text-[#F4EFE6]">
+                  {t(`categories.${cat.id}`)}
+                </option>
+              );
+            })}
+          </select>
         </div>
 
-        {/* Funding Status Tabs */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase mr-1">
-            {t('campaigns.statusLabel')}:
-          </span>
-          {statusOptions.map((status) => {
-            const isSelected = filterStatus === status.id;
-
-            return (
-              <button
-                key={status.id}
-                type="button"
-                onClick={() => setFilterStatus(status.id)}
-                className={`px-2.5 py-1 border text-[10px] font-mono font-bold uppercase transition-all cursor-pointer ${
-                  isSelected
-                    ? 'border-[#26211C] bg-[#26211C] text-white dark:border-[#9A7432] dark:bg-[#9A7432] dark:text-[#080706]'
-                    : 'border-[#26211C]/25 bg-[#EAE2D3] dark:bg-[#161411] text-zinc-700 dark:text-zinc-300 hover:border-[#26211C]'
-                }`}
-              >
+        {/* 2. STATUS SELECTOR */}
+        <div className="flex flex-col gap-0.5">
+          <label htmlFor="status-filter-select" className="text-[10px] font-mono font-bold text-zinc-500 uppercase flex items-center justify-between">
+            <span>{t('campaigns.statusLabel')}:</span>
+            {filterStatus !== 'all' && (
+              <span className="text-[9px] text-[#1E4D38] dark:text-[#52B788] font-bold">{t('campaigns.filterActive')}</span>
+            )}
+          </label>
+          <select
+            id="status-filter-select"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value as CampaignFilterStatus)}
+            className="w-full appearance-none px-3 py-1.5 border border-[#26211C]/30 dark:border-[#9A7432]/40 bg-[#FAF6EC] dark:bg-[#1C1814] font-mono text-xs font-bold uppercase text-[#201C18] dark:text-[#F4EFE6] focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788] cursor-pointer shadow-xs"
+          >
+            {statusOptions.map((status) => (
+              <option key={status.id} value={status.id} className="bg-[#FAF6EC] dark:bg-[#1C1814] text-[#201C18] dark:text-[#F4EFE6]">
                 {t(status.labelKey)}
-              </button>
-            );
-          })}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* 3. LOCATION SELECTOR */}
+        <div className="flex flex-col gap-0.5">
+          <label htmlFor="location-filter-select" className="text-[10px] font-mono font-bold text-zinc-500 uppercase flex items-center justify-between">
+            <span>{t('campaigns.location')}:</span>
+            {selectedLocation !== 'all' && (
+              <span className="text-[9px] text-[#1E4D38] dark:text-[#52B788] font-bold">{t('campaigns.filterActive')}</span>
+            )}
+          </label>
+          <select
+            id="location-filter-select"
+            value={selectedLocation}
+            onChange={(e) => setSelectedLocation(e.target.value)}
+            className="w-full appearance-none px-3 py-1.5 border border-[#26211C]/30 dark:border-[#9A7432]/40 bg-[#FAF6EC] dark:bg-[#1C1814] font-mono text-xs font-bold uppercase text-[#201C18] dark:text-[#F4EFE6] focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788] cursor-pointer shadow-xs"
+          >
+            <option value="all" className="bg-[#FAF6EC] dark:bg-[#1C1814] text-[#201C18] dark:text-[#F4EFE6]">
+              {t('campaigns.allLocations')}
+            </option>
+            {DISCOVER_LOCATIONS.map((loc) => (
+              <option key={loc} value={loc} className="bg-[#FAF6EC] dark:bg-[#1C1814] text-[#201C18] dark:text-[#F4EFE6]">
+                {loc}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
+
+      {hasActiveFilters && (
+        <div className="flex items-center justify-end pt-1">
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="text-[10px] font-mono font-bold text-[#1E4D38] dark:text-[#52B788] uppercase hover:underline cursor-pointer"
+          >
+            {t('campaigns.resetFilters')}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

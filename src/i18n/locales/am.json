@@ -117,6 +117,8 @@
     "impactMetric": "ተጨባጭ ተጽዕኖ",
     "beneficiaries": "ተጠቃሚ ዜጎች",
     "location": "ቦታ",
+    "allLocations": "ሁሉም ቦታዎች",
+    "filterActive": "ንቁ",
     "intaglioPlate": "የ{{appName}} ህትመት ጠፍጣፋ",
     "emptyDescription": "መረጃው ሲገኝ የዘመቻ ዝርዝሮች እዚህ ይታያሉ።",
     "fundedPercent": "{{percent}}% ተሰብስቧል",

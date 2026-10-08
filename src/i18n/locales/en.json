@@ -117,6 +117,8 @@
     "impactMetric": "Impact Commitment",
     "beneficiaries": "Citizens Reached",
     "location": "Location",
+    "allLocations": "All locations",
+    "filterActive": "Active",
     "intaglioPlate": "{{appName}} INTAGLIO PLATE",
     "emptyDescription": "Campaign information will appear here when available.",
     "fundedPercent": "{{percent}}% FUNDED",

@@ -4,19 +4,10 @@ const User = require('../models/User');
 const Organization = require('../models/Organization');
 const AppError = require('../utils/AppError');
 const { signToken } = require('./tokenService');
+const { ensureSuperAdminAccess } = require('./adminAccessService');
 const authConfig = require('../config/auth');
 
 const googleClient = new OAuth2Client();
-const ADMIN_EMAILS = new Set(['yeabsiraayele42@gmail.com']);
-
-const ensureAdminAccess = async (user) => {
-  if (!user || !user.email) return;
-  const normalizedEmail = String(user.email).trim().toLowerCase();
-  if (!ADMIN_EMAILS.has(normalizedEmail) || user.role === 'SUPER_ADMIN') return;
-
-  user.role = 'SUPER_ADMIN';
-  await user.save();
-};
 
 const assertCanLogin = (user) => {
   if (user.status === 'suspended') {
@@ -95,8 +86,12 @@ const loginWithGoogle = async (credential) => {
     }
   }
 
-  await ensureAdminAccess(user);
+  if (user.emailVerified !== true) {
+    user.emailVerified = true;
+    await user.save();
+  }
   assertCanLogin(user);
+  await ensureSuperAdminAccess(user);
   return buildAuthResponse(user);
 };
 

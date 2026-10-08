@@ -26,7 +26,7 @@ Admin account management routes require the `SUPER_ADMIN` database role; `ADMIN`
 - `GET /api/auth/me` returns the current user and, for organization accounts, its organization details. Send the JWT in `Authorization: Bearer <token>`.
 - `PATCH /api/users/me` accepts profile fields including `preferredLanguage` (`am` or `en`) for the language options shown in the frontend. Older stored values are normalized to Amharic by the frontend.
 - `POST /api/organizations/signup` requires that Google-authenticated bearer token and creates an organization application for the signed-in account. Organization contact details are separate from the account's verified Google email.
-- To grant `SUPER_ADMIN` to a verified Google account, first sign in to the app with that account, then run `node scripts/promote-google-super-admin.js <email>` from the backend directory. The script only promotes an existing, active account linked to a verified Google identity; it does not create or link accounts.
+- `yeabsiraayele42@gmail.com` is the configured Super Admin account. Its verified Google account is promoted automatically at sign-in or on its next authenticated API request, so an existing session does not need to be recreated. Other verified Google accounts can be promoted with `node scripts/promote-google-super-admin.js <email>` from the backend directory; the script only promotes an existing, active account linked to a verified Google identity.
 
 ### Admin dashboard and reports
 

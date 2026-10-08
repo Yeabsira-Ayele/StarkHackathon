@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const AppError = require('../utils/AppError');
 const { verifyToken } = require('../services/tokenService');
+const { ensureSuperAdminAccess } = require('../services/adminAccessService');
 
 // The login token is sent by the frontend as:  Authorization: Bearer <token>
 const getToken = (req) => {
@@ -12,7 +13,7 @@ const getToken = (req) => {
 // Turns a token into the real user from the database, or throws an error.
 const loadUser = async (token) => {
   const payload = verifyToken(token);
-  const user = await User.findById(payload.sub);
+  const user = await User.findById(payload.sub).select('+googleId');
 
   if (!user || user.status === 'deleted' || user.tokenVersion !== payload.v) {
     throw new AppError('Your session is no longer valid. Please log in again.', 401, 'INVALID_TOKEN');
@@ -23,6 +24,7 @@ const loadUser = async (token) => {
   if (user.status === 'banned') {
     throw new AppError('Your account has been banned.', 403, 'ACCOUNT_BANNED');
   }
+  await ensureSuperAdminAccess(user);
   return user;
 };
 

@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const adminRoutes = require('../src/routes/adminRoutes');
 const { requireAuth } = require('../src/middleware/authMiddleware');
 const { requireSuperAdmin } = require('../src/middleware/roleMiddleware');
+const { ensureSuperAdminAccess } = require('../src/services/adminAccessService');
 
 test('admin management API routes require authentication and the SUPER_ADMIN role', () => {
   const protectedRoutes = new Map([
@@ -40,4 +41,41 @@ test('requireSuperAdmin allows a Super Admin', () => {
   let continued = false;
   requireSuperAdmin({ user: { role: 'SUPER_ADMIN' } }, {}, () => { continued = true; });
   assert.equal(continued, true);
+});
+
+test('verified Google account for the configured super-admin email is promoted on authenticated requests', async () => {
+  let saved = false;
+  const user = {
+    email: ' YeabsiraAyele42@GMAIL.com ',
+    emailVerified: true,
+    googleId: 'google-account-id',
+    role: 'USER',
+    save: async () => { saved = true; },
+  };
+
+  await ensureSuperAdminAccess(user);
+
+  assert.equal(user.role, 'SUPER_ADMIN');
+  assert.equal(saved, true);
+});
+
+test('unverified or non-Google accounts are not promoted to Super Admin', async () => {
+  for (const identity of [
+    { emailVerified: false, googleId: 'google-account-id' },
+    { emailVerified: true, googleId: undefined },
+    { emailVerified: true, googleId: 'google-account-id', email: 'someone-else@example.com' },
+  ]) {
+    let saved = false;
+    const user = {
+      email: 'yeabsiraayele42@gmail.com',
+      role: 'USER',
+      save: async () => { saved = true; },
+      ...identity,
+    };
+
+    await ensureSuperAdminAccess(user);
+
+    assert.equal(user.role, 'USER');
+    assert.equal(saved, false);
+  }
 });

@@ -822,7 +822,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
           THE LIVING BANKNOTE CANVAS: FULL-SCREEN CINEMATIC PAPER ATMOSPHERE
           No vertical document frame. No giant outer box. The entire screen IS the paper.
       ───────────────────────────────────────────────────────────────────────────── */}
-      <BanknoteLivingBackground isDark={isDark} />
+      <BanknoteLivingBackground isDark={isDark} showProverbScene={zoomMode === 'overview'} />
 
       {/* ─────────────────────────────────────────────────────────────────────────────
           CLEAN WIDESCREEN NAVIGATION HEADER (HIGH USABILITY + INTAGLIO TYPOGRAPHY)

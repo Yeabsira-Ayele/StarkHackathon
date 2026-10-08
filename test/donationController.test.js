@@ -3,6 +3,7 @@ const { beforeEach, test } = require('node:test');
 const mongoose = require('mongoose');
 const Campaign = require('../src/models/Campaign');
 const Donation = require('../src/models/Donation');
+const { getPayoutAccountId } = require('../src/services/campaignPayoutAccounts');
 const linksEt = require('../src/services/LinkEt');
 
 let verifyReceipt;
@@ -137,6 +138,78 @@ test('creates a successful donation and updates the campaign in one transaction'
   assert.equal(campaignUpdates.length, 1);
   assert.equal(createCalls[0].options.session, session);
   assert.equal(campaignUpdates[0][2].session, session);
+});
+
+test('uses the exact selected account when a campaign has multiple accounts at the same bank', async () => {
+  const accounts = [
+    {
+      bankId: 'telebirr',
+      bankName: 'Telebirr',
+      accountNumber: '1234567890',
+      accountName: 'First Account',
+    },
+    {
+      bankId: 'telebirr',
+      bankName: 'Telebirr',
+      accountNumber: '0987654321',
+      accountName: 'Second Account',
+    },
+  ];
+  Campaign.findById = async () => ({
+    _id: campaignId,
+    title: 'Community project',
+    status: 'approved',
+    organizationId: null,
+    payoutAccounts: accounts,
+  });
+
+  const response = makeResponse();
+  await controller.createDonation(makeRequest({
+    payoutAccountId: getPayoutAccountId(accounts[1]),
+    accountNumber: 'attacker-supplied-details-are-ignored',
+  }), response);
+
+  assert.equal(response.statusCode, 201);
+  assert.equal(verificationAccount.accountNumber, '0987654321');
+});
+
+test('rejects an ambiguous legacy bank-only selection when multiple accounts share that bank', async () => {
+  Campaign.findById = async () => ({
+    _id: campaignId,
+    title: 'Community project',
+    status: 'approved',
+    organizationId: null,
+    payoutAccounts: [
+      {
+        bankId: 'telebirr',
+        bankName: 'Telebirr',
+        accountNumber: '1234567890',
+        accountName: 'First Account',
+      },
+      {
+        bankId: 'telebirr',
+        bankName: 'Telebirr',
+        accountNumber: '0987654321',
+        accountName: 'Second Account',
+      },
+    ],
+  });
+
+  const response = makeResponse();
+  await controller.createDonation(makeRequest(), response);
+
+  assert.equal(response.statusCode, 400);
+  assert.equal(verificationAccount, null);
+  assert.equal(createCalls.length, 0);
+});
+
+test('rejects an account ID that is not registered to the requested campaign', async () => {
+  const response = makeResponse();
+  await controller.createDonation(makeRequest({ payoutAccountId: 'telebirr:9999999999' }), response);
+
+  assert.equal(response.statusCode, 400);
+  assert.equal(verificationAccount, null);
+  assert.equal(createCalls.length, 0);
 });
 
 test('does not create a donation when Links.et rejects the receipt', async () => {

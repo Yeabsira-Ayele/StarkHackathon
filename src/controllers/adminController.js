@@ -63,27 +63,6 @@ const normalizeCampaignForAdmin = (campaign) => {
   };
 };
 
-const buildSummary = (donations) => {
-  const successful = donations.filter((donation) => donation.paymentStatus === 'completed');
-  const totalAmount = successful.reduce((sum, donation) => sum + Number(donation.amount || 0), 0);
-  const failedAmount = donations
-    .filter((donation) => donation.paymentStatus === 'failed')
-    .reduce((sum, donation) => sum + Number(donation.amount || 0), 0);
-
-  return {
-    totalCount: donations.length,
-    totalSuccessful: successful.length,
-    totalSuccessAmount: totalAmount,
-    totalFailed: donations.filter((donation) => donation.paymentStatus === 'failed').length,
-    totalFailedAmount: failedAmount,
-    totalPending: donations.filter((donation) => donation.paymentStatus === 'pending').length,
-    totalPendingAmount: donations
-      .filter((donation) => donation.paymentStatus === 'pending')
-      .reduce((sum, donation) => sum + Number(donation.amount || 0), 0),
-    totalAmount,
-  };
-};
-
 exports.getDashboard = async (req, res) => {
   const now = new Date();
   const monthStartDate = monthStart(now);
@@ -96,7 +75,7 @@ exports.getDashboard = async (req, res) => {
       .select('name email phone role status createdAt')
       .sort({ createdAt: -1 })
       .lean(),
-    Donation.find({ paymentStatus: { $in: ['completed', 'failed', 'pending'] } }).sort({ createdAt: -1 }).lean(),
+    Donation.find({ paymentStatus: 'completed' }).sort({ createdAt: -1 }).lean(),
     Report.find().sort({ createdAt: -1 }).lean(),
     Organization.find().sort({ createdAt: -1 }).lean(),
     Campaign.find().select('title status creatorUserId organizationId raisedAmount goalAmount category location story fundraiserData createdAt creatorName organizationName payoutAccounts').lean(),
@@ -272,13 +251,12 @@ exports.getAdminDonations = async (req, res) => {
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
     const { status, campaign, search, startDate, endDate } = req.query;
-    const filter = {};
 
-    if (status) {
-      const normalizedStatus = String(status).toLowerCase();
-      const mappedStatus = normalizedStatus === 'successful' ? 'completed' : normalizedStatus === 'failed' ? 'failed' : normalizedStatus;
-      filter.paymentStatus = mappedStatus;
+    const normalizedStatus = status ? String(status).toLowerCase() : '';
+    if (normalizedStatus && !['successful', 'completed'].includes(normalizedStatus)) {
+      return res.status(400).json({ message: 'Only successfully verified donations are available.' });
     }
+    const filter = { paymentStatus: 'completed' };
 
     if (campaign) {
       filter.campaignId = campaign;
@@ -322,15 +300,18 @@ exports.getAdminDonations = async (req, res) => {
         amount: Number(donation.amount || 0),
         currency: 'ETB',
         paymentMethod: donation.provider || donation.bankId || 'bank_transfer',
-        paymentStatus: donation.paymentStatus === 'completed' ? 'successful' : donation.paymentStatus === 'failed' ? 'failed' : 'pending',
+        paymentStatus: 'successful',
         transactionId: donation.receiptKey || donation.certificateId || '',
         reference: donation.receiptKey || donation.certificateId || '',
         createdAt: donation.createdAt,
-        paymentVerificationStatus: donation.paymentStatus === 'completed' ? 'verified' : donation.paymentStatus === 'failed' ? 'rejected' : 'pending',
+        paymentVerificationStatus: 'verified',
       };
     });
 
-    const summary = buildSummary(allDonations);
+    const totalDonatedAmount = allDonations.reduce(
+      (sum, donation) => sum + Number(donation.amount || 0),
+      0
+    );
 
     return res.json({
       donations: items,
@@ -341,17 +322,13 @@ exports.getAdminDonations = async (req, res) => {
       pages: Math.ceil(total / limit),
       summary: {
         totalDonations: total,
-        successfulDonations: summary.totalSuccessful,
-        totalDonatedAmount: summary.totalAmount,
-        pendingAmount: summary.totalPendingAmount,
-        failedAmount: summary.totalFailedAmount,
+        successfulDonations: total,
+        totalDonatedAmount,
       },
       totals: {
         totalNumberOfDonations: total,
-        totalSuccessfulDonations: summary.totalSuccessful,
-        totalDonatedAmount: summary.totalAmount,
-        totalPendingAmount: summary.totalPendingAmount,
-        totalFailedAmount: summary.totalFailedAmount,
+        totalSuccessfulDonations: total,
+        totalDonatedAmount,
       },
     });
   } catch (error) {
@@ -581,7 +558,7 @@ exports.getAdminUserById = async (req, res) => {
 
     const [campaigns, donations] = await Promise.all([
       Campaign.find({ creatorUserId: user._id }).select('title status createdAt').lean(),
-      Donation.find({ donorId: user._id }).select('amount paymentStatus createdAt campaignId').lean(),
+      Donation.find({ donorId: user._id, paymentStatus: 'completed' }).select('amount paymentStatus createdAt campaignId').lean(),
     ]);
 
     return res.json({

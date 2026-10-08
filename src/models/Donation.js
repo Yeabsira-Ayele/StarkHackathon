@@ -9,8 +9,7 @@ const donationSchema = new mongoose.Schema({
   bankId: { type: String, trim: true },
   anonymous: { type: Boolean, default: false },
   message: { type: String },
-  paymentStatus: { type: String, enum: ['completed', 'failed'], required: true },
-  failureReason: { type: String },
+  paymentStatus: { type: String, enum: ['completed'], required: true },
   certificateId: { type: String, unique: true, sparse: true },
 
   // Set when the donation is verified through links.et

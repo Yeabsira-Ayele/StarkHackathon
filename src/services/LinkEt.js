@@ -41,18 +41,6 @@ const parseAmount = (value) => {
   return Number.isFinite(n) ? n : null;
 };
 
-const normalizeName = (name) =>
-  String(name || "")
-    .normalize("NFKC")
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}]/gu, "");
-
-const receiverMatches = (receiverName, expectedReceiverName) => {
-  const expected = normalizeName(expectedReceiverName);
-  const actual = normalizeName(receiverName);
-  return Boolean(expected && actual && actual === expected);
-};
-
 const currencyIsEtb = (amount, currency) => {
   if (typeof amount === "number") return String(currency || "").trim().toUpperCase() === "ETB";
   return typeof amount === "string" && /\b(?:ETB|BIRR)\b/i.test(amount);
@@ -304,7 +292,7 @@ const verifyDonationReceipt = async (rawUrl, payoutAccount) => {
       "unsupported_campaign_bank"
     );
   }
-  if (!String(payoutAccount.accountName || "").trim() || !String(payoutAccount.accountNumber || "").trim()) {
+  if (!String(payoutAccount.accountNumber || "").trim()) {
     throw new VerificationError(
       "The campaign payment account is missing verification details",
       503,
@@ -342,13 +330,6 @@ const verifyDonationReceipt = async (rawUrl, payoutAccount) => {
       "The receipt is from a different payment provider than the selected campaign account",
       422,
       "wrong_provider"
-    );
-  }
-  if (!receiverMatches(n.receiverName, payoutAccount.accountName)) {
-    throw new VerificationError(
-      "This payment was not sent to our donation account",
-      422,
-      "wrong_receiver"
     );
   }
   if (!accountNumberMatches(n.receiverAccount, payoutAccount.accountNumber)) {

@@ -1,7 +1,11 @@
 const mongoose = require('mongoose');
 const Campaign = require('../models/Campaign');
 const Organization = require('../models/Organization');
-const { getCampaignPayoutAccounts, stripPayoutAccounts } = require('../services/campaignPayoutAccounts');
+const {
+  getCampaignPayoutAccounts,
+  getPayoutAccountId,
+  stripPayoutAccounts,
+} = require('../services/campaignPayoutAccounts');
 
 const CATEGORIES = ['medical', 'education', 'emergency', 'business', 'water', 'environment', 'community', 'other'];
 const EDITABLE_FIELDS = ['title', 'story', 'goalAmount', 'category', 'imageUrl', 'location', 'impactMetric', 'beneficiariesTarget', 'fundraiserData'];
@@ -337,7 +341,11 @@ exports.getDonationAccounts = async (req, res) => {
     const organization = campaign.organizationId
       ? await Organization.findById(campaign.organizationId).select('payoutAccounts').lean()
       : null;
-    res.json({ accounts: getCampaignPayoutAccounts(campaign, organization) });
+    const accounts = getCampaignPayoutAccounts(campaign, organization).map((account) => ({
+      ...account,
+      accountId: getPayoutAccountId(account),
+    }));
+    res.json({ accounts });
   } catch (err) {
     console.error('getDonationAccounts error:', err);
     res.status(500).json({ message: 'Server error' });

@@ -211,7 +211,7 @@ test('requires Links.et base URL configuration rather than falling back to a sou
   );
 });
 
-test('rejects holder names that only partially match', async () => {
+test('accepts the exact destination when the receipt holder name is formatted differently', async () => {
   mockVerifiedReceipt({
     source: 'telebirr-html',
     receiptNo: 'REF123',
@@ -221,8 +221,8 @@ test('rejects holder names that only partially match', async () => {
     transactionStatus: 'Completed',
   });
 
-  await assert.rejects(
-    linksEt.verifyDonationReceipt('https://transactioninfo.ethiotelecom.et/receipt/123', payoutAccount),
-    (error) => error.code === 'wrong_receiver' && error.status === 422
+  assert.deepEqual(
+    await linksEt.verifyDonationReceipt('https://transactioninfo.ethiotelecom.et/receipt/123', payoutAccount),
+    { provider: 'telebirr', amount: 250, receiptKey: 'telebirr:REF123' }
   );
 });

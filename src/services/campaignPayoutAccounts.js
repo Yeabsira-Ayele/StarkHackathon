@@ -15,6 +15,9 @@ const normalizePayoutAccount = (account) => ({
   accountName: String(account.accountName || account.accountHolderName).trim(),
 });
 
+const getPayoutAccountId = (account) =>
+  `${String(account.bankId).trim().toLowerCase()}:${String(account.accountNumber).replace(/\D/g, '')}`;
+
 const getCampaignPayoutAccounts = (campaign, organization) => {
   const explicitAccounts = Array.isArray(campaign.payoutAccounts) ? campaign.payoutAccounts : [];
   const fundraiserData = campaign.fundraiserData || {};
@@ -55,6 +58,7 @@ const stripPayoutAccounts = (campaign) => {
 
 module.exports = {
   getCampaignPayoutAccounts,
+  getPayoutAccountId,
   isValidPayoutAccount,
   stripPayoutAccounts,
 };

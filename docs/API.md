@@ -8,12 +8,13 @@ Success responses use `{ success: true, message, data }`. Errors use `{ success:
 - `GET /api/campaigns` returns published campaigns with `status: "pending"` or `"approved"`. Pending campaigns are live, accept donations, and remain unverified until an admin approves them.
 - `GET /api/campaigns/:id` returns pending campaigns (the payload includes `status`) and returns `404 { "message": "Campaign not found" }` when `status` is `"rejected"`.
 - Donations are accepted for published pending and approved campaigns. Campaigns moved to changes-requested, rejected, paused, or completed status are not listed for public discovery.
+- Admin donation records and statistics include only donations whose `paymentStatus` is `completed` after successful receipt verification. `GET /api/admin/donations` returns those records as `successful`; `status=pending` and `status=failed` filters are rejected.
 
 ## Donating
 
-- `GET /api/campaigns/:campaignId/donation-accounts` returns only valid accounts saved for that public campaign. If the fundraiser has not saved an account, it returns `{ "accounts": [] }`. Public campaign list/detail responses omit account details.
-- `POST /api/donations/:campaignId` accepts `{ amount, receiptUrl, bankId, donorName?, donorEmail?, anonymous?, message? }`. `bankId` only selects an account saved on that campaign (or its registered organization); payout details supplied by the client are never trusted. A campaign without a valid registered payout account cannot accept donations.
-- Successful receipt verification is required before recording a donation. Links.et must provide explicit completed/success status, ETB amount, the exact account-holder name, the complete unmasked receiving account number, and the expected destination provider. Receipt formats that do not carry explicit transaction status are rejected. Receipt references have a unique sparse MongoDB index, created before the API starts; successful donation creation and campaign totals are updated in one MongoDB transaction.
+- `GET /api/campaigns/:campaignId/donation-accounts` returns only valid accounts saved for that public campaign, each with an `accountId` that distinguishes accounts even when they use the same bank/provider. If the fundraiser has not saved an account, it returns `{ "accounts": [] }`. Public campaign list/detail responses omit account details.
+- `POST /api/donations/:campaignId` accepts `{ amount, receiptUrl, payoutAccountId, donorName?, donorEmail?, anonymous?, message? }`. The `payoutAccountId` is resolved only against accounts loaded from that campaign (or its registered organization); payout details supplied by the client are never trusted. `bankId` is accepted only for legacy clients when it identifies exactly one account. A campaign without a valid registered payout account cannot accept donations.
+- Successful receipt verification is required before recording a donation. Links.et must provide explicit completed/success status, ETB amount, the exact receiving account number, and the expected destination provider. The account-holder name is not used as the destination check because receipt formatting can differ; receipt formats that do not establish status or destination are rejected. Receipt references have a unique sparse MongoDB index, created before the API starts; successful donation creation and campaign totals are updated in one MongoDB transaction. Invalid or unverified receipts do not create donations.
 - Set both `LINKS_ET_API_KEY` and `LINKS_ET_URL=https://links.et` in the backend environment, then restart/redeploy the backend. The URL is required rather than defaulted in source. Replace an exposed key in the Links.et provider dashboard and update the backend secret store; never commit or log it.
 
 ## Auth
@@ -223,9 +224,9 @@ The campaign must exist; pending and rejected campaigns still list donations if 
 
 Public (rate limited). Submit a payment receipt link. The server verifies it with links.et and records the amount from the receipt.
 
-**Body:** `{ amount, receiptUrl, bankId, donorName?, donorEmail?, anonymous?, message? }`
+**Body:** `{ amount, receiptUrl, payoutAccountId, donorName?, donorEmail?, anonymous?, message? }`
 
-Local checks run first (minimum amount, receipt URL/provider, optional field types and lengths, campaign exists and is published, and `bankId` belongs to the campaign) so a links.et verification is not spent on invalid input. The amount read from the verified receipt must match `amount`. No donation record is saved while Links.et is working. A definitive receipt rejection or amount mismatch is returned as a final `failed` donation; an invalid request or unavailable verification service creates no record.
+Local checks run first (minimum amount, receipt URL/provider, optional field types and lengths, campaign exists and is published, and `payoutAccountId` belongs to the campaign) so a links.et verification is not spent on invalid input. The account ID selects a payout account from the database-loaded campaign; client-supplied payout details are ignored. The amount read from the verified receipt must match `amount`. No donation record is saved while Links.et is working, and a rejected or mismatched receipt creates no donation.
 
 **Success:** `201`
 
@@ -315,14 +316,17 @@ Pending campaigns, oldest first (`createdAt` ascending).
 | --- | --- | --- |
 | `unsupported_provider` | `400` | Receipt URL host is not a supported bank. Also `422` if links.et returns an undocumented receipt `source`. |
 | `invalid_receipt_url` | `400` | `receiptUrl` is not a valid `http:` / `https:` URL. |
-| `wrong_receiver` | `422` | Receipt payee does not match `EXPECTED_RECEIVER_NAME` (comma-separated allowed names). |
+| `wrong_receiver_account` | `422` | Receipt does not confirm the exact receiving account selected for this campaign. |
+| `wrong_provider` | `422` | Receipt destination provider does not match the selected campaign account. |
 | `duplicate_receipt` | `409` | This receipt's `receiptKey` was already stored. |
-| `payment_not_completed` | `422` | Receipt status is not a completed payment. |
+| `payment_status_unconfirmed` | `422` | Links.et did not provide explicit evidence that the payment completed successfully. |
+| `unsupported_currency` | `422` | The receipt does not confirm an ETB amount. |
+| `amount_mismatch` | `422` | The verified receipt amount does not match the requested donation amount. |
 | `invalid_receipt` | `422` | Missing transaction reference, or no valid amount on the receipt. |
 | `receipt_not_verified` | `422` | links.et did not return a verified receipt. |
 | `campaign_not_approved` | `403` | Campaign exists but `status` is not `"approved"`. |
 | `rate_limited` | `429` | This app's campaign or donation limiter. Also `503` when links.et itself returns `429` with `rate_limited`. |
-| `not_configured` | `503` | `LINKS_ET_API_KEY` missing; links.et rejected the API key; or (production only) `EXPECTED_RECEIVER_NAME` is unset. |
+| `not_configured` | `503` | `LINKS_ET_API_KEY` or `LINKS_ET_URL` is missing, or links.et rejected the API key. |
 | `service_unreachable` | `503` | Could not reach the links.et verification service. |
 | `provider_down` | `503` | links.et returned `503` (bank receipt service down). |
 | `quota_exceeded` | `503` | links.et returned `429` other than `rate_limited`. |

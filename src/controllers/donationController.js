@@ -3,7 +3,10 @@ const mongoose = require('mongoose');
 const Campaign = require('../models/Campaign');
 const Donation = require('../models/Donation');
 const Organization = require('../models/Organization');
-const { getCampaignPayoutAccounts } = require('../services/campaignPayoutAccounts');
+const {
+  getCampaignPayoutAccounts,
+  getPayoutAccountId,
+} = require('../services/campaignPayoutAccounts');
 const {
   verifyDonationReceipt,
   validateReceiptUrl,
@@ -33,7 +36,6 @@ const toDonationResponse = (donation, campaign) => ({
   paymentStatus: donation.paymentStatus,
   provider: donation.provider,
   certificateId: donation.certificateId,
-  failureReason: donation.failureReason,
   createdAt: donation.createdAt,
 });
 
@@ -41,7 +43,7 @@ exports.getMyDonations = async (req, res) => {
   try {
     const donations = await Donation.find({
       donorId: req.user._id,
-      paymentStatus: { $in: ['completed', 'failed'] },
+      paymentStatus: 'completed',
     })
       .populate('campaignId', 'title creatorName organizationName')
       .sort({ createdAt: -1 })
@@ -49,10 +51,9 @@ exports.getMyDonations = async (req, res) => {
     const successful = donations.filter((item) => item.paymentStatus === 'completed');
     const stats = {
       totalAmount: successful.reduce((sum, item) => sum + item.amount, 0),
-      totalDonationsCount: donations.length,
+      totalDonationsCount: successful.length,
       causesSupportedCount: new Set(successful.map((item) => String(item.campaignId?._id || item.campaignId))).size,
       successfulCount: successful.length,
-      failedCount: donations.filter((item) => item.paymentStatus === 'failed').length,
       largestDonation: successful.reduce((largest, item) => Math.max(largest, item.amount), 0),
     };
     res.json({ donations, stats });
@@ -67,7 +68,7 @@ exports.getDonationById = async (req, res) => {
     if (!isValidId(req.params.id)) return res.status(400).json({ message: 'Invalid donation ID' });
     const donation = await Donation.findOne({
       _id: req.params.id,
-      paymentStatus: { $in: ['completed', 'failed'] },
+      paymentStatus: 'completed',
     })
       .populate('campaignId', 'title creatorName organizationName location impactMetric')
       .lean();
@@ -127,7 +128,7 @@ exports.getDonationsByCampaign = async (req, res) => {
 };
 
 // POST /donations/:campaignId
-// Body: { amount, receiptUrl, bankId, donorName?, donorEmail?, anonymous?, message? }
+// Body: { amount, receiptUrl, payoutAccountId, donorName?, donorEmail?, anonymous?, message? }
 //
 // The donor first pays by telebirr / CBE / Zemen / BoA / Awash, then submits
 // the receipt link. We verify it with links.et before creating any donation
@@ -135,7 +136,16 @@ exports.getDonationsByCampaign = async (req, res) => {
 exports.createDonation = async (req, res) => {
   try {
     const { campaignId } = req.params;
-    const { amount, receiptUrl, donorName, donorEmail, anonymous, message, bankId } = req.body || {};
+    const {
+      amount,
+      receiptUrl,
+      donorName,
+      donorEmail,
+      anonymous,
+      message,
+      bankId,
+      payoutAccountId,
+    } = req.body || {};
 
     if (!isValidId(campaignId)) {
       return res.status(400).json({ message: 'Invalid campaign ID' });
@@ -187,8 +197,18 @@ exports.createDonation = async (req, res) => {
     const organization = campaign.organizationId
       ? await Organization.findById(campaign.organizationId).select('payoutAccounts')
       : null;
-    const payoutAccount = getCampaignPayoutAccounts(campaign, organization)
-      .find((account) => account.bankId === String(bankId || ''));
+    const campaignPayoutAccounts = getCampaignPayoutAccounts(campaign, organization);
+    let payoutAccount;
+    if (typeof payoutAccountId === 'string' && payoutAccountId) {
+      payoutAccount = campaignPayoutAccounts.find(
+        (account) => getPayoutAccountId(account) === payoutAccountId
+      );
+    } else {
+      const bankAccounts = campaignPayoutAccounts.filter(
+        (account) => account.bankId === String(bankId || '')
+      );
+      if (bankAccounts.length === 1) payoutAccount = bankAccounts[0];
+    }
     if (!payoutAccount) {
       return res.status(400).json({ message: 'Select a valid receiving account saved for this campaign.' });
     }

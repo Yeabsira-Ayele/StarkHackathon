@@ -15,6 +15,7 @@ const {
 
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 const DONATABLE_CAMPAIGN_STATUSES = new Set(['pending', 'approved']);
+const MIN_DONATION_AMOUNT = 1;
 
 // POST /donations/drafts
 exports.createDraft = async (req, res) => {
@@ -22,8 +23,8 @@ exports.createDraft = async (req, res) => {
     const { campaignId, amount, donorName, donorEmail, anonymous, bankId, payoutAccountId, message } = req.body || {};
     if (!isValidId(campaignId)) return res.status(400).json({ message: 'Invalid campaign ID' });
     const requestedAmount = Number(amount);
-    if (!Number.isFinite(requestedAmount) || requestedAmount < 50) {
-      return res.status(400).json({ message: 'Contribution amount must be at least 50 ETB' });
+    if (!Number.isFinite(requestedAmount) || requestedAmount < MIN_DONATION_AMOUNT) {
+      return res.status(400).json({ message: `Contribution amount must be at least ${MIN_DONATION_AMOUNT} ETB` });
     }
     if (message && String(message).length > 500) {
       return res.status(400).json({ message: 'Message must be 500 characters or fewer' });
@@ -273,8 +274,8 @@ exports.createDonation = async (req, res) => {
     }
 
     const requestedAmount = Number(amount);
-    if (!Number.isFinite(requestedAmount) || requestedAmount < 50) {
-      return res.status(400).json({ message: 'Contribution amount must be at least 50 ETB' });
+    if (!Number.isFinite(requestedAmount) || requestedAmount < MIN_DONATION_AMOUNT) {
+      return res.status(400).json({ message: `Contribution amount must be at least ${MIN_DONATION_AMOUNT} ETB` });
     }
 
     if (typeof receiptUrl !== 'string' || !receiptUrl.trim()) {

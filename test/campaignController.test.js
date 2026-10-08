@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const { beforeEach, test } = require('node:test');
 const Campaign = require('../src/models/Campaign');
+const Donation = require('../src/models/Donation');
 const Organization = require('../src/models/Organization');
 
 const campaignId = '507f1f77bcf86cd799439011';
@@ -37,6 +38,7 @@ let updateFilter;
 let updateFields;
 let updatedCampaign;
 let controller;
+let donationAggregatePipeline;
 
 beforeEach(() => {
   Object.assign(campaign, {
@@ -51,6 +53,11 @@ beforeEach(() => {
   updateFilter = null;
   updateFields = null;
   updatedCampaign = { ...campaign };
+  donationAggregatePipeline = null;
+  Donation.aggregate = async (pipeline) => {
+    donationAggregatePipeline = pipeline;
+    return [];
+  };
   Campaign.findById = async () => campaign;
   Organization.findById = () => ({
     select: async () => null,
@@ -61,6 +68,63 @@ beforeEach(() => {
     return updatedCampaign;
   };
   controller = require('../src/controllers/campaignController');
+});
+
+test('campaign list progress is calculated from completed donation records, not cached totals', async () => {
+  const secondCampaignId = '507f1f77bcf86cd799439012';
+  const listedCampaigns = [
+    { ...campaign, raisedAmount: 9999, donationsCount: 99 },
+    { ...campaign, _id: secondCampaignId, goalAmount: 500, raisedAmount: 9999, donationsCount: 99 },
+  ];
+  const query = {
+    sort() { return this; },
+    skip() { return this; },
+    limit() { return this; },
+    lean: async () => listedCampaigns,
+  };
+  Campaign.find = () => query;
+  Campaign.countDocuments = async () => listedCampaigns.length;
+  Donation.aggregate = async (pipeline) => {
+    donationAggregatePipeline = pipeline;
+    return [
+      { _id: campaignId, raisedAmount: 250, donationsCount: 2 },
+      { _id: secondCampaignId, raisedAmount: 600, donationsCount: 3 },
+    ];
+  };
+  const response = makeResponse();
+
+  await controller.getCampaigns({ query: {} }, response);
+
+  assert.deepEqual(donationAggregatePipeline[0].$match, {
+    campaignId: { $in: listedCampaigns.map((item) => item._id) },
+    paymentStatus: 'completed',
+  });
+  assert.deepEqual(
+    response.body.campaigns.map(({ raisedAmount, donationsCount, progress }) => ({ raisedAmount, donationsCount, progress })),
+    [
+      { raisedAmount: 250, donationsCount: 2, progress: 25 },
+      { raisedAmount: 600, donationsCount: 3, progress: 100 },
+    ]
+  );
+});
+
+test('campaign detail progress is calculated from its completed donation records', async () => {
+  Campaign.findById = () => ({ lean: async () => ({ ...campaign, raisedAmount: 9999, donationsCount: 99 }) });
+  Donation.aggregate = async (pipeline) => {
+    donationAggregatePipeline = pipeline;
+    return [{ _id: campaignId, raisedAmount: 250, donationsCount: 2 }];
+  };
+  const response = makeResponse();
+
+  await controller.getCampaignById({ params: { id: campaignId } }, response);
+
+  assert.deepEqual(donationAggregatePipeline[0].$match, {
+    campaignId: { $in: [campaignId] },
+    paymentStatus: 'completed',
+  });
+  assert.equal(response.body.raisedAmount, 250);
+  assert.equal(response.body.donationsCount, 2);
+  assert.equal(response.body.progress, 25);
 });
 
 test('owner edits to an approved campaign return it to the pending review queue without changing donation totals', async () => {

@@ -70,6 +70,26 @@ test('verifies a completed telebirr payment against the exact registered destina
   });
 });
 
+for (const amount of [1, 5, 10, 25, 49, 50, 500]) {
+  test(`Links.et verification accepts a completed ${amount} ETB receipt`, async () => {
+    mockVerifiedReceipt({
+      source: 'telebirr-html',
+      receiptNo: `REF${amount}`,
+      settledAmount: `${amount} Birr`,
+      creditedPartyName: 'Lewegene Charity',
+      creditedPartyAccountNo: payoutAccount.accountNumber,
+      transactionStatus: 'Completed',
+    });
+
+    const result = await linksEt.verifyDonationReceipt(
+      'https://transactioninfo.ethiotelecom.et/receipt/123',
+      payoutAccount
+    );
+
+    assert.equal(result.amount, amount);
+  });
+}
+
 test('rejects the right recipient name with a different receiving account', async () => {
   mockVerifiedReceipt({
     source: 'telebirr-html',

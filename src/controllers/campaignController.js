@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { isDeepStrictEqual } = require('node:util');
 const Campaign = require('../models/Campaign');
+const Donation = require('../models/Donation');
 const Organization = require('../models/Organization');
 const {
   getCampaignPayoutAccounts,
@@ -15,12 +16,41 @@ const EDITABLE_FIELDS = ['title', 'story', 'goalAmount', 'category', 'imageUrl',
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-const withProgress = (campaign) => ({
-  ...campaign,
-  progress: campaign.goalAmount
-    ? Math.min(Math.round((campaign.raisedAmount / campaign.goalAmount) * 100), 100)
-    : 0,
-});
+const getVerifiedDonationTotals = async (campaigns) => {
+  if (campaigns.length === 0) return new Map();
+
+  const totals = await Donation.aggregate([
+    {
+      $match: {
+        campaignId: { $in: campaigns.map((campaign) => campaign._id) },
+        paymentStatus: 'completed',
+      },
+    },
+    {
+      $group: {
+        _id: '$campaignId',
+        raisedAmount: { $sum: '$amount' },
+        donationsCount: { $sum: 1 },
+      },
+    },
+  ]);
+
+  return new Map(totals.map((total) => [String(total._id), total]));
+};
+
+const withProgress = (campaign, verifiedTotals = {}) => {
+  const raisedAmount = verifiedTotals.raisedAmount ?? 0;
+  const goalAmount = Number(campaign.goalAmount);
+
+  return {
+    ...campaign,
+    raisedAmount,
+    donationsCount: verifiedTotals.donationsCount ?? 0,
+    progress: Number.isFinite(goalAmount) && goalAmount > 0
+      ? Math.min(Math.round((raisedAmount / goalAmount) * 100), 100)
+      : 0,
+  };
+};
 
 // GET /campaigns?category=medical&search=school&sort=newest|oldest|mostFunded&page=1&limit=10
 exports.getCampaigns = async (req, res) => {
@@ -60,8 +90,13 @@ exports.getCampaigns = async (req, res) => {
       Campaign.countDocuments(filter),
     ]);
 
+    const verifiedTotals = await getVerifiedDonationTotals(campaigns);
+
     res.json({
-      campaigns: campaigns.map((campaign) => withProgress(stripPayoutAccounts(campaign))),
+      campaigns: campaigns.map((campaign) => withProgress(
+        stripPayoutAccounts(campaign),
+        verifiedTotals.get(String(campaign._id))
+      )),
       pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
   } catch (err) {
@@ -90,9 +125,15 @@ exports.getCampaignById = async (req, res) => {
       return res.status(404).json({ message: 'Campaign not found' });
     }
 
+    const [verifiedTotals] = await Promise.all([
+      getVerifiedDonationTotals([campaign]),
+    ]);
     const isOwner = req.user && String(campaign.creatorUserId) === String(req.user._id);
     const isAdmin = req.user && ['ADMIN', 'SUPER_ADMIN'].includes(req.user.role);
-    res.json(withProgress(isOwner || isAdmin ? campaign : stripPayoutAccounts(campaign)));
+    res.json(withProgress(
+      isOwner || isAdmin ? campaign : stripPayoutAccounts(campaign),
+      verifiedTotals.get(String(campaign._id))
+    ));
   } catch (err) {
     console.error('getCampaignById error:', err);
     res.status(500).json({ message: 'Server error' });

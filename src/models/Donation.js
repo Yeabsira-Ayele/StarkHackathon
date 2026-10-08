@@ -11,7 +11,7 @@ const payoutAccountSnapshotSchema = new mongoose.Schema({
 const donationSchema = new mongoose.Schema({
   campaignId: { type: mongoose.Schema.Types.ObjectId, ref: 'Campaign', required: true },
   donorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
-  requestedAmount: { type: Number, min: 50 },
+  requestedAmount: { type: Number, min: 1 },
   amount: { type: Number, required: true },
   donorName: { type: String, default: 'Anonymous' },
   donorEmail: { type: String, lowercase: true, trim: true },
@@ -31,5 +31,7 @@ const donationSchema = new mongoose.Schema({
 
   createdAt: { type: Date, default: Date.now }
 });
+
+donationSchema.index({ campaignId: 1, paymentStatus: 1 });
 
 module.exports = mongoose.model('Donation', donationSchema);

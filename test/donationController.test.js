@@ -99,6 +99,28 @@ test('receipt key is protected by a unique sparse MongoDB index', () => {
   assert.equal(index[1].sparse, true);
 });
 
+test('pending donation model enforces a minimum requested amount of 1 ETB', () => {
+  const minimumValidator = Donation.schema.path('requestedAmount').validators.find((validator) => validator.type === 'min');
+  assert.equal(minimumValidator.min, 1);
+});
+
+for (const amount of [0, -1]) {
+  test(`rejects ${amount} ETB before receipt verification`, async () => {
+    let verificationCalled = false;
+    verifyReceipt = async () => {
+      verificationCalled = true;
+      return { amount, provider: 'telebirr', receiptKey: 'telebirr:REF123' };
+    };
+    const response = makeResponse();
+
+    await controller.createDonation(makeRequest({ amount }), response);
+
+    assert.equal(response.statusCode, 400);
+    assert.match(response.body.message, /at least 1 ETB/);
+    assert.equal(verificationCalled, false);
+  });
+}
+
 test('creates a successful donation and updates the campaign in one transaction', async () => {
   let releaseVerification;
   let signalVerificationStarted;
@@ -146,6 +168,39 @@ test('creates a successful donation and updates the campaign in one transaction'
   assert.equal(createCalls[0].options.session, session);
   assert.equal(campaignUpdates[0][2].session, session);
 });
+
+for (const amount of [1, 5, 10, 25, 49, 50, 500]) {
+  test(`accepts ${amount} ETB in the direct donation API when the receipt verifies for that amount`, async () => {
+    verifyReceipt = async () => ({ amount, provider: 'telebirr', receiptKey: 'telebirr:REF123' });
+    const response = makeResponse();
+
+    await controller.createDonation(makeRequest({ amount }), response);
+
+    assert.equal(response.statusCode, 201);
+    assert.equal(createCalls[0].input.amount, amount);
+    assert.equal(createCalls[0].input.paymentStatus, 'completed');
+    assert.equal(campaignUpdates[0][1].$inc.raisedAmount, amount);
+  });
+}
+
+for (const amount of [1, 5, 10, 25, 49, 50, 500]) {
+  test(`accepts ${amount} ETB donation drafts without recording a completed donation`, async () => {
+    Donation.create = async (input) => ({
+      ...input,
+      toObject: () => input,
+    });
+    const response = makeResponse();
+
+    await controller.createDraft({
+      body: { campaignId, amount, bankId: 'telebirr' },
+      user: { _id: '507f191e810c19729de860ea', name: 'Donor' },
+    }, response);
+
+    assert.equal(response.statusCode, 201);
+    assert.equal(response.body.donation.requestedAmount, amount);
+    assert.equal(response.body.donation.paymentStatus, 'pending');
+  });
+}
 
 test('does not record a verified receipt if campaign payout details changed during verification', async () => {
   Campaign.findByIdAndUpdate = async (...args) => {

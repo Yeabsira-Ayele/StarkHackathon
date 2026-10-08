@@ -4,9 +4,7 @@ import { Campaign } from '../../campaigns/types/campaign.types';
 
 export const fundraiserApi = {
   async publishProject(data: FundraiserCreationData): Promise<Campaign> {
-    return campaignApi.createCampaign({
-      ...data,
-      imageUrl: data.imageUrl || '/src/assets/images/ethiopia_school_stem_1790266427111.jpg',
-    });
+    if (!data.imageUrl) throw new Error('Choose a campaign image from your computer before publishing.');
+    return campaignApi.createCampaign(data);
   },
 };

@@ -274,6 +274,9 @@ export const backendCampaignApi = {
   },
 
   async createCampaign(payload: CreateCampaignPayload, _autoApprove = false): Promise<Campaign> {
+    if (!payload.imageUrl?.startsWith('data:image/')) {
+      throw new Error('Choose a campaign image from your computer before publishing.');
+    }
     const response = await api.post<unknown>('/campaigns', {
       title: payload.title.trim(),
       story: payload.story.trim(),

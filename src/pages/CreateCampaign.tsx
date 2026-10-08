@@ -12,12 +12,11 @@ import {
   ArrowRight,
   ShieldCheck,
   CheckCircle2,
-  Image as ImageIcon,
-  Sparkles,
   Eye,
   FileText,
   DollarSign,
   Award,
+  Upload,
 } from 'lucide-react';
 
 export interface CreateCampaignProps {
@@ -53,21 +52,39 @@ export const CreateCampaign: React.FC<CreateCampaignProps> = ({
   const [goalAmount, setGoalAmount] = useState<string>('95000');
   const [impactMetric, setImpactMetric] = useState('Supplies 300 textbooks and laboratory kits for 640 students');
   const [beneficiariesTarget, setBeneficiariesTarget] = useState<number>(640);
-  const [imageUrl, setImageUrl] = useState('/src/assets/images/ethiopia_school_stem_1790266427111.jpg');
+  const [imageUrl, setImageUrl] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const presetImages = [
-    { label: 'Education & STEM', url: '/src/assets/images/ethiopia_school_stem_1790266427111.jpg' },
-    { label: 'Healthcare & Surgery', url: '/src/assets/images/ethiopia_medical_care_1790266416218.jpg' },
-    { label: 'Clean Water & Solar', url: '/src/assets/images/ethiopia_clean_water_1790266442202.jpg' },
-    { label: 'Traditional Artisans', url: '/src/assets/images/ethiopia_artisan_craft_1790266455378.jpg' },
-  ];
+  const handleImageChange = (file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setError('Choose an image file from your computer.');
+      return;
+    }
+    if (file.size > 700 * 1024) {
+      setError('Choose an image smaller than 700 KB.');
+      return;
+    }
+    setError(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') setImageUrl(reader.result);
+      else setError('The selected image could not be read.');
+    };
+    reader.onerror = () => setError('The selected image could not be read.');
+    reader.readAsDataURL(file);
+  };
 
   const handlePublish = async () => {
     if (!title.trim() || !story.trim()) {
       setError('Please provide a complete title and story.');
+      return;
+    }
+    if (!imageUrl) {
+      setError('Choose a real campaign image from your computer before publishing.');
+      setCurrentStep(1);
       return;
     }
     const numGoal = parseFloat(goalAmount);
@@ -244,23 +261,22 @@ export const CreateCampaign: React.FC<CreateCampaignProps> = ({
           </div>
 
           <div>
-            <label className="block font-semibold text-primary mb-2">Select Verified Cover Photo</label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {presetImages.map((img, i) => (
-                <div
-                  key={i}
-                  onClick={() => setImageUrl(img.url)}
-                  className={`rounded-lg overflow-hidden border-2 cursor-pointer transition-all ${
-                    imageUrl === img.url ? 'border-accent shadow-sm' : 'border-border opacity-70 hover:opacity-100'
-                  }`}
-                >
-                  <img src={img.url} alt={img.label} className="w-full h-18 object-cover" />
-                  <p className="text-[10px] text-center py-1 font-semibold text-primary bg-surface-alt">
-                    {img.label}
-                  </p>
-                </div>
-              ))}
-            </div>
+            <label className="block font-semibold text-primary mb-2">Upload a real campaign image from your computer *</label>
+            <label className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 font-semibold text-primary cursor-pointer">
+              <Upload className="w-4 h-4" />
+              Choose image
+              <input
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={(event) => {
+                  handleImageChange(event.target.files?.[0]);
+                  event.target.value = '';
+                }}
+              />
+            </label>
+            <p className="mt-1 text-xs text-zinc-500">Maximum file size: 700 KB.</p>
+            {imageUrl && <img src={imageUrl} alt="Selected campaign photo preview" className="mt-3 h-32 w-48 rounded-lg border border-border object-cover" />}
           </div>
 
           <div className="pt-4 flex justify-end">
@@ -270,6 +286,10 @@ export const CreateCampaign: React.FC<CreateCampaignProps> = ({
               onClick={() => {
                 if (!title.trim()) {
                   setError('Please enter a title');
+                  return;
+                }
+                if (!imageUrl) {
+                  setError('Choose a real campaign image from your computer before continuing.');
                   return;
                 }
                 setError(null);
@@ -412,7 +432,7 @@ export const CreateCampaign: React.FC<CreateCampaignProps> = ({
           {/* Render Full Cause Detail Mock Preview */}
           <div className="p-6 sm:p-8 rounded-2xl border border-border bg-surface shadow-sm space-y-6">
             <div className="relative aspect-16/9 w-full rounded-xl overflow-hidden border border-border">
-              <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+              {imageUrl && <img src={imageUrl} alt={title} className="w-full h-full object-cover" />}
               <div className="absolute top-3 right-3 bg-surface/90 backdrop-blur-xs text-primary border border-border rounded-md px-2.5 py-1 text-xs font-semibold flex items-center gap-1 shadow-xs">
                 <ShieldCheck className="w-4 h-4 text-accent" />
                 <span>Verified Foundation</span>

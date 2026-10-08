@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Send, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Send, AlertCircle, Upload } from 'lucide-react';
 import { fundraiserSchema, FundraiserSchemaData } from '../schemas/fundraiser.schema';
 import { fundraiserApi } from '../api/fundraiser.api';
 import { CAMPAIGN_CATEGORIES } from '../../campaigns/data/categories.data';
@@ -19,10 +19,13 @@ export const CreateCampaignPage: React.FC<CreateCampaignPageProps> = ({
 }) => {
   const { t } = useTranslation();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FundraiserSchemaData>({
     resolver: zodResolver(fundraiserSchema),
@@ -30,8 +33,34 @@ export const CreateCampaignPage: React.FC<CreateCampaignPageProps> = ({
       category: 'medical',
       location: 'Addis Ababa, Ethiopia',
       goalAmount: 200000,
+      imageUrl: '',
     },
   });
+  const imageUrl = watch('imageUrl');
+
+  const handleImageChange = (file?: File) => {
+    setImageUploadError(null);
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setImageUploadError('Choose an image file from your computer.');
+      return;
+    }
+    if (file.size > 700 * 1024) {
+      setImageUploadError('Choose an image smaller than 700 KB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') {
+        setImageUploadError('The selected image could not be read.');
+        return;
+      }
+      setValue('imageUrl', reader.result, { shouldValidate: true });
+    };
+    reader.onerror = () => setImageUploadError('The selected image could not be read.');
+    reader.readAsDataURL(file);
+  };
 
   const onSubmit = async (data: FundraiserSchemaData) => {
     setSubmitError(null);
@@ -78,6 +107,28 @@ export const CreateCampaignPage: React.FC<CreateCampaignPageProps> = ({
               <span>{submitError}</span>
             </div>
           )}
+          <div>
+            <label className="block font-bold uppercase text-[#14110E] dark:text-[#F4EFE6] mb-1">
+              Campaign image *
+            </label>
+            <label className="inline-flex items-center gap-2 border-2 border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#EFE7D5] dark:bg-[#181512] px-3 py-2 font-bold uppercase cursor-pointer">
+              <Upload className="h-4 w-4" />
+              Choose image from computer
+              <input
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={(event) => {
+                  handleImageChange(event.target.files?.[0]);
+                  event.target.value = '';
+                }}
+              />
+            </label>
+            <p className="mt-1 text-xs text-zinc-500">Use a real campaign photo (maximum 700 KB).</p>
+            {imageUploadError && <p role="alert" className="mt-1 text-red-600">{imageUploadError}</p>}
+            {errors.imageUrl && <p role="alert" className="mt-1 text-red-600">{errors.imageUrl.message}</p>}
+            {imageUrl && <img src={imageUrl} alt="Selected campaign photo preview" className="mt-3 h-32 w-48 border border-border object-cover" />}
+          </div>
           {/* Title */}
           <div>
             <label className="block font-bold uppercase text-[#14110E] dark:text-[#F4EFE6] mb-1">

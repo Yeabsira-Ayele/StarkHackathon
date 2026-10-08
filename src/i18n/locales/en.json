@@ -680,13 +680,9 @@
       "imageAlt": "Image {{count}}",
       "removeImage": "Remove image {{count}}",
       "uploadImage": "Upload image",
-      "chooseCover": "or choose a cover photo:",
-      "preset": {
-        "education": "Education",
-        "medical": "Medical",
-        "water": "Water",
-        "craft": "Craft"
-      },
+      "imageUploadOnly": "Choose real campaign images from your computer.",
+      "imageInvalidType": "Choose a valid image file.",
+      "imageReadError": "The selected image could not be read. Please try another file.",
       "locations": {
         "addisAbaba": "Addis Ababa",
         "afar": "Afar",

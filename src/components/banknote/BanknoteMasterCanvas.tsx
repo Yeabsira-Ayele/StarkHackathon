@@ -688,6 +688,8 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
   const [newStory, setNewStory] = useState<string>(
     'Providing sustainable solar borehole water filtration equipment for 850 rural households currently facing acute dry-season water stress.'
   );
+  const [newCampaignImage, setNewCampaignImage] = useState<string>('');
+  const [campaignImageError, setCampaignImageError] = useState<string | null>(null);
   const [isSubmittingCause, setIsSubmittingCause] = useState<boolean>(false);
 
   // Seals modal
@@ -870,7 +872,12 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
       return;
     }
     if (!onCreateCampaign) return;
+    if (!newCampaignImage) {
+      setCampaignImageError('Choose a real campaign image from your computer before publishing.');
+      return;
+    }
     setIsSubmittingCause(true);
+    setCampaignImageError(null);
     try {
       await onCreateCampaign({
         title: newTitle,
@@ -881,7 +888,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
         creatorName: currentOrganization?.name || 'Accredited Foundation Partner',
         beneficiariesTarget: newBeneficiaries,
         impactMetric: `Direct verified community outcome for ${newBeneficiaries} people in ${newLocation}`,
-        imageUrl: '/src/assets/images/ethiopia_school_stem_1790266427111.jpg',
+        imageUrl: newCampaignImage,
       });
       navigateToMode('discover');
     } catch (err) {
@@ -2050,6 +2057,44 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                     onChange={(e) => setNewStory(e.target.value)}
                     className="w-full p-2.5 border border-[#26211C]/30 bg-[#F7F2E7] focus:outline-none focus:border-[#1E4D38]"
                   />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-zinc-600 dark:text-zinc-400 mb-1">
+                    Campaign image *
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    required={!newCampaignImage}
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      event.target.value = '';
+                      setCampaignImageError(null);
+                      if (!file) return;
+                      if (!file.type.startsWith('image/')) {
+                        setCampaignImageError('Choose a valid image file.');
+                        return;
+                      }
+                      if (file.size > 700 * 1024) {
+                        setCampaignImageError('Choose an image smaller than 700 KB.');
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        if (typeof reader.result === 'string') setNewCampaignImage(reader.result);
+                        else setCampaignImageError('The selected image could not be read.');
+                      };
+                      reader.onerror = () => setCampaignImageError('The selected image could not be read.');
+                      reader.readAsDataURL(file);
+                    }}
+                    className="block w-full text-xs text-zinc-600 dark:text-zinc-400 file:mr-3 file:border file:border-[#26211C]/30 file:bg-[#F7F2E7] file:px-3 file:py-2 file:font-bold file:uppercase file:cursor-pointer"
+                  />
+                  <p className="mt-1 text-[10px] text-zinc-500">Upload a real campaign photo from your computer (maximum 700 KB).</p>
+                  {campaignImageError && <p role="alert" className="mt-1 text-red-700 dark:text-red-300">{campaignImageError}</p>}
+                  {newCampaignImage && (
+                    <img src={newCampaignImage} alt="Selected campaign photo preview" className="mt-3 h-28 w-44 border border-[#26211C]/30 object-cover" />
+                  )}
                 </div>
 
                 <div className="pt-2 flex justify-end">

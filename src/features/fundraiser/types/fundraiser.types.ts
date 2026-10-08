@@ -9,7 +9,7 @@ export interface FundraiserCreationData {
   location: string;
   beneficiariesTarget?: number;
   impactMetric?: string;
-  imageUrl?: string;
+  imageUrl: string;
 }
 
 export interface OrganizationProfile {

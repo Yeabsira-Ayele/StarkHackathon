@@ -17,13 +17,6 @@ const MAX_IMAGES = 4;
 const MAX_IMAGE_KB = 700;
 const MAX_DOCUMENTS = 3;
 
-const PRESET_IMAGES = [
-  { labelKey: 'education', url: '/src/assets/images/ethiopia_school_stem_1790266427111.jpg' },
-  { labelKey: 'medical', url: '/src/assets/images/ethiopia_medical_care_1790266416218.jpg' },
-  { labelKey: 'water', url: '/src/assets/images/ethiopia_clean_water_1790266442202.jpg' },
-  { labelKey: 'craft', url: '/src/assets/images/ethiopia_artisan_craft_1790266455378.jpg' },
-];
-
 const BENEFICIARY_OPTIONS: { id: BeneficiaryType; labelKey: string; hintKey: string }[] = [
   { id: 'myself', labelKey: 'myself', hintKey: 'myselfHint' },
   { id: 'friend_family', labelKey: 'friendFamily', hintKey: 'friendFamilyHint' },
@@ -157,6 +150,10 @@ export const FundraiserForm: React.FC<Props> = ({
     if (!files) return;
     setNotice(null);
     Array.from(files).forEach((file) => {
+      if (!file.type.startsWith('image/')) {
+        setNotice(t('fundraiser.form.imageInvalidType'));
+        return;
+      }
       if (file.size > MAX_IMAGE_KB * 1024) {
         setNotice(t('fundraiser.form.imageTooLarge', { name: file.name, size: MAX_IMAGE_KB }));
         return;
@@ -164,6 +161,7 @@ export const FundraiserForm: React.FC<Props> = ({
       const reader = new FileReader();
       reader.onload = () =>
         setValues((v) => (v.images.length >= MAX_IMAGES ? v : { ...v, images: [...v.images, String(reader.result)] }));
+      reader.onerror = () => setNotice(t('fundraiser.form.imageReadError'));
       reader.readAsDataURL(file);
     });
   };
@@ -305,17 +303,7 @@ export const FundraiserForm: React.FC<Props> = ({
               <Upload className="w-3.5 h-3.5" /> {t('fundraiser.form.uploadImage')}
               <input type="file" accept="image/*" multiple className="sr-only" onChange={(e) => addImages(e.target.files)} />
             </label>
-            <span className="text-xs text-zinc-500">{t('fundraiser.form.chooseCover')}</span>
-            {PRESET_IMAGES.map((p) => (
-              <button
-                key={p.url}
-                type="button"
-                onClick={() => set('images', [...values.images, p.url])}
-                className="text-xs px-2.5 py-1 border border-[#26211C]/20 dark:border-[#9A7432]/30 hover:border-[#1E4D38] dark:hover:border-[#52B788] cursor-pointer"
-              >
-                {t(`fundraiser.form.preset.${p.labelKey}`)}
-              </button>
-            ))}
+            <span className="text-xs text-zinc-500">{t('fundraiser.form.imageUploadOnly')}</span>
           </div>
         )}
         {errors.images && <p className="text-xs text-[#1E4D38] dark:text-[#52B788] font-medium">{t(errors.images)}</p>}

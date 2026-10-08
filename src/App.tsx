@@ -293,7 +293,6 @@ function PlatformApp({
           goalAmount: data.goalAmount,
           category: data.category,
           creatorName: data.creatorName,
-          imageUrl: '/src/assets/images/ethiopia_school_stem_1790266427111.jpg',
           location: 'Addis Ababa, Ethiopia',
         },
         true

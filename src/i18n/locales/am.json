@@ -680,13 +680,9 @@
       "imageAlt": "ምስል {{count}}",
       "removeImage": "ምስል {{count}} አስወግድ",
       "uploadImage": "ምስል ስቀል",
-      "chooseCover": "ወይም የሽፋን ፎቶ ይምረጡ፦",
-      "preset": {
-        "education": "ትምህርት",
-        "medical": "ሕክምና",
-        "water": "ውሃ",
-        "craft": "የእጅ ጥበብ"
-      },
+      "imageUploadOnly": "እባክዎ ከኮምፒውተርዎ የእውነተኛ ዘመቻ ምስሎችን ይምረጡ።",
+      "imageInvalidType": "እባክዎ ትክክለኛ የምስል ፋይል ይምረጡ።",
+      "imageReadError": "የተመረጠው ምስል ሊነበብ አልቻለም። ሌላ ፋይል ይሞክሩ።",
       "locations": {
         "addisAbaba": "አዲስ አበባ",
         "afar": "አፋር",

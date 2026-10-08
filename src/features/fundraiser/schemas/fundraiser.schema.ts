@@ -24,7 +24,7 @@ export const fundraiserSchema = z.object({
   location: z.string().min(3, { message: 'Project implementation location is required' }),
   beneficiariesTarget: z.number().int().positive().optional(),
   impactMetric: z.string().optional(),
-  imageUrl: z.string().optional(),
+  imageUrl: z.string().min(1, { message: 'Choose a campaign image from your computer' }),
 });
 
 export type FundraiserSchemaData = z.infer<typeof fundraiserSchema>;

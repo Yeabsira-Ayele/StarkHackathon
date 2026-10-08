@@ -16,6 +16,17 @@ const updateMe = async (req, res) => {
   sendSuccess(res, 'Profile updated', { user });
 };
 
+const getSavedCampaigns = async (req, res) => {
+  const data = await userService.getSavedCampaigns(req.user._id);
+  sendSuccess(res, 'Saved causes loaded', data);
+};
+
+const updateSavedCampaigns = async (req, res) => {
+  v.validateSavedCampaigns(req.body);
+  const campaignIds = await userService.updateSavedCampaigns(req.user._id, req.body.campaignIds);
+  sendSuccess(res, 'Saved causes updated', { campaignIds });
+};
+
 const changePassword = async (req, res) => {
   v.validateChangePassword(req.body);
   const data = await authService.changePassword(req.user._id, req.body);
@@ -36,4 +47,12 @@ const setStatus = async (req, res) => {
   sendSuccess(res, `Account is now ${user.status}`, { user });
 };
 
-module.exports = { getMe, updateMe, changePassword, deleteMe, setStatus };
+module.exports = {
+  getMe,
+  updateMe,
+  getSavedCampaigns,
+  updateSavedCampaigns,
+  changePassword,
+  deleteMe,
+  setStatus,
+};

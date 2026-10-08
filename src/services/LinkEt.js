@@ -41,44 +41,27 @@ const parseAmount = (value) => {
   return Number.isFinite(n) ? n : null;
 };
 
-const normalizeName = (name) =>
-  String(name || "")
-    .normalize("NFKC")
+const currencyIsEtb = (amount, currency) => {
+  if (typeof amount === "number") return String(currency || "").trim().toUpperCase() === "ETB";
+  return typeof amount === "string" && /\b(?:ETB|BIRR)\b/i.test(amount);
+};
+
+const payoutProvider = (account) => {
+  const bank = `${account?.bankId || ""} ${account?.bankName || ""}`
     .toLowerCase()
-    .replace(/[^\p{L}\p{N}]/gu, "");
+    .replace(/[^a-z0-9]/g, "");
+  if (bank.includes("telebirr") || bank.includes("ethiotelecom")) return "telebirr";
+  if (bank.includes("zemen")) return "zemen";
+  if (bank.includes("abyssinia") || bank.includes("boa")) return "boa";
+  if (bank.includes("awash")) return "awash";
+  if (bank.includes("cbe") || bank.includes("commercialbankofethiopia")) return "cbe";
+  return null;
+};
 
-const receiverMatches = (receiverName, expectedReceiverName) => {
-  const expectedSource = expectedReceiverName
-    ? [expectedReceiverName]
-    : (process.env.EXPECTED_RECEIVER_NAME || "").split(",");
-  const expected = expectedSource
-    .map(normalizeName)
-    .filter(Boolean);
-
-  if (expected.length === 0) {
-    if (expectedReceiverName) {
-      throw new VerificationError(
-        "The fundraiser account holder name cannot be verified",
-        503,
-        "receiver_not_configured"
-      );
-    }
-    if (process.env.NODE_ENV === "production") {
-      throw new VerificationError(
-        "Payment verification is not configured",
-        503,
-        "not_configured"
-      );
-    }
-    console.warn(
-      "[links.et] EXPECTED_RECEIVER_NAME is not set: any receipt will be accepted. Set it before going live."
-    );
-    return true;
-  }
-
-  const actual = normalizeName(receiverName);
-  if (!actual) return false;
-  return expected.some((e) => actual.includes(e) || e.includes(actual));
+const accountNumberMatches = (receiptAccount, expectedAccountNumber) => {
+  const actual = String(receiptAccount || "").replace(/\D/g, "");
+  const expected = String(expectedAccountNumber || "").replace(/\D/g, "");
+  return Boolean(actual && expected && actual === expected);
 };
 
 // ------------------------------------------------------------- validation
@@ -106,10 +89,27 @@ const validateReceiptUrl = (raw) => {
 
 const linksFetch = async (path, init = {}) => {
   const key = process.env.LINKS_ET_API_KEY;
-  const base = (process.env.LINKS_ET_URL || "https://links.et").replace(/\/+$/, "");
+  const configuredBase = process.env.LINKS_ET_URL;
+  if (!key || !configuredBase) {
+    throw new VerificationError(
+      "Payment verification is not configured. Set LINKS_ET_API_KEY and LINKS_ET_URL in the backend environment.",
+      503,
+      "not_configured"
+    );
+  }
+
+  let baseUrl;
+  try {
+    baseUrl = new URL(configuredBase);
+  } catch {
+    throw new VerificationError("LINKS_ET_URL must be a valid HTTPS URL.", 503, "not_configured");
+  }
+  if (baseUrl.protocol !== "https:" || baseUrl.pathname !== "/" || baseUrl.search || baseUrl.hash) {
+    throw new VerificationError("LINKS_ET_URL must be an HTTPS base URL without a path.", 503, "not_configured");
+  }
 
   try {
-    return await fetch(base + path, {
+    return await fetch(baseUrl.origin + path, {
       ...init,
       headers: { "x-api-key": key, "content-type": "application/json" },
       signal: AbortSignal.timeout(35000),
@@ -132,8 +132,77 @@ const readJson = async (res) => {
   }
 };
 
-const errorCode = (data) =>
-  data && typeof data.error === "object" && data.error ? data.error.code : undefined;
+const statusValue = (value) => {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "boolean") return value ? "success" : "failed";
+  if (typeof value === "string" || typeof value === "number") return String(value).trim();
+  if (typeof value === "object") {
+    for (const key of [
+      "transactionStatus",
+      "paymentStatus",
+      "status",
+      "upstreamStatus",
+      "settlementStatus",
+      "verificationStatus",
+      "state",
+      "result",
+      "transaction",
+      "data",
+    ]) {
+      const nested = statusValue(value[key]);
+      if (nested) return nested;
+    }
+  }
+  return "";
+};
+
+const isSuccessfulStatus = (value) => {
+  const normalized = statusValue(value).toLowerCase();
+  if (!normalized) return false;
+  return [
+    "completed",
+    "complete",
+    "success",
+    "successful",
+    "succeeded",
+    "paid",
+    "settled",
+    "confirmed",
+    "approved",
+  ].some((token) => normalized === token || normalized.includes(token));
+};
+
+const extractReceipt = (data) => {
+  if (!data || typeof data !== "object") return null;
+  if (data.receipt && typeof data.receipt === "object") return data.receipt;
+
+  for (const key of ["receipt", "result", "data", "verification", "details"]) {
+    if (data[key] && typeof data[key] === "object") {
+      const nested = extractReceipt(data[key]);
+      if (nested) return nested;
+    }
+  }
+
+  if (Array.isArray(data.receipts)) {
+    return data.receipts.find((item) => item && typeof item === "object") || null;
+  }
+
+  return null;
+};
+
+const hasExplicitSuccess = (data) => {
+  if (!data || typeof data !== "object") return false;
+  if (data.ok === true || data.success === true || data.verified === true) return true;
+  const status = statusValue(data).toLowerCase();
+  return ["completed", "complete", "success", "successful", "succeeded", "paid", "settled", "confirmed", "approved"].some(
+    (token) => status === token || status.includes(token)
+  );
+};
+
+const errorCode = (data) => {
+  const error = data && typeof data === "object" ? data.error ?? data.data?.error ?? data.result?.error : undefined;
+  return error && typeof error === "object" ? error.code : undefined;
+};
 
 // One verification attempt. Uses waitMs so we never hold a request for
 // over a minute; on 202 we poll the status URL until it resolves.
@@ -150,7 +219,7 @@ const attempt = async (url) => {
       await sleep(1500);
       res = await linksFetch(statusUrl, { method: "GET" });
       data = await readJson(res);
-      if (res.status !== 202 && typeof data?.ok === "boolean") break;
+      if (res.status !== 202 && (typeof data?.ok === "boolean" || typeof data?.success === "boolean" || hasExplicitSuccess(data))) break;
     }
   }
 
@@ -201,54 +270,84 @@ const throwForFailure = ({ status, data }) => {
 // Turns each provider's receipt into one shape. Fields per source come from
 // https://links.et/docs/verify.md. Always switch on receipt.source.
 const normalizeReceipt = (receipt) => {
-  const done = (o) => o;
+  const receiptStatus = () => {
+    const candidates = [
+      receipt?.transactionStatus,
+      receipt?.paymentStatus,
+      receipt?.status,
+      receipt?.upstreamStatus,
+      receipt?.settlementStatus,
+      receipt?.verificationStatus,
+      receipt?.state,
+      receipt?.transaction?.status,
+      receipt?.transaction?.transactionStatus,
+      receipt?.data?.status,
+    ];
+
+    return candidates.find((candidate) => typeof candidate !== "undefined" && candidate !== null && String(candidate).trim());
+  };
 
   switch (receipt?.source) {
     case "telebirr-html":
-      return done({
+      return {
         provider: "telebirr",
         reference: receipt.receiptNo,
-        amount: parseAmount(receipt.settledAmount), // amount received, without fees
+        amount: parseAmount(receipt.settledAmount),
         receiverName: receipt.creditedPartyName,
-        statusOk: /^completed$/i.test(receipt.transactionStatus || ""),
-      });
+        receiverAccount: receipt.creditedPartyAccountNo,
+        destinationProvider: "telebirr",
+        currencyOk: currencyIsEtb(receipt.settledAmount),
+        statusOk: isSuccessfulStatus(receiptStatus()),
+      };
 
     case "cbe-pdf":
     case "mb-json":
-      return done({
+      return {
         provider: "cbe",
         reference: receipt.reference,
         amount: parseAmount(receipt.transferredAmount),
         receiverName: receipt.receiverName,
-        statusOk: true, // CBE receipts carry no status field
-      });
+        receiverAccount: receipt.receiverAccount,
+        destinationProvider: "cbe",
+        currencyOk: currencyIsEtb(receipt.transferredAmount, receipt.currency),
+        statusOk: isSuccessfulStatus(receiptStatus()),
+      };
 
     case "zemen-pdf":
-      return done({
+      return {
         provider: "zemen",
         reference: receipt.reference,
         amount: parseAmount(receipt.settledAmount),
         receiverName: receipt.recipientName,
-        statusOk: /^completed$/i.test(receipt.transactionStatus || ""),
-      });
+        receiverAccount: receipt.recipientAccount,
+        destinationProvider: "zemen",
+        currencyOk: currencyIsEtb(receipt.settledAmount, receipt.currency),
+        statusOk: isSuccessfulStatus(receiptStatus()),
+      };
 
     case "boa-json":
-      return done({
+      return {
         provider: "boa",
         reference: receipt.transactionReference,
         amount: parseAmount(receipt.transferredAmount),
         receiverName: receipt.receiverName,
-        statusOk: /^success/i.test(receipt.upstreamStatus || ""),
-      });
+        receiverAccount: receipt.receiverAccount,
+        destinationProvider: "boa",
+        currencyOk: currencyIsEtb(receipt.transferredAmount, receipt.currency),
+        statusOk: isSuccessfulStatus(receiptStatus()),
+      };
 
     case "awash-html":
-      return done({
+      return {
         provider: "awash",
         reference: receipt.transaction?.transactionId,
         amount: parseAmount(receipt.transaction?.amount),
         receiverName: receipt.transaction?.beneficiaryName,
-        statusOk: true,
-      });
+        receiverAccount: receipt.transaction?.beneficiaryAccount,
+        destinationProvider: payoutProvider({ bankName: receipt.transaction?.beneficiaryBank }),
+        currencyOk: currencyIsEtb(receipt.transaction?.amount),
+        statusOk: isSuccessfulStatus(receiptStatus()),
+      };
 
     default:
       throw new VerificationError(
@@ -260,40 +359,79 @@ const normalizeReceipt = (receipt) => {
 };
 
 // Verifies a receipt URL end to end and returns what we need to record.
-const verifyDonationReceipt = async (rawUrl, expectedReceiverName) => {
+const verifyDonationReceipt = async (rawUrl, payoutAccount) => {
   const url = validateReceiptUrl(rawUrl);
 
-  if (!process.env.LINKS_ET_API_KEY) {
+  if (!process.env.LINKS_ET_API_KEY || !process.env.LINKS_ET_URL) {
     throw new VerificationError(
-      "Payment verification is not configured. Set LINKS_ET_API_KEY in the backend environment and restart the backend.",
+      "Payment verification is not configured. Set LINKS_ET_API_KEY and LINKS_ET_URL in the backend environment.",
       503,
       "not_configured"
     );
   }
 
-  const result = await fetchReceipt(url);
+  const expectedProvider = payoutProvider(payoutAccount);
+  if (!expectedProvider) {
+    throw new VerificationError(
+      "Receipt verification is not supported for this campaign payment provider",
+      422,
+      "unsupported_campaign_bank"
+    );
+  }
+  if (!String(payoutAccount.accountNumber || "").trim()) {
+    throw new VerificationError(
+      "The campaign payment account is missing verification details",
+      503,
+      "recipient_not_configured"
+    );
+  }
 
-  if (result.status !== 200 || result.data?.ok !== true || !result.data?.receipt) {
+  const result = await fetchReceipt(url);
+  const payload = result.data || {};
+  const receipt = extractReceipt(payload);
+
+  if (result.status !== 200 || !hasExplicitSuccess(payload) || !receipt) {
+    const receiptPreview = receipt ? { source: receipt.source, status: statusValue(receipt) } : null;
+    console.info("[links.et] verification response summary", {
+      status: result.status,
+      hasOk: Boolean(payload?.ok),
+      hasSuccess: Boolean(payload?.success),
+      receiptPreview,
+    });
     throwForFailure(result);
   }
 
-  const n = normalizeReceipt(result.data.receipt);
+  const n = normalizeReceipt(receipt);
   const reference = String(n.reference || "").trim().toUpperCase();
 
   if (!reference) {
     throw new VerificationError("The receipt has no transaction reference", 422, "invalid_receipt");
   }
   if (!n.statusOk) {
-    throw new VerificationError("This payment was not completed", 422, "payment_not_completed");
+    throw new VerificationError(
+      "Links.et did not provide explicit evidence that this payment completed",
+      422,
+      "payment_status_unconfirmed"
+    );
   }
   if (n.amount === null || n.amount <= 0) {
     throw new VerificationError("Could not read a valid amount from the receipt", 422, "invalid_receipt");
   }
-  if (!receiverMatches(n.receiverName, expectedReceiverName)) {
+  if (!n.currencyOk) {
+    throw new VerificationError("The receipt does not confirm an ETB amount", 422, "unsupported_currency");
+  }
+  if (n.destinationProvider !== expectedProvider) {
     throw new VerificationError(
-      "This payment was not sent to our donation account",
+      "The receipt is from a different payment provider than the selected campaign account",
       422,
-      "wrong_receiver"
+      "wrong_provider"
+    );
+  }
+  if (!accountNumberMatches(n.receiverAccount, payoutAccount.accountNumber)) {
+    throw new VerificationError(
+      "The receipt does not confirm the selected campaign payment account",
+      422,
+      "wrong_receiver_account"
     );
   }
 
@@ -311,5 +449,7 @@ module.exports = {
   validateReceiptUrl,
   normalizeReceipt,
   parseAmount,
+  payoutProvider,
+  accountNumberMatches,
   VerificationError,
 };

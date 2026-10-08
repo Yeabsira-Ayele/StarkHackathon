@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const AppError = require('../utils/AppError');
 const { isValidPhone } = require('../utils/phone');
 
@@ -46,6 +47,18 @@ const validateProfileUpdate = (body = {}) => {
   }
   if (body.preferredLanguage !== undefined && !['am', 'en', 'om'].includes(body.preferredLanguage)) {
     fields.preferredLanguage = 'Preferred language must be am, en or om';
+  }
+  fail(fields);
+};
+
+const validateSavedCampaigns = (body = {}) => {
+  const fields = {};
+  if (!Array.isArray(body.campaignIds)) {
+    fields.campaignIds = 'Campaign IDs must be an array';
+  } else if (body.campaignIds.length > 500) {
+    fields.campaignIds = 'You can save at most 500 causes';
+  } else if (body.campaignIds.some((id) => typeof id !== 'string' || !mongoose.isValidObjectId(id))) {
+    fields.campaignIds = 'Every campaign ID must be a valid ID';
   }
   fail(fields);
 };
@@ -124,6 +137,7 @@ module.exports = {
   ORG_TYPES,
   validateChangePassword,
   validateProfileUpdate,
+  validateSavedCampaigns,
   validateOrganizationSignup,
   validateOrganizationUpdate,
 };

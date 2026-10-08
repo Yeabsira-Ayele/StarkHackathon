@@ -21,6 +21,11 @@ const userSchema = new mongoose.Schema(
       enum: ['am', 'en', 'om'],
       default: 'am',
     },
+    savedCampaignIds: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Campaign' }],
+      default: [],
+      select: false,
+    },
 
     role: {
       type: String,
@@ -60,6 +65,7 @@ userSchema.set('toJSON', {
   transform: (doc, ret) => {
     delete ret.passwordHash;
     delete ret.googleId;
+    delete ret.savedCampaignIds;
     delete ret.tokenVersion;
     delete ret.__v;
     return ret;

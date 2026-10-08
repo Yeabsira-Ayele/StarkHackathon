@@ -1,7 +1,13 @@
 const mongoose = require('mongoose');
+const { isDeepStrictEqual } = require('node:util');
 const Campaign = require('../models/Campaign');
 const Organization = require('../models/Organization');
-const { getCampaignPayoutAccounts, stripPayoutAccounts } = require('../services/campaignPayoutAccounts');
+const {
+  getCampaignPayoutAccounts,
+  getPayoutAccountId,
+  isValidPayoutAccount,
+  stripPayoutAccounts,
+} = require('../services/campaignPayoutAccounts');
 
 const CATEGORIES = ['medical', 'education', 'emergency', 'business', 'water', 'environment', 'community', 'other'];
 const EDITABLE_FIELDS = ['title', 'story', 'goalAmount', 'category', 'imageUrl', 'location', 'impactMetric', 'beneficiariesTarget', 'fundraiserData'];
@@ -268,27 +274,67 @@ exports.updateCampaign = async (req, res) => {
 
     const campaign = await Campaign.findById(id);
     if (!campaign) return res.status(404).json({ message: 'Campaign not found' });
-    if (String(campaign.creatorUserId) !== String(req.user._id) &&
+    const isOwner = String(campaign.creatorUserId) === String(req.user._id);
+    if (!isOwner &&
       !['ADMIN', 'SUPER_ADMIN'].includes(req.user.role)) {
       return res.status(403).json({ message: 'You cannot edit this campaign' });
     }
 
     if (req.body.fundraiserData !== undefined) {
-      const organization = campaign.organizationId
-        ? await Organization.findById(campaign.organizationId).select('payoutAccounts')
+      const fundraiserData = req.body.fundraiserData;
+      if (!fundraiserData || typeof fundraiserData !== 'object' || Array.isArray(fundraiserData)) {
+        return res.status(400).json({ message: 'Fundraiser details must be an object' });
+      }
+      const isCommunity = fundraiserData.beneficiaryType === 'community_org';
+      if (isCommunity && !isValidId(fundraiserData.organizationId)) {
+        return res.status(400).json({ message: 'Choose a valid community organization for this fundraiser.' });
+      }
+      const organization = isCommunity
+        ? await Organization.findById(fundraiserData.organizationId)
+          .select('_id name verificationStatus payoutAccounts')
         : null;
+      if (isCommunity && !organization) {
+        return res.status(404).json({ message: 'Community organization not found' });
+      }
+      if (isCommunity && organization.verificationStatus !== 'approved') {
+        return res.status(400).json({ message: 'Choose an approved community organization for this fundraiser.' });
+      }
+
+      const submittedAccounts = Array.isArray(fundraiserData.banks)
+        ? fundraiserData.banks
+        : fundraiserData.bank
+          ? [fundraiserData.bank]
+          : [];
+      if (!isCommunity && submittedAccounts.some((account) => !isValidPayoutAccount(account))) {
+        return res.status(400).json({ message: 'Every payout account must include a bank, valid account number, and account-holder name.' });
+      }
       const newAccounts = getCampaignPayoutAccounts(
-        { ...campaign.toObject(), fundraiserData: req.body.fundraiserData },
+        { fundraiserData, payoutAccounts: [] },
         organization
       );
       req.body.payoutAccounts = newAccounts;
+      req.body.organizationId = organization?._id || null;
+      req.body.organizationName = organization?.name || '';
+      req.body.verifiedOrganization = Boolean(organization);
+    }
+
+    if (req.body.payoutAccounts !== undefined) {
+      if (!Array.isArray(req.body.payoutAccounts) ||
+        req.body.payoutAccounts.some((account) => !isValidPayoutAccount(account))) {
+        return res.status(400).json({ message: 'Payout accounts must contain valid bank and account details.' });
+      }
+      req.body.payoutAccounts = getCampaignPayoutAccounts({
+        payoutAccounts: req.body.payoutAccounts,
+      });
     }
 
     const updates = {};
     for (const field of EDITABLE_FIELDS) {
       if (req.body[field] !== undefined) updates[field] = req.body[field];
     }
-    if (req.body.payoutAccounts !== undefined) updates.payoutAccounts = req.body.payoutAccounts;
+    for (const field of ['payoutAccounts', 'organizationId', 'organizationName', 'verifiedOrganization']) {
+      if (req.body[field] !== undefined) updates[field] = req.body[field];
+    }
 
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({ message: 'No valid fields to update' });
@@ -313,10 +359,28 @@ exports.updateCampaign = async (req, res) => {
       return res.status(400).json({ message: `Category must be one of: ${CATEGORIES.join(', ')}` });
     }
 
-    const updatedCampaign = await Campaign.findByIdAndUpdate(id, updates, {
+    const current = campaign.toObject();
+    const changed = Object.entries(updates).some(([field, value]) =>
+      !isDeepStrictEqual(current[field], value)
+    );
+    const version = Number.isInteger(campaign.__v) ? campaign.__v : 0;
+    if (changed && isOwner && ['approved', 'completed'].includes(campaign.status)) {
+      updates.status = 'pending';
+    }
+    updates.__v = version + 1;
+
+    const updatedCampaign = await Campaign.findOneAndUpdate(
+      { _id: id, __v: version },
+      updates,
+      {
       new: true,
       runValidators: true,
-    });
+      }
+    );
+
+    if (!updatedCampaign) {
+      return res.status(409).json({ message: 'This campaign changed while you were editing it. Reload and try again.' });
+    }
 
     res.json(updatedCampaign);
   } catch (err) {

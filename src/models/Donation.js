@@ -1,5 +1,13 @@
 const mongoose = require('mongoose');
 
+const payoutAccountSnapshotSchema = new mongoose.Schema({
+  payoutAccountId: { type: String, required: true },
+  bankId: { type: String, required: true },
+  bankName: { type: String, required: true },
+  accountNumber: { type: String, required: true },
+  accountName: { type: String, required: true },
+}, { _id: false });
+
 const donationSchema = new mongoose.Schema({
   campaignId: { type: mongoose.Schema.Types.ObjectId, ref: 'Campaign', required: true },
   donorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
@@ -8,6 +16,7 @@ const donationSchema = new mongoose.Schema({
   donorName: { type: String, default: 'Anonymous' },
   donorEmail: { type: String, lowercase: true, trim: true },
   bankId: { type: String, trim: true },
+  payoutAccountSnapshot: { type: payoutAccountSnapshotSchema, required: false },
   anonymous: { type: Boolean, default: false },
   message: { type: String },
   paymentStatus: { type: String, enum: ['pending', 'completed', 'failed'], default: 'pending' },

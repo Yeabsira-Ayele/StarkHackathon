@@ -3,7 +3,10 @@ const mongoose = require('mongoose');
 const Campaign = require('../models/Campaign');
 const Donation = require('../models/Donation');
 const Organization = require('../models/Organization');
-const { getCampaignPayoutAccounts } = require('../services/campaignPayoutAccounts');
+const {
+  getCampaignPayoutAccounts,
+  getPayoutAccountId,
+} = require('../services/campaignPayoutAccounts');
 const {
   verifyDonationReceipt,
   validateReceiptUrl,
@@ -16,7 +19,7 @@ const DONATABLE_CAMPAIGN_STATUSES = new Set(['pending', 'approved']);
 // POST /donations/drafts
 exports.createDraft = async (req, res) => {
   try {
-    const { campaignId, amount, donorName, donorEmail, anonymous, bankId, message } = req.body || {};
+    const { campaignId, amount, donorName, donorEmail, anonymous, bankId, payoutAccountId, message } = req.body || {};
     if (!isValidId(campaignId)) return res.status(400).json({ message: 'Invalid campaign ID' });
     const requestedAmount = Number(amount);
     if (!Number.isFinite(requestedAmount) || requestedAmount < 50) {
@@ -33,8 +36,11 @@ exports.createDraft = async (req, res) => {
     const organization = campaign.organizationId
       ? await Organization.findById(campaign.organizationId).select('payoutAccounts')
       : null;
-    const payoutAccount = getCampaignPayoutAccounts(campaign, organization)
-      .find((account) => account.bankId === String(bankId || ''));
+    const payoutAccounts = getCampaignPayoutAccounts(campaign, organization);
+    const matchingAccounts = payoutAccountId
+      ? payoutAccounts.filter((account) => getPayoutAccountId(account) === payoutAccountId)
+      : payoutAccounts.filter((account) => account.bankId === String(bankId || ''));
+    const payoutAccount = matchingAccounts.length === 1 ? matchingAccounts[0] : null;
     if (!payoutAccount) {
       return res.status(400).json({ message: 'This campaign has no valid saved account for the selected bank.' });
     }
@@ -47,6 +53,13 @@ exports.createDraft = async (req, res) => {
       donorEmail: donorEmail ? String(donorEmail).trim().toLowerCase() : undefined,
       anonymous: Boolean(anonymous),
       bankId: payoutAccount.bankId,
+      payoutAccountSnapshot: {
+        payoutAccountId: getPayoutAccountId(payoutAccount),
+        bankId: payoutAccount.bankId,
+        bankName: payoutAccount.bankName,
+        accountNumber: payoutAccount.accountNumber,
+        accountName: payoutAccount.accountName,
+      },
       message: message ? String(message).trim() : undefined,
       paymentStatus: 'pending',
     });
@@ -91,13 +104,16 @@ exports.verifyDraft = async (req, res) => {
     const organization = campaign?.organizationId
       ? await Organization.findById(campaign.organizationId).select('payoutAccounts')
       : null;
-    const payoutAccount = campaign && getCampaignPayoutAccounts(campaign, organization)
-      .find((account) => account.bankId === donation.bankId);
+    const currentAccounts = campaign ? getCampaignPayoutAccounts(campaign, organization) : [];
+    const matchingAccounts = donation.payoutAccountSnapshot
+      ? [donation.payoutAccountSnapshot]
+      : currentAccounts.filter((account) => account.bankId === donation.bankId);
+    const payoutAccount = matchingAccounts.length === 1 ? matchingAccounts[0] : null;
     if (!payoutAccount) {
       return res.status(409).json({ message: 'This fundraiser no longer has a valid saved receiving account.' });
     }
 
-    const verified = await verifyDonationReceipt(req.body.receiptUrl, payoutAccount.accountName);
+    const verified = await verifyDonationReceipt(req.body.receiptUrl, payoutAccount);
     if (Math.abs(verified.amount - donation.requestedAmount) > 0.01) {
       return res.status(422).json({ message: 'The receipt amount does not match your contribution amount', code: 'amount_mismatch' });
     }
@@ -125,6 +141,31 @@ exports.verifyDraft = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+class CampaignChangedDuringVerificationError extends Error {}
+
+const toDonationResponse = (donation, campaign) => ({
+  _id: donation._id,
+  campaignId: {
+    _id: campaign._id,
+    title: campaign.title,
+    creatorName: campaign.creatorName,
+    organizationName: campaign.organizationName,
+    location: campaign.location,
+    impactMetric: campaign.impactMetric,
+  },
+  donorId: donation.donorId,
+  amount: donation.amount,
+  donorName: donation.donorName,
+  donorEmail: donation.donorEmail,
+  anonymous: donation.anonymous,
+  message: donation.message,
+  bankId: donation.bankId,
+  paymentStatus: donation.paymentStatus,
+  provider: donation.provider,
+  certificateId: donation.certificateId,
+  createdAt: donation.createdAt,
+});
 
 exports.getMyDonations = async (req, res) => {
   try {
@@ -212,36 +253,61 @@ exports.getDonationsByCampaign = async (req, res) => {
 };
 
 // POST /donations/:campaignId
-// Body: { receiptUrl, bankId, donorName?, message? }
-//
-// The donor first pays by telebirr / CBE / Zemen / BoA / Awash, then submits
-// the receipt link. We verify it with links.et and record the donation using
-// the amount on the receipt (never an amount typed by the donor).
+// Body: { amount, receiptUrl, bankId?, payoutAccountId?, donorName?, donorEmail?, anonymous?, message? }
 exports.createDonation = async (req, res) => {
   try {
     const { campaignId } = req.params;
-    const { receiptUrl, donorName, message, bankId } = req.body;
+    const {
+      amount,
+      receiptUrl,
+      donorName,
+      donorEmail,
+      anonymous,
+      message,
+      bankId,
+      payoutAccountId,
+    } = req.body || {};
 
     if (!isValidId(campaignId)) {
       return res.status(400).json({ message: 'Invalid campaign ID' });
     }
 
+    const requestedAmount = Number(amount);
+    if (!Number.isFinite(requestedAmount) || requestedAmount < 50) {
+      return res.status(400).json({ message: 'Contribution amount must be at least 50 ETB' });
+    }
+
     if (typeof receiptUrl !== 'string' || !receiptUrl.trim()) {
       return res.status(400).json({ message: 'receiptUrl is required' });
     }
-
-    if (message && String(message).length > 500) {
+    if (donorName !== undefined && typeof donorName !== 'string') {
+      return res.status(400).json({ message: 'Donor name must be text' });
+    }
+    if (donorName && donorName.length > 120) {
+      return res.status(400).json({ message: 'Donor name must be 120 characters or fewer' });
+    }
+    if (donorEmail !== undefined && typeof donorEmail !== 'string') {
+      return res.status(400).json({ message: 'Donor email must be text' });
+    }
+    if (donorEmail && donorEmail.length > 254) {
+      return res.status(400).json({ message: 'Donor email must be 254 characters or fewer' });
+    }
+    if (message !== undefined && typeof message !== 'string') {
+      return res.status(400).json({ message: 'Message must be text' });
+    }
+    if (message && message.length > 500) {
       return res.status(400).json({ message: 'Message must be 500 characters or fewer' });
     }
+    if (anonymous !== undefined && typeof anonymous !== 'boolean') {
+      return res.status(400).json({ message: 'Anonymous must be a boolean' });
+    }
 
-    // Cheap local checks first so we don't spend a verification on bad input
     validateReceiptUrl(receiptUrl);
 
     const campaign = await Campaign.findById(campaignId);
     if (!campaign) {
       return res.status(404).json({ message: 'Campaign not found' });
     }
-
     if (!DONATABLE_CAMPAIGN_STATUSES.has(campaign.status)) {
       return res.status(403).json({ message: 'This campaign is not open for donations yet', code: 'campaign_not_approved' });
     }
@@ -249,51 +315,108 @@ exports.createDonation = async (req, res) => {
     const organization = campaign.organizationId
       ? await Organization.findById(campaign.organizationId).select('payoutAccounts')
       : null;
-    const payoutAccount = getCampaignPayoutAccounts(campaign, organization)
-      .find((account) => account.bankId === String(bankId || ''));
+    const campaignPayoutAccounts = getCampaignPayoutAccounts(campaign, organization);
+    let payoutAccount;
+    if (typeof payoutAccountId === 'string' && payoutAccountId) {
+      payoutAccount = campaignPayoutAccounts.find(
+        (account) => getPayoutAccountId(account) === payoutAccountId
+      );
+    } else {
+      const bankAccounts = campaignPayoutAccounts.filter(
+        (account) => account.bankId === String(bankId || '')
+      );
+      if (bankAccounts.length === 1) payoutAccount = bankAccounts[0];
+    }
     if (!payoutAccount) {
       return res.status(400).json({ message: 'Select a valid receiving account saved for this campaign.' });
     }
 
-    const verified = await verifyDonationReceipt(receiptUrl, payoutAccount.accountName);
-
-    const donation = await Donation.create({
+    const isAnonymous = Boolean(anonymous);
+    const donationDetails = {
       campaignId,
       donorId: req.user?._id || null,
-      amount: verified.amount,
-      donorName: donorName?.trim() || undefined, // schema default: "Anonymous"
+      donorName: isAnonymous ? 'Anonymous' : donorName?.trim() || req.user?.name || undefined,
+      donorEmail: donorEmail?.trim().toLowerCase() || undefined,
+      anonymous: isAnonymous,
       bankId: payoutAccount.bankId,
       message: message?.trim() || undefined,
-      paymentStatus: 'completed',
-      provider: verified.provider,
-      receiptKey: verified.receiptKey,
-      certificateId: `LW-ETB-${crypto.randomBytes(4).toString('hex').toUpperCase()}`,
-    });
+    };
 
-    await Campaign.findByIdAndUpdate(campaignId, {
-      $inc: { raisedAmount: verified.amount, donationsCount: 1 },
-    });
+    let verified;
+    try {
+      verified = await verifyDonationReceipt(receiptUrl, payoutAccount);
+    } catch (err) {
+      if (!(err instanceof VerificationError) || err.status !== 422) throw err;
+      return res.status(422).json({ message: err.message, code: err.code });
+    }
+
+    if (Math.abs(verified.amount - requestedAmount) > 0.01) {
+      return res.status(422).json({
+        message: 'The receipt amount does not match your contribution amount',
+        code: 'amount_mismatch',
+      });
+    }
+
+    const existingDonation = await Donation.findOne({ receiptKey: verified.receiptKey }).lean();
+    if (existingDonation) {
+      return res.status(409).json({
+        message: 'This receipt has already been used for a donation',
+        code: 'duplicate_receipt',
+        donationId: existingDonation._id,
+      });
+    }
+
+    let donation;
+    const session = await mongoose.startSession();
+    try {
+      await session.withTransaction(async () => {
+        const [createdDonation] = await Donation.create([{
+          ...donationDetails,
+          payoutAccountSnapshot: {
+            payoutAccountId: getPayoutAccountId(payoutAccount),
+            bankId: payoutAccount.bankId,
+            bankName: payoutAccount.bankName,
+            accountNumber: payoutAccount.accountNumber,
+            accountName: payoutAccount.accountName,
+          },
+          amount: verified.amount,
+          paymentStatus: 'completed',
+          provider: verified.provider,
+          receiptKey: verified.receiptKey,
+          certificateId: `LW-ETB-${crypto.randomBytes(4).toString('hex').toUpperCase()}`,
+        }], { session });
+
+        const updatedCampaign = await Campaign.findByIdAndUpdate(
+          { _id: campaignId, __v: Number.isInteger(campaign.__v) ? campaign.__v : 0 },
+          { $inc: { raisedAmount: verified.amount, donationsCount: 1 } },
+          { new: true, session }
+        );
+        if (!updatedCampaign) {
+          throw new CampaignChangedDuringVerificationError(
+            'The campaign payout details changed while the receipt was being verified. Please check the current details and try again.'
+          );
+        }
+        donation = createdDonation;
+      });
+    } catch (err) {
+      if (err instanceof CampaignChangedDuringVerificationError) {
+        return res.status(409).json({ message: err.message, code: 'payout_account_changed' });
+      }
+      throw err;
+    } finally {
+      await session.endSession();
+    }
 
     res.status(201).json({
       message: 'Donation verified. Thank you!',
-      donation: {
-        _id: donation._id,
-        campaignId: donation.campaignId,
-        amount: donation.amount,
-        donorName: donation.donorName,
-        message: donation.message,
-        paymentStatus: donation.paymentStatus,
-        provider: donation.provider,
-        createdAt: donation.createdAt,
-      },
+      donation: toDonationResponse(donation, campaign),
     });
   } catch (err) {
     if (err instanceof VerificationError) {
       return res.status(err.status).json({ message: err.message, code: err.code });
     }
 
-    // Unique index on receiptKey: this receipt was already counted
-    if (err.code === 11000) {
+    if (err.code === 11000 && err.keyPattern?.receiptKey) {
       return res
         .status(409)
         .json({ message: 'This receipt has already been used for a donation', code: 'duplicate_receipt' });

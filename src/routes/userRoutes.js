@@ -6,6 +6,8 @@ const { requireAdmin } = require('../middleware/roleMiddleware');
 
 router.get('/users/me', requireAuth, userController.getMe);
 router.patch('/users/me', requireAuth, userController.updateMe);
+router.get('/users/me/saved-causes', requireAuth, userController.getSavedCampaigns);
+router.put('/users/me/saved-causes', requireAuth, userController.updateSavedCampaigns);
 router.patch('/users/me/password', requireAuth, userController.changePassword);
 router.delete('/users/me', requireAuth, userController.deleteMe);
 

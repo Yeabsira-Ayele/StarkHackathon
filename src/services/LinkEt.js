@@ -59,9 +59,35 @@ const payoutProvider = (account) => {
 };
 
 const accountNumberMatches = (receiptAccount, expectedAccountNumber) => {
-  const actual = String(receiptAccount || "").replace(/\D/g, "");
-  const expected = String(expectedAccountNumber || "").replace(/\D/g, "");
-  return Boolean(actual && expected && actual === expected);
+  const rawActual = String(receiptAccount || "").trim();
+  const rawExpected = String(expectedAccountNumber || "").trim();
+
+  const actualDigits = rawActual.replace(/\D/g, "");
+  const expectedDigits = rawExpected.replace(/\D/g, "");
+
+  if (!expectedDigits) return false;
+
+  // Exact digits match (unmasked accounts)
+  if (actualDigits && actualDigits === expectedDigits) {
+    return true;
+  }
+
+  // Masked accounts (e.g., CBE "1********8828", "1****0000", "1000****3837")
+  // Requires at least 1 prefix digit, mask characters (* or X), and at least 2 suffix digits.
+  const sanitizedActual = rawActual.replace(/[\s-]/g, "");
+  const maskMatch = sanitizedActual.match(/^(\d+)[*xX]+(\d{2,})$/);
+  if (maskMatch) {
+    const [, prefix, suffix] = maskMatch;
+    if (
+      expectedDigits.length >= prefix.length + suffix.length &&
+      expectedDigits.startsWith(prefix) &&
+      expectedDigits.endsWith(suffix)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
 };
 
 // ------------------------------------------------------------- validation
@@ -115,7 +141,12 @@ const linksFetch = async (path, init = {}) => {
       signal: AbortSignal.timeout(35000),
     });
   } catch (err) {
-    console.error("[links.et] request failed:", err.name);
+    console.error(
+      "[links.et] request failed:",
+      err.name,
+      err.message,
+      err.cause?.code || err.cause?.message
+    );
     throw new VerificationError(
       "Could not reach the verification service. Please try again.",
       503,
@@ -310,7 +341,7 @@ const normalizeReceipt = (receipt) => {
         receiverAccount: receipt.receiverAccount,
         destinationProvider: "cbe",
         currencyOk: currencyIsEtb(receipt.transferredAmount, receipt.currency),
-        statusOk: isSuccessfulStatus(receiptStatus()),
+        statusOk: isSuccessfulStatus(receiptStatus()) || Boolean(receipt.reference),
       };
 
     case "zemen-pdf":

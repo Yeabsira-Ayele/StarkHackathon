@@ -2096,13 +2096,6 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
           <div className="flex items-center gap-6">
             <button
               type="button"
-              onClick={() => setShowAcsoModal(true)}
-              className="hover:text-[#1E4D38] dark:hover:text-[#52B788] cursor-pointer"
-            >
-              {t('canvasFooter.acsoRegulation')}
-            </button>
-            <button
-              type="button"
               onClick={onOpenScholarxiv}
               className="hover:text-[#1E4D38] dark:hover:text-[#52B788] cursor-pointer"
             >

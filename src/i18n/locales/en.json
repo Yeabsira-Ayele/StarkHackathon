@@ -79,7 +79,7 @@
     "fundraise": "Fundraise",
     "signUpLogIn": "Sign Up / Log In",
     "tagline": "Ethiopia · Civic Tender",
-    "trustLine": "ACSO REGISTERED · 0% PLATFORM CUT · 100% DIRECT TO CAUSES",
+    "trustLine": "0% PLATFORM CUT · 100% DIRECT TO CAUSES",
     "sections": {
       "hero": "Hero",
       "causes": "Causes",
@@ -874,7 +874,7 @@
   },
   "canvasFooter": {
     "brandLine": "{{appName}} CIVIC BANKNOTE · NATIONAL SOLIDARITY REPOSITORY",
-    "legalLine": "ACSO ACCREDITATION NO. ET-58291 · ALL RIGHTS RESERVED 2026 / አዲስ አበባ",
+    "legalLine": "ALL RIGHTS RESERVED 2026 / አዲስ አበባ",
     "acsoRegulation": "ACSO REGULATION",
     "academicArchive": "ACADEMIC ARCHIVE",
     "communityOwned": "100% COMMUNITY OWNED"

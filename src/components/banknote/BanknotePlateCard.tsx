@@ -75,15 +75,6 @@ export const BanknotePlateCard: React.FC<BanknotePlateCardProps> = ({
             <ShieldCheck className="w-3 h-3" />
             <span>{t(campaign.status === 'approved' ? 'common.fundraiserVerified' : 'common.fundraiserPendingVerification')}</span>
           </span>
-          {campaign.verifiedOrganization && (
-            <span
-              title={t('banknote.acsoVerified')}
-              className="flex items-center gap-1 text-[9px] font-mono font-bold text-[#1E4D38] dark:text-[#52B788]"
-            >
-              <ShieldCheck className="w-3 h-3 text-[#1E4D38] dark:text-[#52B788]" />
-              <span>{t('banknote.acsoVerified')}</span>
-            </span>
-          )}
           <span className="font-mono text-[9px] font-bold text-zinc-500">2026</span>
         </div>
       </div>

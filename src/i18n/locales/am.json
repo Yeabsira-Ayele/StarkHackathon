@@ -79,7 +79,7 @@
     "fundraise": "ገንዘብ ማሰባሰብ",
     "signUpLogIn": "ይመዝገቡ / ይግቡ",
     "tagline": "የኢትዮጵያ · የሕዝብ ትብብር",
-    "trustLine": "በሲቪል ማኅበራት ኤጀንሲ የተረጋገጠ · 0% የመድረክ ተቀናሽ · 100% ቀጥታ ለምክንያቶች",
+    "trustLine": "0% የመድረክ ተቀናሽ · 100% ቀጥታ ለምክንያቶች",
     "sections": {
       "hero": "ዋና",
       "causes": "ምክንያቶች",
@@ -874,7 +874,7 @@
   },
   "canvasFooter": {
     "brandLine": "{{appName}} · የዜጎች የአንድነት መዝገብ",
-    "legalLine": "የACSO ፈቃድ ቁጥር ET-58291 · መብቱ በሕግ የተጠበቀ ነው 2026 / አዲስ አበባ",
+    "legalLine": "መብቱ በሕግ የተጠበቀ ነው 2026 / አዲስ አበባ",
     "acsoRegulation": "የACSO ደንብ",
     "academicArchive": "የምርምር ማህደር",
     "communityOwned": "100% የማኅበረሰብ ባለቤትነት"

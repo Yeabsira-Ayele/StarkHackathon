@@ -219,16 +219,69 @@ test('rejects Awash receipts without explicit completed-payment status', async (
   );
 });
 
-test('requires Links.et base URL configuration rather than falling back to a source URL', async () => {
+test('defaults to the documented Links.et URL when only the API key is configured', async () => {
   delete process.env.LINKS_ET_URL;
-  global.fetch = async () => {
-    throw new Error('fetch must not run without configuration');
+  const requests = mockVerifiedReceipt({
+    source: 'telebirr-html',
+    receiptNo: 'REF123',
+    settledAmount: '250 Birr',
+    creditedPartyName: 'Lewegene Charity',
+    creditedPartyAccountNo: payoutAccount.accountNumber,
+    transactionStatus: 'Completed',
+  });
+
+  const result = await linksEt.verifyDonationReceipt(
+    'https://transactioninfo.ethiotelecom.et/receipt/123',
+    payoutAccount
+  );
+
+  assert.equal(requests[0].url, 'https://links.et/api/verify');
+  assert.equal(result.amount, 250);
+});
+
+test('polls queued Links.et verifications beyond the initial 15 polls', async () => {
+  const originalSetTimeout = global.setTimeout;
+  const originalReceipt = {
+    source: 'telebirr-html',
+    receiptNo: 'REF-QUEUED',
+    settledAmount: '250 Birr',
+    creditedPartyName: 'Lewegene Charity',
+    creditedPartyAccountNo: payoutAccount.accountNumber,
+    transactionStatus: 'Completed',
+  };
+  let pollCount = 0;
+  const requests = [];
+  global.setTimeout = (callback, ...args) => originalSetTimeout(callback, 0, ...args);
+  global.fetch = async (url, options) => {
+    requests.push({ url, options });
+    if (options.method === 'POST') {
+      return new Response(JSON.stringify({
+        processingStatus: 'queued',
+        statusUrl: '/api/verify/request-id',
+      }), { status: 202, headers: { 'content-type': 'application/json' } });
+    }
+
+    pollCount += 1;
+    const stillQueued = pollCount <= 16;
+    return new Response(JSON.stringify(stillQueued
+      ? { processingStatus: 'queued' }
+      : { ok: true, receipt: originalReceipt }), {
+      status: stillQueued ? 202 : 200,
+      headers: { 'content-type': 'application/json' },
+    });
   };
 
-  await assert.rejects(
-    linksEt.verifyDonationReceipt('https://transactioninfo.ethiotelecom.et/receipt/123', payoutAccount),
-    (error) => error.code === 'not_configured' && error.status === 503
-  );
+  try {
+    const result = await linksEt.verifyDonationReceipt(
+      'https://transactioninfo.ethiotelecom.et/receipt/123',
+      payoutAccount
+    );
+    assert.equal(result.amount, 250);
+    assert.equal(pollCount, 17);
+    assert.equal(requests.length, 18);
+  } finally {
+    global.setTimeout = originalSetTimeout;
+  }
 });
 
 test('accepts the exact destination when the receipt holder name is formatted differently', async () => {

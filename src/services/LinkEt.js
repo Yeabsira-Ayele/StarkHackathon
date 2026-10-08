@@ -17,6 +17,10 @@ const ALLOWED_HOSTS = new Set([
 ]);
 
 const SUPPORTED_LABEL = "telebirr, CBE, Zemen Bank, Bank of Abyssinia and Awash Bank";
+const DEFAULT_LINKS_ET_URL = "https://links.et";
+const VERIFICATION_DEADLINE_MS = 175000;
+const STATUS_POLL_INTERVAL_MS = 1000;
+const STATUS_REQUEST_TIMEOUT_MS = 10000;
 
 class VerificationError extends Error {
   constructor(message, status = 422, code = "verification_failed") {
@@ -87,12 +91,12 @@ const validateReceiptUrl = (raw) => {
 
 // -------------------------------------------------------- links.et calls
 
-const linksFetch = async (path, init = {}) => {
+const linksFetch = async (path, init = {}, timeoutMs = 35000) => {
   const key = process.env.LINKS_ET_API_KEY;
-  const configuredBase = process.env.LINKS_ET_URL;
-  if (!key || !configuredBase) {
+  const configuredBase = process.env.LINKS_ET_URL || DEFAULT_LINKS_ET_URL;
+  if (!key) {
     throw new VerificationError(
-      "Payment verification is not configured. Set LINKS_ET_API_KEY and LINKS_ET_URL in the backend environment.",
+      "Payment verification is not configured. Set LINKS_ET_API_KEY in the backend environment.",
       503,
       "not_configured"
     );
@@ -112,7 +116,7 @@ const linksFetch = async (path, init = {}) => {
     return await fetch(baseUrl.origin + path, {
       ...init,
       headers: { "x-api-key": key, "content-type": "application/json" },
-      signal: AbortSignal.timeout(35000),
+      signal: AbortSignal.timeout(timeoutMs),
     });
   } catch (err) {
     console.error("[links.et] request failed:", err.name);
@@ -204,9 +208,9 @@ const errorCode = (data) => {
   return error && typeof error === "object" ? error.code : undefined;
 };
 
-// One verification attempt. Uses waitMs so we never hold a request for
-// over a minute; on 202 we poll the status URL until it resolves.
+// Links.et can return an async request when its upstream provider is busy.
 const attempt = async (url) => {
+  const deadline = Date.now() + VERIFICATION_DEADLINE_MS;
   let res = await linksFetch("/api/verify", {
     method: "POST",
     body: JSON.stringify({ url, waitMs: 20000 }),
@@ -215,27 +219,20 @@ const attempt = async (url) => {
 
   if (res.status === 202 && typeof data?.statusUrl === "string" && data.statusUrl.startsWith("/api/verify/")) {
     const statusUrl = data.statusUrl;
-    for (let i = 0; i < 15; i++) {
-      await sleep(1500);
-      res = await linksFetch(statusUrl, { method: "GET" });
+    while (Date.now() < deadline) {
+      const remainingMs = deadline - Date.now();
+      await sleep(Math.min(STATUS_POLL_INTERVAL_MS, remainingMs));
+      res = await linksFetch(
+        statusUrl,
+        { method: "GET" },
+        Math.min(STATUS_REQUEST_TIMEOUT_MS, Math.max(1, deadline - Date.now()))
+      );
       data = await readJson(res);
-      if (res.status !== 202 && (typeof data?.ok === "boolean" || typeof data?.success === "boolean" || hasExplicitSuccess(data))) break;
+      if (res.status !== 202) break;
     }
   }
 
   return { status: res.status, data };
-};
-
-const isRetryable = ({ status, data }) =>
-  status === 502 || (status === 400 && !errorCode(data));
-
-const fetchReceipt = async (url) => {
-  let result = await attempt(url);
-  if (isRetryable(result)) {
-    await sleep(1000 + Math.random() * 1000);
-    result = await attempt(url);
-  }
-  return result;
 };
 
 const throwForFailure = ({ status, data }) => {
@@ -362,9 +359,9 @@ const normalizeReceipt = (receipt) => {
 const verifyDonationReceipt = async (rawUrl, payoutAccount) => {
   const url = validateReceiptUrl(rawUrl);
 
-  if (!process.env.LINKS_ET_API_KEY || !process.env.LINKS_ET_URL) {
+  if (!process.env.LINKS_ET_API_KEY) {
     throw new VerificationError(
-      "Payment verification is not configured. Set LINKS_ET_API_KEY and LINKS_ET_URL in the backend environment.",
+      "Payment verification is not configured. Set LINKS_ET_API_KEY in the backend environment.",
       503,
       "not_configured"
     );
@@ -386,7 +383,7 @@ const verifyDonationReceipt = async (rawUrl, payoutAccount) => {
     );
   }
 
-  const result = await fetchReceipt(url);
+  const result = await attempt(url);
   const payload = result.data || {};
   const receipt = extractReceipt(payload);
 

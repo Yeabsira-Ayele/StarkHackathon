@@ -152,8 +152,8 @@ exports.createDonation = async (req, res) => {
     }
 
     const requestedAmount = Number(amount);
-    if (!Number.isFinite(requestedAmount) || requestedAmount < 50) {
-      return res.status(400).json({ message: 'Contribution amount must be at least 50 ETB' });
+    if (!Number.isFinite(requestedAmount) || requestedAmount <= 0) {
+      return res.status(400).json({ message: 'Contribution amount must be greater than 0 ETB' });
     }
 
     if (typeof receiptUrl !== 'string' || !receiptUrl.trim()) {

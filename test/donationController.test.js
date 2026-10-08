@@ -325,3 +325,23 @@ test('does not create a donation when Links.et is unavailable', async () => {
   assert.equal(createCalls.length, 0);
   assert.equal(campaignUpdates.length, 0);
 });
+
+test('rejects non-positive donation amounts (zero and negative)', async () => {
+  for (const invalidAmount of [0, -1, -50, NaN]) {
+    const response = makeResponse();
+    await controller.createDonation(makeRequest({ amount: invalidAmount }), response);
+    assert.equal(response.statusCode, 400);
+    assert.equal(createCalls.length, 0);
+    assert.equal(response.body.message, 'Contribution amount must be greater than 0 ETB');
+  }
+});
+
+test('accepts valid positive donation amounts below the previous 50 ETB minimum', async () => {
+  verifyReceipt = async () => ({ amount: 5, provider: 'telebirr', receiptKey: 'telebirr:REF123' });
+  const response = makeResponse();
+  await controller.createDonation(makeRequest({ amount: 5 }), response);
+
+  assert.equal(response.statusCode, 201);
+  assert.equal(createCalls.length, 1);
+  assert.equal(createCalls[0].input.amount, 5);
+});

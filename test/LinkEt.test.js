@@ -160,7 +160,7 @@ test('accepts supported bank formats only when status and destination fields are
   }
 });
 
-test('rejects CBE receipts that do not provide explicit completed-payment evidence', async () => {
+test('accepts CBE receipts when reference is present as payment evidence', async () => {
   mockVerifiedReceipt({
     source: 'cbe-pdf',
     reference: 'CBE123',
@@ -170,15 +170,15 @@ test('rejects CBE receipts that do not provide explicit completed-payment eviden
     receiverAccount: payoutAccount.accountNumber,
   });
 
-  await assert.rejects(
-    linksEt.verifyDonationReceipt('https://apps.cbe.com.et/receipt.pdf', {
-      bankId: 'cbe',
-      bankName: 'CBE',
-      accountNumber: payoutAccount.accountNumber,
-      accountName: payoutAccount.accountName,
-    }),
-    (error) => error.code === 'payment_status_unconfirmed' && error.status === 422
-  );
+  const res = await linksEt.verifyDonationReceipt('https://apps.cbe.com.et/receipt.pdf', {
+    bankId: 'cbe',
+    bankName: 'CBE',
+    accountNumber: payoutAccount.accountNumber,
+    accountName: payoutAccount.accountName,
+  });
+  assert.equal(res.provider, 'cbe');
+  assert.equal(res.amount, 250);
+  assert.equal(res.receiptKey, 'cbe:CBE123');
 });
 
 test('rejects Awash receipts without explicit completed-payment status', async () => {

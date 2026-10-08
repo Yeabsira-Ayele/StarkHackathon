@@ -32,7 +32,6 @@ interface BackendDonation {
   provider?: string;
   receiptKey?: string;
   certificateId?: string;
-  failureReason?: string;
   createdAt: string;
 }
 
@@ -40,16 +39,15 @@ interface DonationResponse {
   donation: BackendDonation;
 }
 
-function isFinalDonation(donation: BackendDonation): boolean {
-  return donation.paymentStatus === 'completed' || donation.paymentStatus === 'failed';
+function isVerifiedDonation(donation: BackendDonation): boolean {
+  return donation.paymentStatus === 'completed';
 }
 
 function toDonation(donation: BackendDonation): Donation {
-  if (!isFinalDonation(donation)) {
-    throw new Error('Payment verification has not returned a final result.');
+  if (!isVerifiedDonation(donation)) {
+    throw new Error('Donation was not successfully verified.');
   }
   const campaign = typeof donation.campaignId === 'string' ? undefined : donation.campaignId;
-  const status = donation.paymentStatus === 'completed' ? 'successful' : 'failed';
 
   return {
     id: donation._id,
@@ -64,10 +62,7 @@ function toDonation(donation: BackendDonation): Donation {
     message: donation.message,
     bankId: donation.bankId || donation.provider || '',
     bankName: getBankById(donation.bankId || '')?.shortName || donation.bankId || donation.provider,
-    status,
-    verification: donation.failureReason
-      ? { verifiedAt: null, verifiedAmount: null, verifiedSender: null, failureReason: donation.failureReason }
-      : undefined,
+    status: 'successful',
     createdAt: donation.createdAt,
     certificateId: donation.certificateId,
     paymentRail: undefined,
@@ -123,17 +118,16 @@ export const donationApi = {
 
   async getMyContributions(): Promise<{ donations: Donation[]; stats: DonationSummaryStats }> {
     const response = await api.get<{ donations: BackendDonation[] }>('/users/me/donations');
-    const donations = response.data.donations.filter(isFinalDonation).map(toDonation);
-    const successful = donations.filter((donation) => donation.status === 'successful');
+    const donations = response.data.donations.filter(isVerifiedDonation).map(toDonation);
     return {
       donations,
       stats: {
-        totalAmount: successful.reduce((sum, donation) => sum + donation.amount, 0),
+        totalAmount: donations.reduce((sum, donation) => sum + donation.amount, 0),
         totalDonationsCount: donations.length,
-        causesSupportedCount: new Set(successful.map((donation) => donation.campaignId)).size,
-        successfulCount: successful.length,
-        failedCount: donations.filter((donation) => donation.status === 'failed').length,
-        largestDonation: successful.reduce((largest, donation) => Math.max(largest, donation.amount), 0),
+        causesSupportedCount: new Set(donations.map((donation) => donation.campaignId)).size,
+        successfulCount: donations.length,
+        failedCount: 0,
+        largestDonation: donations.reduce((largest, donation) => Math.max(largest, donation.amount), 0),
       },
     };
   },
@@ -141,7 +135,7 @@ export const donationApi = {
   async getPatronCertificates(): Promise<ContributionCertificate[]> {
     const { donations } = await this.getMyContributions();
     return donations
-      .filter((donation) => donation.status === 'successful' && donation.certificateId)
+      .filter((donation) => donation.certificateId)
       .map(toCertificate);
   },
 

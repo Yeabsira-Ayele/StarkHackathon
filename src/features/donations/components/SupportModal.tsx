@@ -47,7 +47,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
     donorEmail,
     isAnonymous,
     donorMessage,
-    selectedBankId,
+    selectedAccountId,
     receiptUrl,
     createdDonation,
     setStep,
@@ -57,7 +57,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
     setDonorEmail,
     setIsAnonymous,
     setDonorMessage,
-    setSelectedBankId,
+    setSelectedAccountId,
     setReceiptUrl,
     setCreatedDonation,
     resetWizard,
@@ -66,7 +66,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
   const createDonationMutation = useCreateDonation();
   const [flowError, setFlowError] = useState<string | null>(null);
 
-  const selectedAccount = payoutAccounts.find((account) => account.bankId === selectedBankId);
+  const selectedAccount = payoutAccounts.find((account) => account.accountId === selectedAccountId);
 
   // Advance from Bank Selection to Account Details
   const handleProceedToAccountDetails = () => {
@@ -89,6 +89,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
         campaignId: campaign.id,
         amount,
         receiptUrl: targetUrl,
+        payoutAccountId: selectedAccount.accountId,
         donorName: isAnonymous ? 'Anonymous Patron' : (donorName.trim() || 'Anonymous Patron'),
         donorEmail: donorEmail.trim() || undefined,
         anonymous: isAnonymous,
@@ -260,8 +261,8 @@ export const SupportModal: React.FC<SupportModalProps> = ({
               ) : (
                 <BankSelector
                   accounts={payoutAccounts}
-                  selectedBankId={selectedBankId}
-                  onSelect={setSelectedBankId}
+                  selectedAccountId={selectedAccountId}
+                  onSelect={setSelectedAccountId}
                 />
               )}
 

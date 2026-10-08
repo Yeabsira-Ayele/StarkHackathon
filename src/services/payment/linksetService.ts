@@ -45,7 +45,16 @@ export function isValidReceiptUrl(value: string): boolean {
   if (!value || typeof value !== 'string') return false;
   try {
     const url = new URL(value.trim());
-    return ['https:', 'http:'].includes(url.protocol) && Boolean(url.hostname);
+    const supportedHosts = new Set([
+      'transactioninfo.ethiotelecom.et',
+      'apps.cbe.com.et',
+      'mb.cbe.com.et',
+      'mbreciept.cbe.com.et',
+      'share.zemenbank.com',
+      'cs.bankofabyssinia.com',
+      'awashpay.awashbank.com',
+    ]);
+    return ['https:', 'http:'].includes(url.protocol) && supportedHosts.has(url.hostname);
   } catch {
     return false;
   }

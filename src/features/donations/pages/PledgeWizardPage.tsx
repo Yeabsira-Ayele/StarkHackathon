@@ -44,7 +44,7 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
     donorEmail,
     isAnonymous,
     donorMessage,
-    selectedBankId,
+    selectedAccountId,
     receiptUrl,
     createdDonation,
     setStep,
@@ -54,7 +54,7 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
     setDonorEmail,
     setIsAnonymous,
     setDonorMessage,
-    setSelectedBankId,
+    setSelectedAccountId,
     setReceiptUrl,
     setCreatedDonation,
     resetWizard,
@@ -63,7 +63,7 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
   const [generalError, setGeneralError] = useState<string | null>(null);
   const createDonationMutation = useCreateDonation();
 
-  const selectedAccount = payoutAccounts.find((account) => account.bankId === selectedBankId);
+  const selectedAccount = payoutAccounts.find((account) => account.accountId === selectedAccountId);
 
   // Advance from Bank Selection to Account Details
   const handleProceedToAccountDetails = () => {
@@ -86,6 +86,7 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
         campaignId: campaign.id,
         amount,
         receiptUrl: targetUrl,
+        payoutAccountId: selectedAccount.accountId,
         donorName: isAnonymous ? 'Anonymous Patron' : (donorName.trim() || 'Anonymous Patron'),
         donorEmail: donorEmail.trim() || undefined,
         anonymous: isAnonymous,
@@ -285,8 +286,8 @@ export const PledgeWizardPage: React.FC<PledgeWizardPageProps> = ({
           ) : (
             <BankSelector
               accounts={payoutAccounts}
-              selectedBankId={selectedBankId}
-              onSelect={setSelectedBankId}
+              selectedAccountId={selectedAccountId}
+              onSelect={setSelectedAccountId}
             />
           )}
 

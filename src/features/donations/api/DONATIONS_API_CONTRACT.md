@@ -42,9 +42,10 @@ was saved. Public campaign list/detail payloads do not include payout details.
 ```
 
 The backend validates the campaign account and receipt URL, asks Links.et to
-verify the receipt, and checks the verified recipient and amount before saving.
-A successful transfer creates a completed donation and certificate. A
-definitive receipt rejection or amount mismatch creates a final failed
-donation; invalid input or an unavailable Links.et service creates no record.
+verify the receipt, and checks the selected provider, recipient name, recipient
+account number, and amount before saving. A successful transfer creates a
+completed donation and certificate and updates campaign totals in one MongoDB
+transaction. A receipt rejection, recipient/provider mismatch, or amount
+mismatch creates no donation record.
 Admin approval is not part of the payment flow. There are no donation draft or
 separate receipt-verification endpoints.

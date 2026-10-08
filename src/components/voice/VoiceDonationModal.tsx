@@ -3,7 +3,7 @@ import { Modal } from '../ui/Modal.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Input } from '../ui/Input.tsx';
 import { Select } from '../ui/Select.tsx';
-import { Campaign, PaymentRail } from '../../types/index.ts';
+import { Campaign } from '../../types/index.ts';
 import { ShieldCheck, Mic, AlertCircle } from 'lucide-react';
 
 export interface VoiceDonationModalProps {
@@ -22,7 +22,6 @@ export interface VoiceDonationModalProps {
     amount: number;
     donorName: string;
     message: string;
-    paymentRail: PaymentRail;
   }) => Promise<void>;
   isLoading?: boolean;
 }
@@ -39,7 +38,6 @@ export const VoiceDonationModal: React.FC<VoiceDonationModalProps> = ({
   const [amount, setAmount] = useState<number>(500);
   const [donorName, setDonorName] = useState('Anonymous');
   const [message, setMessage] = useState('');
-  const [paymentRail, setPaymentRail] = useState<PaymentRail>('telebirr');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -66,20 +64,13 @@ export const VoiceDonationModal: React.FC<VoiceDonationModalProps> = ({
     label: `${c.title.slice(0, 48)}... (${c.category})`,
   }));
 
-  const railOptions = [
-    { value: 'telebirr', label: 'Telebirr (Ethio Telecom)' },
-    { value: 'cbe_birr', label: 'CBE Birr (Commercial Bank of Ethiopia)' },
-    { value: 'bank_card', label: 'Bank Card (Debit / Credit)' },
-    { value: 'chapa', label: 'Chapa Gateway' },
-  ];
-
   const handleAuthorize = async () => {
     if (!selectedCampaignId) {
       setError('Please select a verified campaign for this donation.');
       return;
     }
-    if (amount <= 0) {
-      setError('Donation amount must be at least 1 ETB.');
+    if (amount < 50) {
+      setError('Donation amount must be at least 50 ETB.');
       return;
     }
     setError(null);
@@ -89,7 +80,6 @@ export const VoiceDonationModal: React.FC<VoiceDonationModalProps> = ({
       amount: Number(amount),
       donorName: donorName || 'Anonymous',
       message: message || '',
-      paymentRail,
     });
   };
 
@@ -105,10 +95,10 @@ export const VoiceDonationModal: React.FC<VoiceDonationModalProps> = ({
           </div>
           <div>
             <h3 className="text-base font-bold text-primary">
-              Authorize Contribution
+              Prepare Donation
             </h3>
             <span className="text-xs text-zinc-500 font-normal">
-              Review and confirm your voice donation details.
+              Review the campaign and amount. You will provide payment and receipt details next.
             </span>
           </div>
         </div>
@@ -125,7 +115,7 @@ export const VoiceDonationModal: React.FC<VoiceDonationModalProps> = ({
             isLoading={isLoading}
             icon={<ShieldCheck className="w-4 h-4" />}
           >
-            Authorize {Number(amount).toLocaleString()} ETB
+            Continue to payment details
           </Button>
         </>
       }
@@ -171,15 +161,6 @@ export const VoiceDonationModal: React.FC<VoiceDonationModalProps> = ({
           </div>
 
           <div>
-            <Select
-              label="Payment Method"
-              options={railOptions}
-              value={paymentRail}
-              onChange={(e) => setPaymentRail(e.target.value as PaymentRail)}
-            />
-          </div>
-
-          <div>
             <Input
               label="Note / Message (Optional)"
               value={message}
@@ -199,9 +180,7 @@ export const VoiceDonationModal: React.FC<VoiceDonationModalProps> = ({
             </div>
             <div className="flex justify-between text-zinc-500 dark:text-zinc-400">
               <span>Rail:</span>
-              <span className="font-semibold text-accent uppercase">
-                {paymentRail.replace('_', ' ')}
-              </span>
+              <span className="font-semibold text-accent">Links.et verified</span>
             </div>
             <div className="flex justify-between text-base font-bold text-primary pt-1.5 border-t border-indigo-200/60 dark:border-indigo-900/50">
               <span>Total Contribution:</span>

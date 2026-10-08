@@ -6,6 +6,7 @@ const cors = require("cors");
 dotenv.config(); // must run before anything reads process.env
 
 const connectDB = require("./src/config/db");
+const Donation = require("./src/models/Donation");
 const campaignRoutes = require("./src/routes/CampaignRoutes");
 const donationRoutes = require("./src/routes/donationRoutes");
 const adminRoutes = require("./src/routes/adminRoutes");
@@ -43,9 +44,13 @@ app.use("/api", reportRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-// Connect to MongoDB, then start listening
-connectDB().then(() => {
+// Create the receipt uniqueness index before accepting donation requests.
+connectDB().then(async () => {
+  await Donation.init();
   app.listen(PORT, () => {
     console.log(`Server started on port ${PORT}`);
   });
+}).catch((error) => {
+  console.error("Backend startup failed:", error.name);
+  process.exitCode = 1;
 });

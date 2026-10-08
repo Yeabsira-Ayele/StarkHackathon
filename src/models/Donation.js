@@ -18,9 +18,11 @@ const donationSchema = new mongoose.Schema({
   // "<provider>:<bank reference>". The unique index makes it impossible to
   // count the same bank receipt twice, even under concurrent requests.
   // (Only the reference is stored, never the receipt URL.)
-  receiptKey: { type: String, unique: true, sparse: true },
+  receiptKey: { type: String },
 
   createdAt: { type: Date, default: Date.now }
 });
+
+donationSchema.index({ receiptKey: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model('Donation', donationSchema);

@@ -131,7 +131,7 @@ exports.getDonationsByCampaign = async (req, res) => {
 //
 // The donor first pays by telebirr / CBE / Zemen / BoA / Awash, then submits
 // the receipt link. We verify it with links.et before creating any donation
-// record; definitive verification failures are stored only as failed attempts.
+// record. Verification failures do not create donation records.
 exports.createDonation = async (req, res) => {
   try {
     const { campaignId } = req.params;
@@ -206,32 +206,16 @@ exports.createDonation = async (req, res) => {
 
     let verified;
     try {
-      verified = await verifyDonationReceipt(receiptUrl, payoutAccount.accountName);
+      verified = await verifyDonationReceipt(receiptUrl, payoutAccount);
     } catch (err) {
       if (!(err instanceof VerificationError) || err.status !== 422) throw err;
-
-      const donation = await Donation.create({
-        ...donationDetails,
-        amount: requestedAmount,
-        paymentStatus: 'failed',
-        failureReason: err.message,
-      });
-      return res.status(201).json({
-        message: 'Payment verification failed.',
-        donation: toDonationResponse(donation, campaign),
-      });
+      return res.status(422).json({ message: err.message, code: err.code });
     }
 
     if (Math.abs(verified.amount - requestedAmount) > 0.01) {
-      const donation = await Donation.create({
-        ...donationDetails,
-        amount: requestedAmount,
-        paymentStatus: 'failed',
-        failureReason: 'The receipt amount does not match your contribution amount',
-      });
-      return res.status(201).json({
-        message: donation.failureReason,
-        donation: toDonationResponse(donation, campaign),
+      return res.status(422).json({
+        message: 'The receipt amount does not match your contribution amount',
+        code: 'amount_mismatch',
       });
     }
 
@@ -244,18 +228,30 @@ exports.createDonation = async (req, res) => {
       });
     }
 
-    const donation = await Donation.create({
-      ...donationDetails,
-      amount: verified.amount,
-      paymentStatus: 'completed',
-      provider: verified.provider,
-      receiptKey: verified.receiptKey,
-      certificateId: `LW-ETB-${crypto.randomBytes(4).toString('hex').toUpperCase()}`,
-    });
+    let donation;
+    const session = await mongoose.startSession();
+    try {
+      await session.withTransaction(async () => {
+        const [createdDonation] = await Donation.create([{
+          ...donationDetails,
+          amount: verified.amount,
+          paymentStatus: 'completed',
+          provider: verified.provider,
+          receiptKey: verified.receiptKey,
+          certificateId: `LW-ETB-${crypto.randomBytes(4).toString('hex').toUpperCase()}`,
+        }], { session });
 
-    await Campaign.findByIdAndUpdate(campaignId, {
-      $inc: { raisedAmount: verified.amount, donationsCount: 1 },
-    });
+        const updatedCampaign = await Campaign.findByIdAndUpdate(
+          campaignId,
+          { $inc: { raisedAmount: verified.amount, donationsCount: 1 } },
+          { new: true, session }
+        );
+        if (!updatedCampaign) throw new Error('Campaign disappeared while recording a verified donation');
+        donation = createdDonation;
+      });
+    } finally {
+      await session.endSession();
+    }
 
     res.status(201).json({
       message: 'Donation verified. Thank you!',
@@ -266,8 +262,8 @@ exports.createDonation = async (req, res) => {
       return res.status(err.status).json({ message: err.message, code: err.code });
     }
 
-    // Unique index on receiptKey: this receipt was already counted
-    if (err.code === 11000) {
+    // The receiptKey unique index also prevents concurrent re-use attempts.
+    if (err.code === 11000 && err.keyPattern?.receiptKey) {
       return res
         .status(409)
         .json({ message: 'This receipt has already been used for a donation', code: 'duplicate_receipt' });

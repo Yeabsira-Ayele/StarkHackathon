@@ -18,6 +18,7 @@ import {
   FileCheck,
 } from 'lucide-react';
 import { toGeezNumber } from '../services/utils/currencyUtils.ts';
+import { getCampaignFundedPercentage } from '../services/utils/campaignProgress.ts';
 
 export interface CampaignDetailProps {
   campaign: Campaign;
@@ -47,7 +48,7 @@ export const CampaignDetail: React.FC<CampaignDetailProps> = ({
     year: 'numeric',
   });
 
-  const percent = Math.min(Math.round((campaign.raisedAmount / campaign.goalAmount) * 100), 100);
+  const percent = Math.round(getCampaignFundedPercentage(campaign.raisedAmount, campaign.goalAmount));
 
   const handleShare = () => {
     try {

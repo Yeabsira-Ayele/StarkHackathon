@@ -71,7 +71,14 @@ export const useDonationStore = create<DonationWizardState>((set, get) => ({
   // Setters
   setStep: (step) => set({ step, pledgeStep: step }),
   setAmount: (amt) => set({ amount: amt, pledgeAmount: amt, customAmountStr: String(amt) }),
-  setCustomAmountStr: (str) => set({ customAmountStr: str }),
+  setCustomAmountStr: (str) => {
+    const amount = Number(str);
+    set({
+      customAmountStr: str,
+      amount: Number.isFinite(amount) ? amount : 0,
+      pledgeAmount: Number.isFinite(amount) ? amount : 0,
+    });
+  },
   setDonorName: (name) => set({ donorName: name }),
   setDonorEmail: (email) => set({ donorEmail: email }),
   setIsAnonymous: (anon) => set({ isAnonymous: anon }),

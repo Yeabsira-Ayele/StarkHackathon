@@ -3,6 +3,7 @@ import { Campaign } from '../../types/index.ts';
 import { ProgressBar } from '../ui/ProgressBar.tsx';
 import { Card } from '../ui/Card.tsx';
 import { ShieldCheck, Heart, ArrowRight, MapPin, Award } from 'lucide-react';
+import { getCampaignFundedPercentage } from '../../services/utils/campaignProgress.ts';
 
 export interface CampaignCardProps {
   campaign: Campaign;
@@ -34,8 +35,8 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
   if (!campaign) return null;
 
   const raised = campaign.raisedAmount || 0;
-  const goal = campaign.goalAmount || 1;
-  const percent = Math.min(Math.round((raised / goal) * 100), 100);
+  const fundingPercentage = getCampaignFundedPercentage(raised, campaign.goalAmount);
+  const percent = Math.round(fundingPercentage);
 
   return (
     <Card
@@ -122,7 +123,7 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
         {/* Financial Progress Section */}
         <div className="pt-3 border-t border-[#D8CEBA]/70 dark:border-[#313C36]/70 space-y-2">
           <ProgressBar
-            value={campaign.raisedAmount}
+            value={raised}
             max={campaign.goalAmount}
             size="sm"
             color="accent"
@@ -131,7 +132,7 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
           <div className="flex justify-between items-baseline text-xs">
             <div>
               <span className="text-sm font-bold text-primary tabular-nums font-display">
-                {campaign.raisedAmount.toLocaleString()} ETB
+                {raised.toLocaleString()} ETB
               </span>
               <span className="text-zinc-400 text-[10px] ml-1">raised</span>
             </div>

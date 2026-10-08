@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ShieldCheck, MapPin, ArrowRight } from 'lucide-react';
 import { Campaign } from '../types/campaign.types';
 import { APP_NAME } from '../../../data/content.ts';
+import { getCampaignFundedPercentage } from '../../../services/utils/campaignProgress.ts';
 
 interface CampaignCardProps {
   campaign: Campaign;
@@ -18,9 +19,9 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
   variant = 'standard',
 }) => {
   const { t } = useTranslation();
-  const percentage = campaign.goalAmount
-    ? Math.min(100, Math.round((campaign.raisedAmount / campaign.goalAmount) * 100))
-    : 0;
+  const raised = campaign.raisedAmount || 0;
+  const fundingPercentage = getCampaignFundedPercentage(raised, campaign.goalAmount);
+  const percentage = Math.round(fundingPercentage);
 
   return (
     <article
@@ -93,13 +94,13 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
           <div className="w-full h-2.5 bg-[#EAE2D3] dark:bg-[#201B16] border border-[#26211C]/30 dark:border-[#9A7432]/40 rounded-[1px] overflow-hidden p-0.5">
             <div
               className="h-full bg-[#1E4D38] dark:bg-[#52B788] transition-all duration-500"
-              style={{ width: `${percentage}%` }}
+              style={{ width: `${fundingPercentage}%` }}
             />
           </div>
 
           <div className="flex items-center justify-between text-[11px] font-mono">
             <span className="font-black text-[#1E4D38] dark:text-[#52B788]">
-              {campaign.raisedAmount.toLocaleString()} {t('common.currency')}
+              {raised.toLocaleString()} {t('common.currency')}
             </span>
             <span className="text-zinc-500 font-bold">
               / {campaign.goalAmount.toLocaleString()} {t('common.currency')}

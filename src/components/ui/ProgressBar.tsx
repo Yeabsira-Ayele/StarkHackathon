@@ -27,7 +27,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   }
 
   const displayPct = Math.min(Math.max(computedPct, 0), 100);
-  const roundedPct = Math.round(computedPct);
+  const roundedPct = Math.round(displayPct);
 
   const heightStyles = {
     sm: 'h-1.5',

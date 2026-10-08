@@ -387,13 +387,14 @@ export const BanknoteRulerGauge: React.FC<{
   className?: string;
 }> = ({ percent, raised, goal, className = '' }) => {
   const clamped = Math.min(Math.max(percent, 0), 100);
+  const displayedPercent = Math.round(clamped);
 
   return (
     <div className={`space-y-1 select-none font-mono ${className}`}>
       {/* Top Numbers: Denomination Scale */}
       <div className="flex justify-between items-baseline text-[11px] font-bold">
         <span className="text-[#26211C] dark:text-[#D8B066]">
-          {clamped}% FUNDED
+          {displayedPercent}% FUNDED
         </span>
         <span className="text-zinc-600 dark:text-zinc-400 text-[10px]">
           {raised.toLocaleString()} / {goal.toLocaleString()} ETB

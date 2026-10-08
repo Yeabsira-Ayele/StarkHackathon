@@ -4,6 +4,7 @@ import { Campaign } from '../../types/index.ts';
 import { BanknoteRulerGauge } from './BanknoteArtwork.tsx';
 import { ShieldCheck, MapPin, ArrowRight } from 'lucide-react';
 import { APP_NAME } from '../../data/content.ts';
+import { getCampaignFundedPercentage } from '../../services/utils/campaignProgress.ts';
 
 export interface BanknotePlateCardProps {
   campaign: Campaign;
@@ -28,8 +29,7 @@ export const BanknotePlateCard: React.FC<BanknotePlateCardProps> = ({
   if (!campaign) return null;
 
   const raised = campaign.raisedAmount || 0;
-  const goal = campaign.goalAmount || 1;
-  const percent = Math.min(Math.round((raised / goal) * 100), 100);
+  const percent = getCampaignFundedPercentage(raised, campaign.goalAmount);
 
   const serial = campaign.serialCode || `№ ${String(campaign.id || '').replace('camp-', '00')}`;
   const categoryLabel = t(`categories.${campaign.category || 'other'}`).toUpperCase();
@@ -124,7 +124,7 @@ export const BanknotePlateCard: React.FC<BanknotePlateCardProps> = ({
       <div className="relative z-10 mb-4">
         <BanknoteRulerGauge
           percent={percent}
-          raised={campaign.raisedAmount}
+          raised={raised}
           goal={campaign.goalAmount}
         />
       </div>

@@ -4,6 +4,7 @@ import { Campaign } from '../../types/index.ts';
 import { ProgressBar } from '../ui/ProgressBar.tsx';
 import { ShieldCheck, Heart, ArrowRight, MapPin, Award, FileText } from 'lucide-react';
 import { toGeezNumber } from '../../services/utils/currencyUtils.ts';
+import { getCampaignFundedPercentage } from '../../services/utils/campaignProgress.ts';
 
 export interface BanknoteVignetteCardProps {
   campaign: Campaign;
@@ -20,8 +21,8 @@ export const BanknoteVignetteCard: React.FC<BanknoteVignetteCardProps> = ({
   if (!campaign) return null;
 
   const raised = campaign.raisedAmount || 0;
-  const goal = campaign.goalAmount || 1;
-  const percent = Math.min(Math.round((raised / goal) * 100), 100);
+  const fundingPercentage = getCampaignFundedPercentage(raised, campaign.goalAmount);
+  const percent = Math.round(fundingPercentage);
 
   const categoryLabels: Record<string, { en: string; am: string }> = {
     medical: { en: 'HEALTHCARE', am: 'የህክምና ዋስትና' },
@@ -142,7 +143,7 @@ export const BanknoteVignetteCard: React.FC<BanknoteVignetteCardProps> = ({
         <div className="pt-3 border-t border-[#D8CEBA] dark:border-[#2C3831] space-y-2">
           
           <ProgressBar
-            value={campaign.raisedAmount}
+            value={raised}
             max={campaign.goalAmount}
             size="sm"
             color="accent"
@@ -151,7 +152,7 @@ export const BanknoteVignetteCard: React.FC<BanknoteVignetteCardProps> = ({
           <div className="flex justify-between items-baseline text-xs font-mono">
             <div>
               <span className="text-sm font-bold text-[#173C32] dark:text-[#C5A059] tabular-nums font-display">
-                {campaign.raisedAmount.toLocaleString()} ETB
+                {raised.toLocaleString()} ETB
               </span>
               <span className="text-zinc-400 text-[10px] ml-1">raised</span>
             </div>

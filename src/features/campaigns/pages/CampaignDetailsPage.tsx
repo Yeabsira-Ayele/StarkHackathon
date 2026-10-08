@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ShieldCheck, MapPin, ArrowRight } from 'lucide-react';
 import { Campaign } from '../types/campaign.types';
+import { getCampaignFundedPercentage } from '../../../services/utils/campaignProgress.ts';
 import { APP_NAME } from '../../../data/content.ts';
 
 interface CampaignDetailsPageProps {
@@ -16,9 +17,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
   onPledge,
 }) => {
   const { t } = useTranslation();
-  const percentage = campaign.goalAmount
-    ? Math.min(100, Math.round((campaign.raisedAmount / campaign.goalAmount) * 100))
-    : 0;
+  const percentage = Math.round(getCampaignFundedPercentage(campaign.raisedAmount, campaign.goalAmount));
 
   return (
     <div className="w-full space-y-8 animate-in fade-in duration-300">

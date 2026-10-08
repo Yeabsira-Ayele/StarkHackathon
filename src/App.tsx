@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter, Route, Routes, useNavigate, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import type { AppLanguage } from './i18n/config.ts';
 import { APP_NAME } from './data/content.ts';
-import { Campaign, CampaignCategory, ContributionCertificate, Organization, PaymentRail } from './types/index.ts';
+import { Campaign, CampaignCategory, ContributionCertificate, Organization } from './types/index.ts';
 import { campaignApi } from './services/api/campaignApi.ts';
 import { BanknoteMasterCanvas } from './components/banknote/BanknoteMasterCanvas.tsx';
 import { VoiceCampaignModal } from './components/voice/VoiceCampaignModal.tsx';
@@ -30,6 +30,7 @@ import { OrganizationProfile } from './pages/OrganizationProfile.tsx';
 import { organizationService } from './services/organizationService.ts';
 import { localizeErrorMessage } from './i18n/errorMessage.ts';
 import { ErrorState } from './components/ErrorState.tsx';
+import { useDonationStore } from './features/donations/store/donation.store';
 
 export type AppView =
   | 'campaigns'
@@ -191,27 +192,36 @@ function PlatformApp({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const openVerifiedDonationFlow = useCallback((
+    campaign: Campaign,
+    amount: number,
+    donorName: string,
+    message?: string,
+  ) => {
+    const donationStore = useDonationStore.getState();
+    const anonymous = !donorName.trim() || donorName.trim().toLowerCase() === 'anonymous';
+    donationStore.resetWizard();
+    donationStore.setAmount(Number.isFinite(amount) ? amount : 500);
+    donationStore.setDonorName(anonymous ? '' : donorName.trim());
+    donationStore.setIsAnonymous(anonymous);
+    donationStore.setDonorMessage(message || '');
+    setSelectedCampaign(campaign);
+    navigate(`/donations/${campaign.id}`);
+  }, [navigate]);
+
   // Handler: Support / Donation flow with Certificate Generation
   const handleDonate = async (payload: {
     amount: number;
     donorName: string;
     message?: string;
-    paymentRail: PaymentRail;
   }) => {
     if (!selectedCampaign) return;
-
-    const res = await campaignApi.submitDonation(selectedCampaign.id, payload);
-    setSelectedCampaign(res.campaign);
-    setActiveCertificate(res.certificate);
-    showToast({
-      key: 'notifications.donationReceived',
-      values: {
-        amount: payload.amount.toLocaleString(),
-        rail: payload.paymentRail.toUpperCase(),
-      },
-    });
-    await loadData();
-    return res;
+    openVerifiedDonationFlow(
+      selectedCampaign,
+      payload.amount,
+      payload.donorName,
+      payload.message,
+    );
   };
 
   // Handler: Confirm Voice Donation
@@ -220,36 +230,14 @@ function PlatformApp({
     amount: number;
     donorName: string;
     message: string;
-    paymentRail: PaymentRail;
   }) => {
-    setIsProcessingVoice(true);
-    try {
-      const res = await campaignApi.submitDonation(payload.campaignId, {
-        amount: payload.amount,
-        donorName: payload.donorName,
-        message: payload.message,
-        paymentRail: payload.paymentRail,
-      });
-
-      setVoiceDonationData(null);
-      await loadData();
-      setActiveCertificate(res.certificate);
-      showToast({
-        key: 'notifications.voiceDonationReceived',
-        values: { amount: payload.amount.toLocaleString() },
-      });
-
-      const updated = await campaignApi.getCampaignById(payload.campaignId);
-      setSelectedCampaign(updated);
-      setCurrentView('detail');
-    } catch (err: any) {
-      showToast(
-        { error: err, fallbackKey: 'notifications.paymentFailed' },
-        'info'
-      );
-    } finally {
-      setIsProcessingVoice(false);
+    const campaign = campaigns.find((item) => item.id === payload.campaignId);
+    if (!campaign) {
+      showToast({ text: 'The selected campaign is no longer available.' }, 'info');
+      return;
     }
+    setVoiceDonationData(null);
+    openVerifiedDonationFlow(campaign, payload.amount, payload.donorName, payload.message);
   };
 
   // Handler: Create Campaign (Standard / Multi-step Form)
@@ -374,18 +362,17 @@ function PlatformApp({
     };
 
     const handleVoxideDonation = async (e: any) => {
-      const { amount, campaignId, donorName, paymentRail = 'telebirr' } = e.detail || {};
+      const { amount, campaignId, donorName } = e.detail || {};
       const target = campaignId
         ? campaigns.find((c) => c.id === campaignId) || campaigns[0]
         : (selectedCampaign || campaigns[0]);
       if (target) {
-        setSelectedCampaign(target);
-        await handleDonate({
-          amount: Number(amount) || 100,
-          donorName: donorName || 'Anonymous Patron',
-          paymentRail,
-          message: 'Voice Pledge via Voxide',
-        });
+        openVerifiedDonationFlow(
+          target,
+          Number(amount) || 100,
+          donorName || 'Anonymous',
+          'Voice pledge via Voxide',
+        );
       }
     };
 
@@ -397,7 +384,7 @@ function PlatformApp({
       window.removeEventListener('voxide:language' as any, handleVoxideLang);
       window.removeEventListener('voxide:start_donation' as any, handleVoxideDonation);
     };
-  }, [campaigns, selectedCampaign, i18n]);
+  }, [campaigns, selectedCampaign, i18n, openVerifiedDonationFlow]);
 
   return (
     <div className={`min-h-screen bg-[#F2ECE1] dark:bg-[#080706] text-[#201C18] dark:text-[#F4EFE6] font-sans selection:bg-[#9A7432]/30 selection:text-[#1E4D38] transition-colors duration-200 ${isDark ? 'dark' : ''}`}>
@@ -431,7 +418,18 @@ function PlatformApp({
         language={language}
         isDark={isDark}
         onToggleTheme={toggleTheme}
-        onDonationCompleted={(cert) => setActiveCertificate(cert)}
+        onDonationCompleted={(cert) => {
+          setActiveCertificate(cert);
+          const updateCampaign = (campaign: Campaign) => campaign.id === cert.campaignId
+            ? {
+                ...campaign,
+                raisedAmount: campaign.raisedAmount + cert.amount,
+                donationsCount: (campaign.donationsCount || 0) + 1,
+              }
+            : campaign;
+          setCampaigns((current) => current.map(updateCampaign));
+          setSelectedCampaign((current) => current ? updateCampaign(current) : current);
+        }}
       />
 
       {/* Signature Digital Contribution Certificate Modal */}

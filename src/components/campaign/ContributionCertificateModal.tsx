@@ -1,9 +1,17 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { ContributionCertificate } from '../../types/index.ts';
-import { ShieldCheck, Award, Download, Share2, Check, ArrowRight, X } from 'lucide-react';
+import { Award, Download, Share2, ArrowRight, X, Loader2 } from 'lucide-react';
 import { Button } from '../ui/Button.tsx';
 import { toGeezNumber } from '../../services/utils/currencyUtils.ts';
 import { APP_NAME } from '../../data/content.ts';
+import { ContributionCertificateExport } from './ContributionCertificateExport.tsx';
+import {
+  generateCertificatePngBlob,
+  downloadPngFile,
+  shareCertificateImageFile,
+  sanitizeCertificateFilename,
+} from './certificateExportUtils.ts';
+import mosaicBg from '../../assets/images/ethiopian_mosaic_banknote_bg_1791344861673.jpg';
 
 export interface ContributionCertificateModalProps {
   certificate: ContributionCertificate | null;
@@ -20,14 +28,58 @@ export const ContributionCertificateModal: React.FC<ContributionCertificateModal
   onViewDashboard,
   onExploreMore,
 }) => {
-  const [copied, setCopied] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
+  const [busy, setBusy] = useState<'download' | 'share' | null>(null);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'info' | 'error'; message: string } | null>(null);
 
   if (!isOpen || !certificate) return null;
 
-  const handleCopyLink = () => {
-    navigator.clipboard?.writeText(window.location.origin + `?cert=${certificate.certificateId}`);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+  const filename = sanitizeCertificateFilename(certificate.certificateId);
+
+  const showFeedback = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
+    setFeedback({ type, message });
+    setTimeout(() => setFeedback((current) => (current?.message === message ? null : current)), 5500);
+  };
+
+  const handleDownload = async () => {
+    if (busy) return;
+    setBusy('download');
+    setFeedback(null);
+    try {
+      const blob = await generateCertificatePngBlob(exportRef.current, certificate, mosaicBg);
+      downloadPngFile(blob, filename);
+      showFeedback('Certificate image downloaded.');
+    } catch (err) {
+      console.error('Failed to generate certificate image', err);
+      showFeedback('Unable to create the certificate image. Please try again.', 'error');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleShare = async () => {
+    if (busy) return;
+    setBusy('share');
+    setFeedback(null);
+    try {
+      const blob = await generateCertificatePngBlob(exportRef.current, certificate, mosaicBg);
+      const result = await shareCertificateImageFile(
+        blob,
+        filename,
+        `${APP_NAME} Certificate — ${certificate.donorName || 'Patron'}`,
+        `I supported "${certificate.campaignTitle}" on ${APP_NAME}! ለወገን አለኝታ!`
+      );
+      if (result === 'shared') {
+        showFeedback('Certificate shared.');
+      } else {
+        showFeedback('Image saved to your device. You can now attach it in Telegram or WhatsApp.', 'info');
+      }
+    } catch (err) {
+      console.error('Failed to share certificate image', err);
+      showFeedback('Unable to create the certificate image. Please try again.', 'error');
+    } finally {
+      setBusy(null);
+    }
   };
 
   const formattedDate = new Date(certificate.issuedAt).toLocaleDateString('en-US', {
@@ -40,6 +92,13 @@ export const ContributionCertificateModal: React.FC<ContributionCertificateModal
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-start sm:items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
+      {/* Offscreen 1080x1350 plate captured as the downloadable/shareable image */}
+      <div
+        aria-hidden="true"
+        style={{ position: 'fixed', left: '-9999px', top: 0, width: '1080px', height: '1350px', zIndex: -9999, pointerEvents: 'none' }}
+      >
+        <ContributionCertificateExport ref={exportRef} certificate={certificate} />
+      </div>
       <div className="relative my-0 sm:my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl overflow-x-hidden overflow-y-auto bg-[#FAF6EE] dark:bg-[#141210] text-[#201C18] dark:text-[#F4EFE6] rounded-2xl shadow-2xl border-4 border-[#26211C] dark:border-[#9A7432] animate-in zoom-in-95 duration-200">
         
         {/* Close Button */}
@@ -171,23 +230,42 @@ export const ContributionCertificateModal: React.FC<ContributionCertificateModal
 
         </div>
 
+        {feedback && (
+          <div
+            role="status"
+            className={`px-6 py-2 text-xs font-mono font-bold border-t-2 ${
+              feedback.type === 'error'
+                ? 'bg-rose-50 text-rose-900 border-rose-300'
+                : feedback.type === 'info'
+                ? 'bg-amber-50 text-amber-900 border-amber-300'
+                : 'bg-emerald-50 text-emerald-900 border-emerald-300'
+            }`}
+          >
+            {feedback.message}
+          </div>
+        )}
+
         {/* Action Controls */}
         <div className="bg-[#EFE8D8] dark:bg-[#1E1A17] px-6 py-4 border-t-2 border-[#26211C] dark:border-[#332B23] flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
           <div className="flex items-center gap-2">
             <button
-              onClick={handleCopyLink}
-              className="px-3 py-1.5 rounded-lg border border-[#9A7432] bg-[#FCF9F2] dark:bg-[#26201B] font-bold text-[#201C18] dark:text-[#F4EFE6] hover:bg-[#E5DDCB] transition-colors cursor-pointer flex items-center gap-1.5"
+              type="button"
+              onClick={handleShare}
+              disabled={busy !== null}
+              className="px-3 py-1.5 rounded-lg border border-[#9A7432] bg-[#FCF9F2] dark:bg-[#26201B] font-bold text-[#201C18] dark:text-[#F4EFE6] hover:bg-[#E5DDCB] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5 text-[#9A7432]" />}
-              <span>{copied ? 'LINK COPIED' : 'SHARE NOTE'}</span>
+              {busy === 'share' ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#9A7432]" /> : <Share2 className="w-3.5 h-3.5 text-[#9A7432]" />}
+              <span>{busy === 'share' ? 'PREPARING IMAGE…' : 'SHARE IMAGE'}</span>
             </button>
 
             <button
-              onClick={() => window.print()}
-              className="px-3 py-1.5 rounded-lg border border-[#9A7432] bg-[#FCF9F2] dark:bg-[#26201B] font-bold text-[#201C18] dark:text-[#F4EFE6] hover:bg-[#E5DDCB] transition-colors cursor-pointer flex items-center gap-1.5"
+              type="button"
+              onClick={handleDownload}
+              disabled={busy !== null}
+              className="px-3 py-1.5 rounded-lg border border-[#9A7432] bg-[#FCF9F2] dark:bg-[#26201B] font-bold text-[#201C18] dark:text-[#F4EFE6] hover:bg-[#E5DDCB] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
             >
-              <Download className="w-3.5 h-3.5 text-[#9A7432]" />
-              <span>PRINT BANKNOTE (PDF)</span>
+              {busy === 'download' ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#9A7432]" /> : <Download className="w-3.5 h-3.5 text-[#9A7432]" />}
+              <span>{busy === 'download' ? 'SAVING…' : 'DOWNLOAD PNG'}</span>
             </button>
           </div>
 

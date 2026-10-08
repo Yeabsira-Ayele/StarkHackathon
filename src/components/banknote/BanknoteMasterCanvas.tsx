@@ -113,11 +113,9 @@ export interface BanknoteMasterCanvasProps {
 interface HomeLandingProps {
   campaigns: Campaign[];
   organizations: Organization[];
-  isDataLoading?: boolean;
   totalRaised: number;
   totalDonations: number;
-  showHero?: boolean;
-  showImpact?: boolean;
+  isDataLoading?: boolean;
   onDiscover: () => void;
   onFundraise: () => void;
   onVoxide: () => void;
@@ -127,11 +125,9 @@ interface HomeLandingProps {
 const HomeLanding: React.FC<HomeLandingProps> = ({
   campaigns,
   organizations,
-  isDataLoading = false,
   totalRaised,
   totalDonations,
-  showHero = true,
-  showImpact = true,
+  isDataLoading = false,
   onDiscover,
   onFundraise,
   onVoxide,
@@ -149,226 +145,309 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
       return score(b) - score(a);
     })
     .slice(0, 3);
-  const trustedOrganizations = organizations.filter((organization) => organization.verified).slice(0, 4);
-  const heroCampaign = featuredCampaigns[0];
 
   return (
-    <div className="flex w-full flex-col gap-4 animate-in fade-in duration-300">
-      {showHero && (
-      <section className="relative overflow-hidden bg-[#EAE1CF] dark:bg-[#101711]">
-        <div className="absolute inset-0 pointer-events-none intaglio-crosshatch opacity-60" />
-        <div className="relative z-10 mx-auto grid max-w-[1500px] items-center gap-10 px-6 py-12 sm:px-12 sm:py-16 lg:grid-cols-[1.05fr_.95fr] lg:px-20 lg:py-20">
-          <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 border border-[#9A7432]/50 bg-[#F7F2E7]/80 px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#805F29] dark:bg-[#161b16] dark:text-[#D8B066]">
-              <ShieldCheck className="h-3.5 w-3.5" />
-              <span>{t('home.hero.badge')}</span>
-            </div>
-            <div>
-              <h1 className="font-display text-4xl font-black leading-[1.08] tracking-tight text-[#201C18] dark:text-[#F4EFE6] sm:text-6xl">
-                {t('home.hero.titleLead')}<br />
-                <span className="text-[#1E4D38] dark:text-[#52B788]">{t('home.hero.titleHighlight')}</span>
-              </h1>
-              <p className="mt-5 max-w-xl font-serif text-lg leading-relaxed text-[#5A4E3E] dark:text-[#C9BEAC] sm:text-xl">
-                {t('home.hero.description', { appName: APP_NAME })}
-              </p>
-              <p className="mt-3 font-ethiopic text-sm text-[#8B6A34]">{t('home.motto')}</p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <button type="button" onClick={onDiscover} className="inline-flex items-center gap-2 border-2 border-[#1E4D38] bg-[#1E4D38] px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-white shadow-md transition hover:bg-[#163E2C]">
-                {t('home.hero.discover')} <ArrowRight className="h-4 w-4" />
-              </button>
-              <button type="button" onClick={onFundraise} className="inline-flex items-center gap-2 border border-[#26211C]/50 bg-[#F7F2E7] px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-[#201C18] transition hover:border-[#1E4D38] hover:text-[#1E4D38] dark:bg-[#1A201B] dark:text-[#F4EFE6]">
-                {t('home.hero.startFundraising')} <ArrowRight className="h-4 w-4" />
-              </button>
-              <button type="button" onClick={onVoxide} className="inline-flex items-center gap-2 border border-[#9A7432]/60 bg-[#F2EADA]/70 px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-[#805F29] transition hover:bg-[#E1D4BA] dark:bg-[#181612] dark:text-[#D8B066]">
-                <Volume2 className="h-4 w-4" /> {t('home.hero.voxide')}
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-x-6 gap-y-2 border-t border-[#26211C]/15 pt-4 font-mono text-[9px] font-bold uppercase tracking-wider text-[#5A4E3E] dark:text-[#B6AA98]">
-              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-[#1E4D38]" /> {t('home.hero.verifiedOrganizations')}</span>
-              <span className="inline-flex items-center gap-1.5"><HandHeart className="h-3.5 w-3.5 text-[#9A7432]" /> {t('home.hero.communityFirst')}</span>
-            </div>
-          </div>
-
-          <div className="relative mx-auto w-full max-w-[520px]">
-            <div className="absolute -inset-3 border border-[#9A7432]/45" />
-            <div className="absolute -inset-1.5 border border-[#1E4D38]/35 dark:border-[#9A7432]/35" />
-            {heroCampaign?.imageUrl ? (
-              <img src={heroCampaign.imageUrl} alt={heroCampaign.title} className="relative block aspect-[4/3] w-full object-cover filter contrast-110 saturate-90" />
-            ) : (
-              <div className="relative grid aspect-[4/3] place-items-center bg-[#1E4D38] text-6xl text-[#D8B066]">{t('home.hero.brandMark')}</div>
-            )}
-            <div className="absolute inset-0 pointer-events-none intaglio-overlay opacity-50" />
-            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-4 border border-[#B88B45]/60 bg-[#F2ECE1]/95 p-4 shadow-xl dark:bg-[#141210]/95">
-              <div className="min-w-0">
-                <span className="font-mono text-[9px] font-black uppercase tracking-widest text-[#1E4D38] dark:text-[#52B788]">{t('home.hero.closeToHome')}</span>
-                <p className="mt-1 truncate font-serif text-base font-bold text-[#201C18] dark:text-[#F4EFE6]">{heroCampaign?.title || t('home.hero.findFirstCause')}</p>
-              </div>
-              <button type="button" onClick={onDiscover} aria-label={t('home.hero.discover')} className="grid h-9 w-9 shrink-0 place-items-center border border-[#1E4D38] bg-[#1E4D38] text-white hover:bg-[#163E2C]"><ArrowRight className="h-4 w-4" /></button>
-            </div>
-            <div className="absolute -right-5 -top-5 hidden h-16 w-16 rotate-6 flex-col items-center justify-center rounded-full border border-[#B88B45] bg-[#F2ECE1] font-mono text-[8px] font-black leading-tight text-[#1E4D38] dark:bg-[#141210] dark:text-[#D8B066] sm:flex">
-              <HeartHandshake className="mb-0.5 h-5 w-5" /> {t('home.hero.giveLabel')}<br />{t('home.hero.togetherLabel')}
-            </div>
-          </div>
-        </div>
-      </section>
-      )}
-
-      <section id="home-featured-causes" className="scroll-mt-20 relative mx-auto w-full max-w-6xl border-2 border-[#1E4D38]/40 bg-[#FAF6EC] p-6 shadow-xl dark:border-[#9A7432]/50 dark:bg-[#0C0A09] sm:p-8">
-        <div className="pointer-events-none absolute inset-1.5 border border-[#9A7432]/35" />
-        <div className="relative z-10 mb-7 flex flex-wrap items-end justify-between gap-4 border-b-2 border-[#1E4D38]/20 pb-4 dark:border-[#9A7432]/30">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="bg-[#1E4D38] px-2.5 py-1 font-mono text-[9px] font-black uppercase tracking-widest text-white dark:bg-[#52B788] dark:text-[#080706]">{t('home.featured.badge')}</span>
-              <span className="font-mono text-xs font-black uppercase tracking-wider text-[#8B5E14] dark:text-[#D8B066]">{t('home.featured.ledger')}</span>
-            </div>
-            <h2 className="mt-1.5 font-display text-2xl font-black tracking-tight text-[#14110E] dark:text-white sm:text-3xl">{t('home.featured.title')}</h2>
-            <p className="mt-2 max-w-xl font-serif text-base text-zinc-600 dark:text-zinc-400">{t('home.featured.description')}</p>
-          </div>
-          <button type="button" onClick={onDiscover} className="inline-flex items-center gap-2 border-b border-[#1E4D38] pb-1 font-mono text-[10px] font-black uppercase tracking-wider text-[#1E4D38] dark:text-[#52B788]">{t('home.featured.browseAll')} <ArrowRight className="h-3.5 w-3.5" /></button>
-        </div>
-        {featuredCampaigns.length > 0 ? (
-          <div className="relative z-10 grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {featuredCampaigns.map((campaign, index) => (
-              <BanknotePlateCard key={campaign.id} campaign={campaign} onSelect={onSelectCampaign} showViewCause isSpotlight={index === 0} />
-            ))}
-          </div>
-        ) : (
-          <div className="relative z-10 border border-dashed border-[#9A7432]/50 bg-[#F7F2E7]/70 p-10 text-center font-mono text-xs text-zinc-600 dark:bg-[#141210] dark:text-zinc-400">
-            {t('home.featured.empty')}
-          </div>
-        )}
-      </section>
-
-      <section id="home-how-it-works" className="scroll-mt-20 relative border-2 border-[#9A7432]/50 bg-[#EAE1CF]/70 dark:bg-[#111410]">
-        <div className="pointer-events-none absolute inset-2 border border-[#1E4D38]/25 dark:border-[#9A7432]/25" />
-        <div className="relative mx-auto grid max-w-[1300px] gap-9 px-6 py-8 sm:px-12 lg:grid-cols-[.72fr_1.28fr] lg:items-center lg:px-20 lg:py-10">
-          <div>
-            <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[#9A7432]">{t('home.howItWorks.eyebrow')}</p>
-            <h2 className="mt-2 font-display text-2xl font-black leading-tight text-[#201C18] dark:text-[#F4EFE6] sm:text-3xl">{t('home.howItWorks.titleLine1')}<br />{t('home.howItWorks.titleLine2')}</h2>
-            <p className="mt-3 max-w-sm font-serif text-base leading-relaxed text-zinc-600 dark:text-zinc-400">{t('home.howItWorks.description')}</p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {[
-              { number: '01', title: t('home.howItWorks.step1Title'), detail: t('home.howItWorks.step1Detail'), icon: <Search className="h-5 w-5" /> },
-              { number: '02', title: t('home.howItWorks.step2Title'), detail: t('home.howItWorks.step2Detail'), icon: <HandHeart className="h-5 w-5" /> },
-              { number: '03', title: t('home.howItWorks.step3Title'), detail: t('home.howItWorks.step3Detail'), icon: <TrendingUp className="h-5 w-5" /> },
-            ].map((step) => (
-              <article key={step.number} className="border border-[#26211C]/20 bg-[#F7F2E7]/75 p-5 dark:border-[#9A7432]/30 dark:bg-[#171a16]">
-                <div className="flex items-center justify-between font-mono text-[10px] font-black text-[#9A7432]"><span>{step.number}</span><span className="text-[#1E4D38] dark:text-[#52B788]">{step.icon}</span></div>
-                <h3 className="mt-5 font-serif text-lg font-bold text-[#201C18] dark:text-[#F4EFE6]">{step.title}</h3>
-                <p className="mt-2 font-mono text-[10px] leading-relaxed text-zinc-600 dark:text-zinc-400">{step.detail}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {showImpact && (
-      <section id="home-impact" className="scroll-mt-20 relative mx-auto w-full max-w-5xl border-2 border-[#9A7432]/50 bg-[#F7F2E7]/75 px-4 py-6 dark:bg-[#141210] sm:px-6">
-        <div className="pointer-events-none absolute inset-2 border border-[#1E4D38]/25 dark:border-[#9A7432]/25" />
-        <div className="relative grid grid-cols-2 gap-6 font-mono text-center lg:grid-cols-4">
-          <div className="space-y-1">
-            <p className="text-2xl font-black text-[#201C18] dark:text-[#D8B066] sm:text-3xl">
-              {isDataLoading ? '—' : `${totalRaised.toLocaleString()} ${t('common.currency')}`}
+    <div className="flex w-full flex-col">
+      {/* ── SECTION 2: FEATURED CAUSES (ONLY INDIVIDUAL CARDS ARE FRAMED PLATES) ── */}
+      <section
+        id="home-featured-causes"
+        className="scroll-mt-20 w-full max-w-[1480px] mx-auto px-6 sm:px-12 lg:px-20 pt-16 sm:pt-24 pb-12 sm:pb-20"
+      >
+        <div className="mb-10 flex flex-wrap items-end justify-between gap-4 border-b border-[#26211C]/15 pb-5 dark:border-[#9A7432]/25">
+          <div className="space-y-1.5">
+            <h2 className="type-section-title text-[#201C18] dark:text-[#F4EFE6]">
+              {t('home.featured.title', 'Community causes & live Birr progress')}
+            </h2>
+            <p className="font-sans text-sm sm:text-base text-[#5A4E3E] dark:text-[#9E9383]">
+              {t(
+                'home.featured.oneLiner',
+                'Verified local causes ready for your direct support.'
+              )}
             </p>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
-              {t('home.impact.totalUnderwritten')}
-            </p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-2xl font-black text-[#201C18] dark:text-[#D8B066] sm:text-3xl">
-              {isDataLoading ? '—' : totalDonations.toLocaleString()}
-            </p>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
-              {t('home.impact.communityPatrons')}
-            </p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-2xl font-black text-[#1E4D38] dark:text-[#52B788] sm:text-3xl">100%</p>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
-              {t('home.impact.directToBeneficiaries')}
-            </p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-2xl font-black text-[#201C18] dark:text-[#D8B066] sm:text-3xl">
-              {isDataLoading ? '—' : campaigns.length}
-            </p>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
-              {t('home.impact.verifiedPlates')}
-            </p>
-          </div>
-        </div>
-      </section>
-      )}
-
-      <section id="home-communities" className="scroll-mt-20 mx-auto w-full max-w-[1300px] px-6 py-8 sm:px-12 lg:px-20">
-        <div className="relative">
-        <div className="mb-7 text-center">
-          <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[#9A7432]">{t('home.communities.eyebrow')}</p>
-          <h2 className="mt-2 font-display text-2xl font-black text-[#201C18] dark:text-[#F4EFE6] sm:text-3xl">{t('home.communities.title')}</h2>
-          <p className="mx-auto mt-2 max-w-xl font-serif text-base text-zinc-600 dark:text-zinc-400">{t('home.communities.description')}</p>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {trustedOrganizations.map((organization) => (
-            <article key={organization.id} className="flex min-h-36 flex-col justify-between border border-[#26211C]/20 bg-[#F7F2E7]/75 p-5 dark:border-[#9A7432]/30 dark:bg-[#141210]">
-              <div className="flex items-start justify-between gap-3">
-                <span className="grid h-9 w-9 place-items-center border border-[#9A7432]/50 bg-[#1E4D38] font-display text-lg font-black text-[#F4EFE6]">{organization.name.charAt(0)}</span>
-                <BadgeCheck className="h-4 w-4 shrink-0 text-[#1E4D38] dark:text-[#52B788]" />
-              </div>
-              <div className="mt-5">
-                <h3 className="font-serif text-sm font-bold leading-snug text-[#201C18] dark:text-[#F4EFE6]">{organization.name}</h3>
-                <p className="mt-1 font-mono text-[9px] text-zinc-500">{organization.location}</p>
-              </div>
-            </article>
-          ))}
-          {trustedOrganizations.length === 0 && <p className="col-span-full text-center font-mono text-xs text-zinc-500">{t('home.communities.empty')}</p>}
-        </div>
-        </div>
-      </section>
-
-      <section id="home-voxide" className="scroll-mt-20 relative overflow-hidden border-2 border-[#9A7432]/50 bg-[#F2EADA] dark:bg-[#111410]">
-        <div className="pointer-events-none absolute inset-2 border border-[#1E4D38]/25 dark:border-[#9A7432]/25" />
-        <div className="relative mx-auto grid max-w-[1300px] gap-8 px-6 py-8 sm:px-12 lg:grid-cols-[1fr_auto] lg:items-center lg:px-20">
-          <div>
-            <div className="inline-flex items-center gap-2 border border-[#9A7432]/50 bg-[#FAF6EC] px-3 py-1 font-mono text-[9px] font-black uppercase tracking-[.18em] text-[#805F29] dark:bg-[#181612] dark:text-[#D8B066]">
-              <Volume2 className="h-3.5 w-3.5" />
-              {t('home.voxide.badge', { appName: APP_NAME })}
-            </div>
-            <h2 className="mt-3 font-display text-3xl font-black text-[#201C18] dark:text-[#F4EFE6] sm:text-4xl">{t('home.voxide.title')}</h2>
-            <p className="mt-1 font-serif text-xl font-bold text-[#1E4D38] dark:text-[#52B788]">{t('home.voxide.tagline')}</p>
-            <p className="mt-3 max-w-2xl font-serif text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
-              {t('home.voxide.description')}
-            </p>
-            <div className="mt-5 flex flex-wrap items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-wider text-[#201C18] dark:text-[#E8DEC8] sm:text-xs">
-              <span className="border border-[#26211C]/20 bg-[#FAF6EC] px-3 py-2 dark:border-[#9A7432]/30 dark:bg-[#171a16]">{t('home.voxide.speak')}</span>
-              <ArrowRight className="h-4 w-4 text-[#9A7432]" />
-              <span className="border border-[#26211C]/20 bg-[#FAF6EC] px-3 py-2 dark:border-[#9A7432]/30 dark:bg-[#171a16]">{t('home.voxide.understands')}</span>
-              <ArrowRight className="h-4 w-4 text-[#9A7432]" />
-              <span className="border border-[#26211C]/20 bg-[#FAF6EC] px-3 py-2 dark:border-[#9A7432]/30 dark:bg-[#171a16]">{t('home.voxide.takeAction')}</span>
-            </div>
           </div>
           <button
             type="button"
-            onClick={onVoxide}
-            className="inline-flex items-center justify-center gap-2 justify-self-start border-2 border-[#1E4D38] bg-[#1E4D38] px-6 py-3 font-mono text-xs font-black uppercase tracking-wider text-white shadow-md transition hover:bg-[#163E2C] lg:justify-self-end"
+            onClick={onDiscover}
+            className="inline-flex items-center gap-2 border-b border-[#1E4D38] pb-1 font-mono text-xs font-bold uppercase tracking-wider text-[#1E4D38] hover:text-[#163E2C] dark:border-[#52B788] dark:text-[#52B788] cursor-pointer"
           >
-            <Volume2 className="h-4 w-4" />
-            {t('home.voxide.try')}
-            <ArrowRight className="h-4 w-4" />
+            <span>{t('home.featured.browseAll', 'Browse all causes')}</span>
+            <ArrowRight className="h-3.5 w-3.5" />
           </button>
+        </div>
+
+        {featuredCampaigns.length > 0 ? (
+          <div className="mx-auto grid w-full max-w-[315px] sm:max-w-[642px] lg:max-w-[969px] grid-cols-1 items-stretch gap-2.5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-3">
+            {featuredCampaigns.map((campaign, index) => (
+              <BanknotePlateCard
+                key={campaign.id}
+                campaign={campaign}
+                onSelect={onSelectCampaign}
+                showViewCause
+                isSpotlight={index === 0}
+                className="w-full max-w-[315px] !p-3 sm:!p-3.5 [&_h3]:text-sm [&_h3]:sm:text-[15px]"
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="py-12 font-mono text-xs text-[#5A4E3E] dark:text-[#9E9383]">
+            {t('home.featured.empty', 'New causes are being prepared. Check back soon or explore our community.')}
+          </p>
+        )}
+      </section>
+
+      {/* ── SECTION 3: ZERO-FEE DIRECT DISBURSEMENT PLEDGE (UNBOXED TEXT BESIDE FRAMED LEDGER PLATE) ── */}
+      <section
+        id="home-proverb"
+        className="scroll-mt-20 w-full max-w-[1240px] mx-auto px-6 sm:px-12 lg:px-20 py-14 sm:py-20"
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+          {/* Unboxed Zero-Cut Text sitting directly on the page background */}
+          <div className="lg:col-span-6 space-y-4">
+            <p className="type-caption text-[#9A7432]">
+              {t('home.zeroCut.eyebrow', 'Zero-deduction civic pledge')}
+            </p>
+            <h2 className="type-section-title text-[#201C18] dark:text-[#F4EFE6]">
+              {t('home.zeroCut.headline', '0% Platform Cut. 100% Direct to Causes.')}
+            </h2>
+            <p className="type-subhead text-[#1E4D38] dark:text-[#52B788]">
+              {t(
+                'home.zeroCut.subhead',
+                'Every single Birr you give reaches the community it was meant for.'
+              )}
+            </p>
+            <p className="type-body text-[#5A4E3E] dark:text-[#9E9383]">
+              {t(
+                'home.zeroCut.description',
+                'Lewegene takes nothing from your generosity. Contributions settle straight into local Telebirr and CBE Birr accounts with zero platform commissions or middleman deductions.'
+              )}
+            </p>
+          </div>
+
+          {/* Framed Intaglio 0% Cut / 100% Direct Settlement Plate */}
+          <div className="lg:col-span-6">
+            <div className="relative border-2 border-[#26211C] dark:border-[#9A7432] bg-[#FAF6EC] dark:bg-[#161411] p-5 sm:p-6 banknote-shadow">
+              <div className="pointer-events-none absolute inset-1.5 border border-[#9A7432]/35" />
+
+              {/* Plate Header */}
+              <div className="relative z-10 flex items-center justify-between border-b border-[#26211C]/20 dark:border-[#9A7432]/30 pb-2.5 mb-5 font-mono text-[10px] font-bold uppercase tracking-widest text-[#5A4E3E] dark:text-[#9E9383]">
+                <span>{t('home.zeroCut.plateHeader', 'DIRECT SETTLEMENT GUARANTEE')}</span>
+                <span className="text-[#1E4D38] dark:text-[#52B788]">100% PASS-THROUGH</span>
+              </div>
+
+              {/* Dual Engraved Numerals: 0% Platform Cut vs 100% Direct to Cause */}
+              <div className="relative z-10 grid grid-cols-2 gap-4 pb-5 border-b border-[#26211C]/15 dark:border-[#9A7432]/25">
+                <div className="p-4 border border-[#26211C]/25 dark:border-[#9A7432]/35 bg-[#F2EADA]/80 dark:bg-[#0E0D0B]/80 space-y-1">
+                  <span className="block font-mono text-[10px] font-bold uppercase tracking-wider text-[#9A7432]">
+                    {t('home.zeroCut.platformFeeLabel', 'Platform Commission')}
+                  </span>
+                  <span className="block font-display font-black text-3xl sm:text-4xl text-[#201C18] dark:text-[#F4EFE6] tabular-nums leading-none">
+                    0%
+                  </span>
+                  <span className="block font-mono text-[10px] text-[#5A4E3E] dark:text-[#9E9383]">
+                    {t('home.zeroCut.platformFeeNote', '0.00 ETB deducted')}
+                  </span>
+                </div>
+
+                <div className="p-4 border border-[#1E4D38] dark:border-[#52B788] bg-[#1E4D38]/8 dark:bg-[#52B788]/10 space-y-1">
+                  <span className="block font-mono text-[10px] font-bold uppercase tracking-wider text-[#1E4D38] dark:text-[#52B788]">
+                    {t('home.zeroCut.directToCauseLabel', 'Delivered to Cause')}
+                  </span>
+                  <span className="block font-display font-black text-3xl sm:text-4xl text-[#1E4D38] dark:text-[#52B788] tabular-nums leading-none">
+                    100%
+                  </span>
+                  <span className="block font-mono text-[10px] text-[#201C18] dark:text-[#E8DEC8] font-bold">
+                    {t('home.zeroCut.directToCauseNote', 'Every Birr reaches the field')}
+                  </span>
+                </div>
+              </div>
+
+              {/* Engraved Intaglio Direct Transfer Flow Bar */}
+              <div className="relative z-10 py-4 space-y-2">
+                <div className="flex items-center justify-between font-mono text-[10px] font-bold uppercase tracking-wider text-[#201C18] dark:text-[#F4EFE6]">
+                  <span>{t('home.zeroCut.flowDonor', 'Donor Pledge: 1,000 ETB')}</span>
+                  <span className="text-[#9A7432]">── 0% CUT ──►</span>
+                  <span className="text-[#1E4D38] dark:text-[#52B788]">
+                    {t('home.zeroCut.flowCause', 'Cause Receives: 1,000 ETB')}
+                  </span>
+                </div>
+                <div className="h-2 w-full border border-[#26211C] dark:border-[#9A7432] bg-[#EAE1CF] dark:bg-[#0E0D0B] p-0.5">
+                  <div className="h-full w-full bg-[#1E4D38] dark:bg-[#52B788]" />
+                </div>
+              </div>
+
+              {/* Plate Footer */}
+              <div className="relative z-10 mt-1 pt-2.5 border-t border-[#26211C]/15 dark:border-[#9A7432]/25 flex flex-wrap items-center justify-between gap-2 text-[9px] font-mono text-[#5A4E3E] dark:text-[#9E9383] uppercase tracking-widest">
+                <span>{t('home.zeroCut.rails', 'TELEBIRR · CBE BIRR · DIRECT ESCROW RAILS')}</span>
+                <span>{t('home.plateLocation', 'ADDIS ABABA · ፳፻፲፰')}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="relative overflow-hidden border-2 border-[#9A7432]/60 bg-[#EAE1CF] px-6 py-8 text-center dark:bg-[#111410] sm:px-12">
-        <div className="absolute inset-2 border border-[#9A7432]/25 pointer-events-none" />
-        <div className="relative mx-auto max-w-2xl">
-          <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[#9A7432]">{t('home.cta.eyebrow')}</p>
-          <h2 className="mt-3 font-display text-3xl font-black leading-tight text-[#201C18] dark:text-[#F4EFE6] sm:text-4xl">{t('home.cta.title')}</h2>
-          <p className="mx-auto mt-3 max-w-lg font-serif text-base text-zinc-600 dark:text-zinc-400">{t('home.cta.description')}</p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <button type="button" onClick={onFundraise} className="inline-flex items-center gap-2 border-2 border-[#1E4D38] bg-[#1E4D38] px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-white hover:bg-[#163E2C]">{t('home.cta.startFundraising')} <ArrowRight className="h-4 w-4" /></button>
-            <button type="button" onClick={onDiscover} className="inline-flex items-center gap-2 border border-[#26211C]/40 bg-[#F7F2E7] px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-[#201C18] hover:border-[#1E4D38] dark:bg-[#171a16] dark:text-[#F4EFE6]">{t('home.cta.discover')} <ArrowRight className="h-4 w-4" /></button>
+      {/* ── SECTION 4: HOW IT WORKS (UNBOXED SEQUENCE CONNECTED BY ENGRAVED THREAD LINE) ── */}
+      <section
+        id="home-how-it-works"
+        className="scroll-mt-20 w-full max-w-[1240px] mx-auto px-6 sm:px-12 lg:px-20 py-14 sm:py-20"
+      >
+        <div className="max-w-xl space-y-2 mb-10 sm:mb-12">
+          <p className="type-caption text-[#9A7432]">
+            {t('home.howItWorks.eyebrow', 'How it works')}
+          </p>
+          <h2 className="type-section-title text-[#201C18] dark:text-[#F4EFE6]">
+            {t('home.howItWorks.titleLine1', 'Good things happen')}{' '}
+            {t('home.howItWorks.titleLine2', 'one step at a time.')}
+          </h2>
+          <p className="type-body text-[#5A4E3E] dark:text-[#9E9383]">
+            {t(
+              'home.howItWorks.description',
+              'Find a community cause, lend your support, and follow the difference you helped make.'
+            )}
+          </p>
+        </div>
+
+        <div className="relative grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
+          {/* Continuous Engraved Thread Line on Desktop (horizontal) & Mobile (vertical) */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none hidden md:block absolute top-4 left-0 right-0 h-px bg-[#9A7432]/45"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none md:hidden absolute top-2 bottom-2 left-4 w-px bg-[#9A7432]/45"
+          />
+
+          {[
+            {
+              number: '01',
+              title: t('home.howItWorks.step1Title', 'Find a cause'),
+              detail: t(
+                'home.howItWorks.step1Detail',
+                'Explore community-led projects and choose a cause that matters to you.'
+              ),
+              icon: <Search className="h-3.5 w-3.5" />,
+            },
+            {
+              number: '02',
+              title: t('home.howItWorks.step2Title', 'Give what you can'),
+              detail: t(
+                'home.howItWorks.step2Detail',
+                'Every contribution matters. Support the people and purpose you believe in.'
+              ),
+              icon: <HandHeart className="h-3.5 w-3.5" />,
+            },
+            {
+              number: '03',
+              title: t('home.howItWorks.step3Title', 'See the impact'),
+              detail: t(
+                'home.howItWorks.step3Detail',
+                'Follow cause updates and see how your community moves forward.'
+              ),
+              icon: <TrendingUp className="h-3.5 w-3.5" />,
+            },
+          ].map((step) => (
+            <div
+              key={step.number}
+              className="relative pl-12 md:pl-0 md:pt-9"
+            >
+              {/* Thread Node Marker */}
+              <div className="absolute left-0 top-0 md:top-0 md:left-0 inline-flex h-8 items-center gap-1.5 bg-[#F2ECE1] dark:bg-[#080706] pr-3 font-mono text-xs font-black text-[#9A7432]">
+                <span className="inline-flex h-8 w-8 items-center justify-center border border-[#9A7432]/60 bg-[#F2ECE1] dark:bg-[#080706] text-[#1E4D38] dark:text-[#52B788]">
+                  {step.number}
+                </span>
+                <span className="text-[#1E4D38] dark:text-[#52B788]">{step.icon}</span>
+              </div>
+
+              <h3 className="type-subhead text-[#201C18] dark:text-[#F4EFE6]">
+                {step.title}
+              </h3>
+              <p className="mt-2 max-w-[48ch] font-sans text-xs sm:text-sm leading-relaxed text-[#5A4E3E] dark:text-[#9E9383]">
+                {step.detail}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── SECTION 5: IMPACT STATS (LARGE TYPOGRAPHIC NUMBERS DIRECTLY ON BACKGROUND) ── */}
+      <section
+        id="home-impact"
+        className="scroll-mt-20 w-full max-w-[1360px] mx-auto px-6 sm:px-12 lg:px-20 py-16 sm:py-24"
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 border-y border-[#26211C]/15 dark:border-[#9A7432]/25 py-10 sm:py-12">
+          <div className="space-y-1.5">
+            <p className="font-mono text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#201C18] dark:text-[#D8B066] tabular-nums">
+              {isDataLoading ? '—' : totalRaised.toLocaleString()} <span className="text-lg sm:text-xl font-bold">ETB</span>
+            </p>
+            <p className="type-caption text-[#5A4E3E] dark:text-[#9E9383]">
+              {t('home.impact.totalUnderwritten', 'TOTAL UNDERWRITTEN BIRR')}
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <p className="font-mono text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#201C18] dark:text-[#D8B066] tabular-nums">
+              {isDataLoading ? '—' : totalDonations.toLocaleString()}
+            </p>
+            <p className="type-caption text-[#5A4E3E] dark:text-[#9E9383]">
+              {t('home.impact.communityPatrons', 'COMMUNITY PATRONS')}
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <p className="font-mono text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#1E4D38] dark:text-[#52B788] tabular-nums">
+              100%
+            </p>
+            <p className="type-caption text-[#5A4E3E] dark:text-[#9E9383]">
+              {t('home.impact.directToBeneficiaries', 'DIRECT TO BENEFICIARIES')}
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <p className="font-mono text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#201C18] dark:text-[#D8B066] tabular-nums">
+              {campaigns.length}
+            </p>
+            <p className="type-caption text-[#5A4E3E] dark:text-[#9E9383]">
+              {t('home.impact.verifiedPlates', 'VERIFIED CAUSE PLATES')}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SECTION 6: FULL-BLEED CLOSING CTA BANNER (NO FLOATING BOX) ── */}
+      <section
+        id="home-closing-cta"
+        className="w-full border-t border-[#26211C]/20 dark:border-[#9A7432]/30 bg-[#EAE1CF]/85 dark:bg-[#111410]/90 py-16 sm:py-24 px-6 sm:px-12 lg:px-20"
+      >
+        <div className="mx-auto max-w-[1240px] flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+          <div className="space-y-3 max-w-2xl">
+            <p className="type-caption text-[#9A7432]">
+              {t('home.cta.eyebrow', 'There’s room for you here')}
+            </p>
+            <h2 className="type-section-title text-[#201C18] dark:text-[#F4EFE6]">
+              {t('home.cta.title', 'What good will you help grow?')}
+            </h2>
+            <p className="type-body text-[#5A4E3E] dark:text-[#9E9383]">
+              {t(
+                'home.cta.description',
+                'Bring your community together around a verified cause, or use voice search to navigate in English or Amharic.'
+              )}
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6 shrink-0">
+            <button
+              type="button"
+              onClick={onFundraise}
+              className="w-full sm:w-auto justify-center inline-flex items-center gap-2 border-2 border-[#1E4D38] bg-[#1E4D38] px-7 py-3.5 font-mono text-xs sm:text-sm font-black uppercase tracking-widest text-white hover:bg-[#163E2C] transition-colors cursor-pointer"
+            >
+              <span>{t('home.cta.startFundraising', 'Start fundraising')}</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={onVoxide}
+              className="justify-center inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-wider text-[#5A4E3E] hover:text-[#1E4D38] dark:text-[#9E9383] dark:hover:text-[#52B788] underline underline-offset-4 transition-colors cursor-pointer"
+            >
+              <Volume2 className="h-3.5 w-3.5 text-[#9A7432]" />
+              <span>{t('home.voxide.try', 'Speak with Voxide')}</span>
+            </button>
           </div>
         </div>
       </section>
@@ -784,7 +863,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
           THE LIVING BANKNOTE CANVAS: FULL-SCREEN CINEMATIC PAPER ATMOSPHERE
           No vertical document frame. No giant outer box. The entire screen IS the paper.
       ───────────────────────────────────────────────────────────────────────────── */}
-      <BanknoteLivingBackground isDark={isDark} />
+      <BanknoteLivingBackground isDark={isDark} showProverbScene={zoomMode === 'overview'} />
 
       {/* ─────────────────────────────────────────────────────────────────────────────
           CLEAN WIDESCREEN NAVIGATION HEADER (HIGH USABILITY + INTAGLIO TYPOGRAPHY)
@@ -1124,243 +1203,65 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
         {/* ══════════════════════════════════════════════════════════════════════════
             VIEW 1: OVERVIEW (HERO CINEMATIC: WIDE, MINIMALIST, HIGH USABILITY)
         ══════════════════════════════════════════════════════════════════════════ */}
-        {false && zoomMode === 'overview' && (
-          <HomeLanding
-            campaigns={campaigns}
-            organizations={organizations}
-            totalRaised={totalRaised}
-            totalDonations={totalDonations}
-            isDataLoading={isDataLoading}
-            onDiscover={() => navigateToMode('discover')}
-            onFundraise={() => navigate('/fundraising')}
-            onVoxide={onOpenVoice}
-            onSelectCampaign={handleOpenDetail}
-          />
-        )}
-
         {zoomMode === 'overview' && (
-          <div className="w-full max-w-[1600px] mx-auto px-6 sm:px-12 lg:px-20 py-12 lg:py-16 space-y-8 animate-in fade-in duration-300">
-            
-            {/* ── Wide Hero Section: Pure Negative Space & Authority ── */}
-            <div id="home-hero" className="scroll-mt-20 max-w-4xl mx-auto text-center">
-              <div className="relative space-y-6">
-              
-              <div className="inline-flex items-center gap-2 px-3 py-1 border border-[#9A7432]/40 bg-[#F2EADA]/90 dark:bg-[#0E0D0B]/90 text-[10px] font-mono font-bold tracking-[0.25em] text-[#9A7432] uppercase">
-                <span>{t('home.tenderBadgeLine1')}</span>
-                <span>·</span>
-                <span>{t('home.tenderBadgeLine2')}</span>
-              </div>
-
-              <div className="space-y-3">
-                <h1 className="font-display font-black text-4xl sm:text-6xl lg:text-7xl text-[#201C18] dark:text-[#F4EFE6] tracking-tight leading-none banknote-engraved-text">
-                  {APP_NAME.toUpperCase()}
-                </h1>
-                
-                <p className="font-serif font-bold text-2xl sm:text-4xl text-[#1E4D38] dark:text-[#52B788] tracking-wide">
-                  {t('home.tagline')}
-                </p>
-
-                <p className="font-ethiopic text-lg sm:text-xl text-[#201C18]/80 dark:text-[#E8DEC8]/80 italic">
-                  {t('home.motto')}
-                </p>
-              </div>
-
-              {/* The Two Primary Hero Actions */}
-              <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
-                <button
-                  type="button"
-                  onClick={() => navigateToMode('discover')}
-                  className="py-3.5 px-8 border-2 border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-sm font-black tracking-widest uppercase hover:bg-[#163E2C] transition-all cursor-pointer shadow-md flex items-center gap-3 active:translate-y-px"
-                >
-                  <span>{t('home.exploreCauses')}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={openFoundationDesk}
-                  className="py-3.5 px-6 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#F2EADA]/90 dark:bg-[#0E0D0B]/90 text-[#201C18] dark:text-[#F4EFE6] font-mono text-sm font-black tracking-wider uppercase hover:bg-[#DFD3BC] transition-all cursor-pointer"
-                >
-                  <span>{t('home.forFoundations')}</span>
-                </button>
-              </div>
-              </div>
-            </div>
-
-            {/* ── Delicate Centerpiece Engraving (Widescreen Monument) ── */}
-            <div className="w-full max-w-4xl mx-auto relative border border-[#26211C]/25 dark:border-[#9A7432]/35 bg-[#F2EADA]/80 dark:bg-[#0E0D0B]/80 p-4 sm:p-6">
-              <div className="absolute inset-1 border border-[#9A7432]/25 pointer-events-none" />
-              <CentralMonumentEngraving />
-              <div className="mt-3 flex items-center justify-between text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
-                <span>{t('home.plateSerial')}</span>
-                <span>{t('home.plateCaption')}</span>
-                <span>{t('home.plateLocation')}</span>
-              </div>
-            </div>
-
-            {/* ── Explore Causes Gallery with Live Money Progress & Direct Underwriting ── */}
-            {false && (
-            <div className="w-full max-w-6xl mx-auto p-6 sm:p-8 border-2 border-[#1E4D38]/40 dark:border-[#9A7432]/50 bg-[#FAF6EC] dark:bg-[#0C0A09] space-y-8 shadow-xl relative">
-              <div className="absolute inset-1.5 border border-[#9A7432]/35 pointer-events-none" />
-
-              {/* Panel Header */}
-              <div className="relative z-10 flex flex-wrap items-center justify-between gap-4 border-b-2 border-[#1E4D38]/20 dark:border-[#9A7432]/30 pb-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-1 bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706] font-mono text-[9px] font-black uppercase tracking-widest shadow-xs">
-                      EXPLORE VERIFIED CAUSES
-                    </span>
-                    <span className="font-mono text-xs font-black text-[#8B5E14] dark:text-[#D8B066] tracking-wider uppercase">
-                      ★ DIRECT UNDERWRITING LEDGER
-                    </span>
-                  </div>
-                  <h3 className="font-display font-black text-2xl sm:text-3xl text-[#14110E] dark:text-[#FFFFFF] mt-1.5 tracking-tight">
-                    COMMUNITY CAUSES &amp; LIVE BIRR PROGRESS
-                  </h3>
-                </div>
-
-                <div className="text-right">
-                  <span className="font-mono text-xs font-black text-[#1E4D38] dark:text-[#52B788] block">
-                    {isDataLoading
-                      ? t('common.loading')
-                      : t('explore.activePlates', { count: filteredCampaigns.length })}
-                  </span>
-                  <span className="font-mono text-[10px] text-zinc-600 dark:text-zinc-400">
-                    {isDataLoading
-                      ? t('common.loading')
-                      : t('explore.pledgedAcross', { amount: totalRaised.toLocaleString() })}
-                  </span>
-                </div>
-              </div>
-
-              {/* Modern Search & Filters: Clean, Spacious, Usable */}
-              <div className="relative z-10 p-4 sm:p-5 border border-[#1E4D38]/25 dark:border-[#9A7432]/35 bg-[#F2EADA]/90 dark:bg-[#141210] space-y-4">
-                {/* Search Field */}
-                <div className="relative w-full">
-                  <Search className="w-4 h-4 text-[#9A7432] absolute left-3.5 top-3 pointer-events-none" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search causes by title, organization, location, or serial number..."
-                    className="w-full pl-10 pr-4 py-2 border border-[#26211C]/30 dark:border-[#4A3E33] bg-[#EAE1CF] dark:bg-[#080706] font-mono text-xs text-[#201C18] dark:text-[#F4EFE6] placeholder:text-zinc-500 focus:outline-none focus:border-[#1E4D38]"
-                  />
-                </div>
-
-                {/* Filter Tabs */}
-                <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-[#26211C]/15 dark:border-[#4A3E33]">
-                  {/* Sector Categories */}
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase mr-1">
-                      SECTOR:
-                    </span>
-                    {categories.map((cat) => (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => setSelectedCategory(cat.id)}
-                        className={`px-3 py-1 border text-xs font-mono font-bold uppercase transition-all cursor-pointer ${
-                          selectedCategory === cat.id
-                            ? 'border-[#1E4D38] bg-[#1E4D38] text-white shadow-xs'
-                            : 'border-[#26211C]/25 bg-[#FAF6EC] dark:bg-[#201B16] text-[#201C18] dark:text-[#E8DEC8] hover:border-[#1E4D38]'
-                        }`}
-                      >
-                        {cat.label}
-                      </button>
-                    ))}
+          <div className="w-full">
+            {/* ── SECTION 1: FULL-BLEED HERO (NO BORDER BOX, SITS DIRECTLY ON GUILLOCHÉ CANVAS) ── */}
+            <section
+              id="home-hero"
+              className="scroll-mt-20 w-full border-b border-[#26211C]/15 dark:border-[#9A7432]/25 px-6 sm:px-12 lg:px-24 pt-10 sm:pt-14 lg:pt-16 pb-16 sm:pb-24 lg:pb-28 animate-banknote-reveal"
+            >
+              <div className="w-full max-w-4xl mx-auto text-center">
+                <div className="relative space-y-7 sm:space-y-8 flex flex-col items-center">
+                  <div className="inline-flex flex-wrap items-center justify-center gap-2 px-3 py-1 border border-[#9A7432]/40 bg-[#F2EADA]/90 dark:bg-[#0E0D0B]/90 text-[10px] font-mono font-bold tracking-[0.25em] text-[#9A7432] uppercase">
+                    <span>{t('home.tenderBadgeLine1', 'የኢትዮጵያ ሕዝባዊ አንድነት ትብብር')}</span>
+                    <span>·</span>
+                    <span>{t('home.tenderBadgeLine2', 'NATIONAL CITIZEN SOLIDARITY TENDER')}</span>
                   </div>
 
-                  {/* Funding Status Tabs */}
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase mr-1">
-                      STATUS &amp; LOCATION:
-                    </span>
-                    {[
-                      { id: 'all', labelKey: 'common.all' },
-                      { id: 'ending_soon', labelKey: 'banknote.status.ending_soon' },
-                      { id: 'started_now', labelKey: 'banknote.status.started_now' },
-                      { id: 'ongoing', labelKey: 'banknote.status.ongoing' },
-                    ].map((status) => (
-                      <button
-                        key={status.id}
-                        type="button"
-                        onClick={() => setFundingStatusFilter(status.id as typeof fundingStatusFilter)}
-                        className={`px-2.5 py-1 border text-[10px] font-mono font-bold uppercase transition-all cursor-pointer ${
-                          fundingStatusFilter === status.id
-                            ? 'border-[#26211C] bg-[#26211C] text-white dark:border-[#9A7432] dark:bg-[#9A7432] dark:text-[#080706]'
-                            : 'border-[#26211C]/25 bg-[#EAE1CF] dark:bg-[#161411] text-zinc-700 dark:text-zinc-300 hover:border-[#26211C]'
-                        }`}
-                      >
-                        {t(status.labelKey)}
-                      </button>
-                    ))}
-                    <label className="flex items-center gap-1.5">
-                      <span className="sr-only">{t('banknote.filterByLocation')}</span>
-                      <select
-                        value={selectedLocation}
-                        onChange={(event) => setSelectedLocation(event.target.value)}
-                        className="px-2.5 py-1 border border-[#26211C]/25 bg-[#FAF6EC] dark:bg-[#201B16] text-[10px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300 cursor-pointer"
-                      >
-                        <option value="all">{t('banknote.allLocations')}</option>
-                        {ETHIOPIAN_REGIONS.map((location) => <option key={location} value={location}>{location}</option>)}
-                      </select>
-                    </label>
-                  </div>
-                </div>
-              </div>
+                  <div className="space-y-4 sm:space-y-5">
+                    <h1 className="font-display font-black text-4xl sm:text-6xl lg:text-7xl text-[#201C18] dark:text-[#F4EFE6] tracking-tight leading-none banknote-engraved-text">
+                      {APP_NAME.toUpperCase()}
+                    </h1>
 
-              {/* Causes Grid with Money Progress & Quick Pledge Actions */}
-              <div className="relative z-10">
-                {isDataLoading ? (
-                  <p role="status" className="p-8 text-center font-mono text-xs text-zinc-500">
-                    {t('common.loading')}
-                  </p>
-                ) : dataError ? (
-                  <div role="alert" className="p-8 text-center border border-dashed border-red-500/40 font-mono text-xs space-y-3">
-                    <p>{dataError}</p>
-                    {onRetryData && (
-                      <button
-                        type="button"
-                        onClick={() => void onRetryData?.()}
-                        className="px-3 py-1 bg-[#1E4D38] text-white font-mono text-xs font-bold uppercase cursor-pointer"
-                      >
-                        {t('common.retry')}
-                      </button>
-                    )}
-                  </div>
-                ) : filteredCampaigns.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredCampaigns.map((camp) => (
-                      <BanknotePlateCard
-                        key={camp.id}
-                        campaign={camp}
-                        onSelect={handleOpenDetail}
-                        onQuickPledge={handleOpenPledge}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-8 text-center border border-dashed border-[#26211C]/30 dark:border-[#9A7432]/40 font-mono text-xs space-y-2">
-                    <p className="text-[#201C18] dark:text-[#F4EFE6] font-bold">
-                      No causes matching your search or filters.
+                    <p className="font-serif font-bold text-2xl sm:text-4xl text-[#1E4D38] dark:text-[#52B788] tracking-wide uppercase">
+                      {t('home.tagline', "SUPPORTING ETHIOPIA'S PEOPLE & PURPOSE")}
                     </p>
+
+                    <p className="font-ethiopic text-lg sm:text-xl text-[#201C18]/80 dark:text-[#E8DEC8]/80 italic pt-0.5">
+                      {t('home.motto', '« ለወገን ደራሽ ወገን ነው። »')}
+                    </p>
+
+                    <p className="font-sans text-xs sm:text-[13px] text-[#5A4E3E]/75 dark:text-[#9E9383]/75 max-w-lg mx-auto leading-relaxed">
+                      {t(
+                        'home.hero.description',
+                        { appName: APP_NAME, defaultValue: '{{appName}} brings people and trusted community causes closer. Find a story that moves you, and help make its next chapter possible.' }
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Single Primary Hero CTA + Lower-Emphasis Secondary Link */}
+                  <div className="pt-4 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-center gap-4 sm:gap-6 w-full sm:w-auto">
                     <button
                       type="button"
-                      onClick={() => {
-                        setSelectedCategory('all');
-                        setFundingStatusFilter('all');
-                        setSelectedLocation('all');
-                        setSearchQuery('');
-                      }}
-                      className="px-3 py-1 bg-[#1E4D38] text-white font-mono text-xs font-bold uppercase cursor-pointer"
+                      onClick={() => navigateToMode('discover')}
+                      className="w-full sm:w-auto justify-center py-3.5 px-8 border-2 border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-xs sm:text-sm font-black tracking-widest uppercase hover:bg-[#163E2C] transition-colors cursor-pointer shadow-sm flex items-center gap-3 active:translate-y-px"
                     >
-                      RESET FILTERS
+                      <span>{t('home.exploreCauses', 'Explore causes')}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={openFoundationDesk}
+                      className="py-2 font-mono text-xs font-bold tracking-wider uppercase text-[#5A4E3E] dark:text-[#9E9383] hover:text-[#1E4D38] dark:hover:text-[#52B788] underline underline-offset-4 transition-colors cursor-pointer inline-flex items-center justify-center gap-1.5"
+                    >
+                      <span>{t('home.forFoundations', 'For foundations')}</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                )}
+                </div>
               </div>
-            </div>
-            )}
+            </section>
 
             <HomeLanding
               campaigns={campaigns}
@@ -1368,13 +1269,11 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               totalRaised={totalRaised}
               totalDonations={totalDonations}
               isDataLoading={isDataLoading}
-              showHero={false}
               onDiscover={() => navigateToMode('discover')}
               onFundraise={() => navigate('/fundraising')}
               onVoxide={onOpenVoice}
               onSelectCampaign={handleOpenDetail}
             />
-
           </div>
         )}
 
@@ -1392,7 +1291,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 className="px-4 py-2 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#F2EADA] dark:bg-[#0E0D0B] font-mono text-xs font-bold uppercase flex items-center gap-2 hover:bg-[#DFD3BC] transition-colors cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>← {t('explore.backHome')}</span>
+                <span>{t('explore.backHome')}</span>
               </button>
 
               <div className="text-center">
@@ -1426,67 +1325,67 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 />
               </div>
 
-              {/* Filter Tabs */}
-              <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-[#26211C]/15 dark:border-[#4A3E33]">
-                {/* Sector Categories */}
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase mr-1">
-                    {t('explore.sectorLabel')}
-                  </span>
-                  {categories.map((cat) => (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setSelectedCategory(cat.id)}
-                      className={`px-3 py-1.5 border text-xs font-mono font-bold uppercase transition-all cursor-pointer ${
-                        selectedCategory === cat.id
-                          ? 'border-[#1E4D38] bg-[#1E4D38] text-white'
-                          : 'border-[#26211C]/25 bg-[#F7F2E7] dark:bg-[#26201B] text-[#201C18] dark:text-[#E8DEC8] hover:border-[#1E4D38]'
-                      }`}
-                    >
-                      {cat.label}
-                    </button>
-                  ))}
+              {/* Filter Selectors: Sector, Status, Location */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-2 border-t border-[#26211C]/15 dark:border-[#4A3E33]">
+                <div className="flex flex-col gap-0.5">
+                  <label htmlFor="filter-sector-select" className="text-[10px] font-mono font-bold tracking-wider text-zinc-600 dark:text-zinc-400 uppercase flex items-center justify-between">
+                    <span>{t('explore.sectorLabel')}</span>
+                    {selectedCategory !== 'all' && <span className="text-[9px] text-[#1E4D38] dark:text-[#52B788] font-bold">ACTIVE</span>}
+                  </label>
+                  <select id="filter-sector-select" value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="w-full appearance-none px-3 py-1.5 border border-[#26211C]/30 dark:border-[#4A3E33] bg-[#FAF6EC] dark:bg-[#12100E] font-mono text-xs font-bold uppercase text-[#201C18] dark:text-[#F4EFE6] focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788] cursor-pointer shadow-xs transition-colors">
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id} className="bg-[#FAF6EC] dark:bg-[#12100E] text-[#201C18] dark:text-[#F4EFE6]">{cat.label}</option>
+                    ))}
+                  </select>
                 </div>
 
-                {/* Funding Status Tabs */}
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase mr-1">
-                    {t('explore.statusLabel')}
-                  </span>
-                  {[
-                    { id: 'all', label: t('explore.statusAll') },
-                    { id: 'ending_soon', label: t('explore.statusEndingSoon') },
-                    { id: 'started_now', label: t('explore.statusStartedNow') },
-                    { id: 'ongoing', label: t('explore.statusOngoing') },
-                  ].map((status) => (
-                    <button
-                      key={status.id}
-                      type="button"
-                      onClick={() => setFundingStatusFilter(status.id as typeof fundingStatusFilter)}
-                      className={`px-2.5 py-1.5 border text-[10px] font-mono font-bold uppercase transition-all cursor-pointer ${
-                        fundingStatusFilter === status.id
-                          ? 'border-[#26211C] bg-[#26211C] text-white dark:border-[#9A7432] dark:bg-[#9A7432] dark:text-[#080706]'
-                          : 'border-[#26211C]/25 bg-[#EAE1CF] dark:bg-[#161411] text-zinc-700 dark:text-zinc-300 hover:border-[#26211C]'
-                      }`}
-                    >
-                      {status.label}
-                    </button>
-                  ))}
-                  <label className="flex items-center gap-1.5">
-                    <span className="sr-only">{t('explore.filterByLocation')}</span>
-                    <select
-                      value={selectedLocation}
-                      onChange={(event) => setSelectedLocation(event.target.value)}
-                      className="px-2.5 py-1.5 border border-[#26211C]/25 bg-[#EAE1CF] dark:bg-[#161411] text-[10px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300 cursor-pointer"
-                    >
-                      <option value="all">{t('explore.allLocations')}</option>
-                      {ETHIOPIAN_REGIONS.map((location) => <option key={location} value={location}>{location}</option>)}
-                    </select>
+                <div className="flex flex-col gap-0.5">
+                  <label htmlFor="filter-status-select" className="text-[10px] font-mono font-bold tracking-wider text-zinc-600 dark:text-zinc-400 uppercase flex items-center justify-between">
+                    <span>{t('explore.statusLabel')}</span>
+                    {fundingStatusFilter !== 'all' && <span className="text-[9px] text-[#1E4D38] dark:text-[#52B788] font-bold">ACTIVE</span>}
                   </label>
+                  <select id="filter-status-select" value={fundingStatusFilter} onChange={(e) => setFundingStatusFilter(e.target.value as typeof fundingStatusFilter)} className="w-full appearance-none px-3 py-1.5 border border-[#26211C]/30 dark:border-[#4A3E33] bg-[#FAF6EC] dark:bg-[#12100E] font-mono text-xs font-bold uppercase text-[#201C18] dark:text-[#F4EFE6] focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788] cursor-pointer shadow-xs transition-colors">
+                    {[
+                      { id: 'all', label: t('explore.statusAll') },
+                      { id: 'ending_soon', label: t('explore.statusEndingSoon') },
+                      { id: 'started_now', label: t('explore.statusStartedNow') },
+                      { id: 'ongoing', label: t('explore.statusOngoing') },
+                    ].map((status) => (
+                      <option key={status['id']} value={status['id']} className="bg-[#FAF6EC] dark:bg-[#12100E] text-[#201C18] dark:text-[#F4EFE6]">{status['label']}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-0.5">
+                  <label htmlFor="filter-location-select" className="text-[10px] font-mono font-bold tracking-wider text-zinc-600 dark:text-zinc-400 uppercase flex items-center justify-between">
+                    <span>{t('campaigns.location')}:</span>
+                    {selectedLocation !== 'all' && <span className="text-[9px] text-[#1E4D38] dark:text-[#52B788] font-bold">ACTIVE</span>}
+                  </label>
+                  <select id="filter-location-select" value={selectedLocation} onChange={(event) => setSelectedLocation(event.target.value)} className="w-full appearance-none px-3 py-1.5 border border-[#26211C]/30 dark:border-[#4A3E33] bg-[#FAF6EC] dark:bg-[#12100E] font-mono text-xs font-bold uppercase text-[#201C18] dark:text-[#F4EFE6] focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788] cursor-pointer shadow-xs transition-colors">
+                    <option value="all">{t('explore.allLocations')}</option>
+                    {ETHIOPIAN_REGIONS.map((location) => (
+                      <option key={location} value={location} className="bg-[#FAF6EC] dark:bg-[#12100E] text-[#201C18] dark:text-[#F4EFE6]">{location}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
+              {(selectedCategory !== 'all' || fundingStatusFilter !== 'all' || selectedLocation !== 'all' || searchQuery.trim() !== '') && (
+                <div className="flex items-center justify-end pt-2 text-[10px] font-mono border-t border-[#26211C]/10 dark:border-[#4A3E33]/60">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategory('all');
+                      setFundingStatusFilter('all');
+                      setSelectedLocation('all');
+                      setSearchQuery('');
+                    }}
+                    className="text-[#1E4D38] dark:text-[#52B788] hover:underline font-bold uppercase cursor-pointer"
+                  >
+                    RESET ALL FILTERS
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Widescreen 3-Column Causes Grid (Breathable Banknote Plates) */}
@@ -1562,7 +1461,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 className="px-4 py-2 border border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-xs font-black tracking-widest uppercase flex items-center gap-2 hover:bg-[#163E2C] transition-colors cursor-pointer shadow-xs"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>← {t('banknote.backToCauses')}</span>
+                <span>{t('banknote.backToCauses')}</span>
               </button>
 
               <div className="flex items-center gap-3">
@@ -2134,13 +2033,6 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
           </div>
 
           <div className="flex items-center gap-6">
-            <button
-              type="button"
-              onClick={() => setShowAcsoModal(true)}
-              className="hover:text-[#1E4D38] dark:hover:text-[#52B788] cursor-pointer"
-            >
-              {t('canvasFooter.acsoRegulation')}
-            </button>
             <button
               type="button"
               onClick={onOpenScholarxiv}

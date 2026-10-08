@@ -6,7 +6,7 @@ import { CampaignFormData } from '../schemas/campaign.schema';
 export const CAMPAIGNS_QUERY_KEY = ['campaigns'] as const;
 
 export const useCampaigns = () => {
-  const { searchQuery, selectedCategory, filterStatus } = useCampaignStore();
+  const { searchQuery, selectedCategory, filterStatus, selectedLocation } = useCampaignStore();
 
   const query = useQuery({
     queryKey: CAMPAIGNS_QUERY_KEY,
@@ -41,7 +41,13 @@ export const useCampaigns = () => {
       matchesStatus = c.raisedAmount >= c.goalAmount || c.status === 'completed';
     }
 
-    return matchesSearch && matchesCategory && matchesStatus;
+    // Location filter
+    const matchesLocation =
+      !selectedLocation ||
+      selectedLocation === 'all' ||
+      Boolean(c.location && c.location.toLowerCase().includes(selectedLocation.toLowerCase()));
+
+    return matchesSearch && matchesCategory && matchesStatus && matchesLocation;
   });
 
   return {

@@ -30,7 +30,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
           className="px-4 py-2 border-2 border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-xs font-black tracking-widest uppercase flex items-center gap-2 hover:bg-[#163E2C] dark:bg-[#52B788] dark:text-[#080706] cursor-pointer shadow-xs"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>← {t('common.back')}</span>
+          <span>{t('common.back')}</span>
         </button>
 
         <div className="flex items-center gap-3 font-mono">

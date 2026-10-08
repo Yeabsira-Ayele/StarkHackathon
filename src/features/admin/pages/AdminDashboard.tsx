@@ -43,7 +43,7 @@ function DonationsChart({ donations }: { donations: AdminDonation[] }) {
       const nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, 1);
       const amount = donations.filter((donation) => {
         const created = new Date(donation.createdAt).getTime();
-        return donation.status === 'confirmed' && created >= date.getTime() && created < nextMonth.getTime();
+        return donation.status === 'successful' && created >= date.getTime() && created < nextMonth.getTime();
       }).reduce((sum, donation) => sum + donation.amount, 0);
       return { label: date.toLocaleDateString(locale, { month: 'short' }), amount };
     });
@@ -82,7 +82,7 @@ function DonationsChart({ donations }: { donations: AdminDonation[] }) {
             <div>
               <HandCoins className="mx-auto h-6 w-6 text-[var(--admin-gold)]" />
               <p className="mt-2 text-sm font-medium">{t('adminDashboard.noDonations')}</p>
-              <p className="mt-1 text-xs text-[var(--admin-muted)]">{t('adminDashboard.confirmDonationHint')}</p>
+              <p className="mt-1 text-xs text-[var(--admin-muted)]">{t('adminDashboard.verifiedDonationHint')}</p>
             </div>
           </div>
         )}
@@ -97,9 +97,13 @@ export const AdminDashboard: React.FC = () => {
   const { notify } = useAdminToast();
   const [busyId, setBusyId] = useState<string | null>(null);
   const snapshot = store.snapshot!;
-  if (['users', 'donations', 'reports'].some((section) => snapshot.unavailableSections?.includes(section as 'users' | 'donations' | 'reports'))) {
-    return <AdminErrorState title="Dashboard data is incomplete" text="The admin backend does not currently provide user, donation, or report records. Dashboard totals and trends are hidden rather than shown as zero." onRetry={() => void store.actions.refresh()} />;
-  }
+  const unavailable = new Set(snapshot.unavailableSections ?? []);
+  const usersAvailable = !unavailable.has('users');
+  const donationsAvailable = !unavailable.has('donations');
+  const reportsAvailable = !unavailable.has('reports');
+  const activityAvailable = !unavailable.has('activity');
+  const organizationsAvailable = !unavailable.has('organizations');
+  const fundraisersAvailable = !unavailable.has('fundraisers');
   const now = new Date();
   const thisMonth = startOfMonth(now);
   const previousMonth = startOfPreviousMonth(now);
@@ -109,13 +113,13 @@ export const AdminDashboard: React.FC = () => {
     const percent = Math.round(((current - previous) / previous) * 100);
     return t('adminDashboard.trendVsLastMonth', { percent: `${percent > 0 ? '+' : ''}${percent}` });
   };
-  const confirmed = snapshot.donations.filter((donation) => donation.status === 'confirmed');
-  const currentDonations = confirmed.filter((donation) => new Date(donation.createdAt).getTime() >= thisMonth);
-  const previousDonations = confirmed.filter((donation) => {
+  const successful = snapshot.donations.filter((donation) => donation.status === 'successful');
+  const currentDonations = successful.filter((donation) => new Date(donation.createdAt).getTime() >= thisMonth);
+  const previousDonations = successful.filter((donation) => {
     const createdAt = new Date(donation.createdAt).getTime();
     return createdAt >= previousMonth && createdAt < thisMonth;
   });
-  const totalDonationAmount = confirmed.reduce((sum, donation) => sum + donation.amount, 0);
+  const totalDonationAmount = successful.reduce((sum, donation) => sum + donation.amount, 0);
   const raised = store.campaigns.reduce((sum, campaign) => sum + (campaign.raisedAmount || 0), 0);
   const monthlyUsers = snapshot.users.filter((user) => new Date(user.joinedAt).getTime() >= thisMonth).length;
   const previousUsers = snapshot.users.filter((user) => {
@@ -128,9 +132,9 @@ export const AdminDashboard: React.FC = () => {
     const submittedAt = new Date(organization.submittedAt).getTime();
     return submittedAt >= previousMonth && submittedAt < thisMonth;
   }).length;
-  const pendingFundraisers = store.campaigns.filter((campaign) => campaign.status === 'pending');
+  const pendingFundraisers = fundraisersAvailable ? store.campaigns.filter((campaign) => campaign.status === 'pending') : [];
   const pendingReports = snapshot.reports.filter((report) => report.status === 'pending');
-  const donationsByDay = weeklyValues(confirmed, (donation) => donation.createdAt, (donation) => donation.amount);
+  const donationsByDay = weeklyValues(successful, (donation) => donation.createdAt, (donation) => donation.amount);
   const usersByDay = weeklyValues(snapshot.users, (user) => user.joinedAt, () => 1);
   const organizationsByDay = weeklyValues(snapshot.organizations, (organization) => organization.submittedAt, () => 1);
 
@@ -149,10 +153,10 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const stats = [
-    { label: 'adminDashboard.totalUsers', value: snapshot.users.length.toLocaleString(locale), trend: trendText(monthlyUsers, previousUsers), icon: <Users className="h-4 w-4" />, spark: usersByDay, goTo: 'users' as const },
-    { label: 'adminDashboard.organizations', value: approvedOrganizations.length.toLocaleString(locale), trend: trendText(monthlyOrganizations, previousOrganizations), icon: <Building2 className="h-4 w-4" />, spark: organizationsByDay, goTo: 'organizations' as const },
-    { label: 'adminDashboard.totalDonations', value: formatETB(totalDonationAmount, locale), trend: trendText(currentDonations.reduce((sum, donation) => sum + donation.amount, 0), previousDonations.reduce((sum, donation) => sum + donation.amount, 0)), icon: <HandCoins className="h-4 w-4" />, spark: donationsByDay, goTo: 'donations' as const, sub: t('adminDashboard.confirmedContributions', { count: confirmed.length }) },
-    { label: 'adminDashboard.totalRaised', value: formatETB(raised, locale), trend: trendText(currentDonations.reduce((sum, donation) => sum + donation.amount, 0), previousDonations.reduce((sum, donation) => sum + donation.amount, 0)), icon: <TrendingUp className="h-4 w-4" />, spark: donationsByDay },
+    { label: 'adminDashboard.totalUsers', value: usersAvailable ? snapshot.users.length.toLocaleString(locale) : t('adminDashboard.notAvailable'), trend: usersAvailable ? trendText(monthlyUsers, previousUsers) : t('adminDashboard.notAvailable'), icon: <Users className="h-4 w-4" />, spark: usersAvailable ? usersByDay : [], goTo: 'users' as const },
+    { label: 'adminDashboard.organizations', value: organizationsAvailable ? approvedOrganizations.length.toLocaleString(locale) : t('adminDashboard.notAvailable'), trend: organizationsAvailable ? trendText(monthlyOrganizations, previousOrganizations) : t('adminDashboard.notAvailable'), icon: <Building2 className="h-4 w-4" />, spark: organizationsAvailable ? organizationsByDay : [], goTo: 'organizations' as const },
+    { label: 'adminDashboard.totalDonations', value: donationsAvailable ? formatETB(totalDonationAmount, locale) : t('adminDashboard.notAvailable'), trend: donationsAvailable ? trendText(currentDonations.reduce((sum, donation) => sum + donation.amount, 0), previousDonations.reduce((sum, donation) => sum + donation.amount, 0)) : t('adminDashboard.notAvailable'), icon: <HandCoins className="h-4 w-4" />, spark: donationsAvailable ? donationsByDay : [], goTo: 'donations' as const, sub: donationsAvailable ? t('adminDashboard.successfulContributions', { count: successful.length }) : undefined },
+    { label: 'adminDashboard.totalRaised', value: fundraisersAvailable ? formatETB(raised, locale) : t('adminDashboard.notAvailable'), trend: t('adminDashboard.notAvailable'), icon: <TrendingUp className="h-4 w-4" />, spark: [] },
   ];
 
   return (
@@ -174,12 +178,15 @@ export const AdminDashboard: React.FC = () => {
             <span className="grid h-9 w-9 place-items-center rounded-full bg-[var(--admin-red)]/10 text-[var(--admin-red)]"><Clock3 className="h-4 w-4" /></span>
             <div>
               <h2 id="needs-review-title" className="font-serif text-xl font-bold">{t('adminDashboard.needsReview')}</h2>
-              <p className="text-xs text-[var(--admin-muted)]">{t('adminDashboard.pendingAttention')}</p>
+              <p className="text-xs text-[var(--admin-muted)]">{t(reportsAvailable ? 'adminDashboard.pendingAttention' : 'adminDashboard.pendingFundraisers')}</p>
             </div>
           </div>
-          <span className="rounded-full bg-[var(--admin-red)] px-2.5 py-1 font-mono text-[10px] font-bold text-white">{pendingFundraisers.length + pendingReports.length} {t('adminDashboard.waiting')}</span>
+          <span className="rounded-full bg-[var(--admin-red)] px-2.5 py-1 font-mono text-[10px] font-bold text-white">{pendingFundraisers.length + (reportsAvailable ? pendingReports.length : 0)} {t('adminDashboard.waiting')}</span>
         </div>
-        {pendingFundraisers.length === 0 && pendingReports.length === 0 ? (
+        {!reportsAvailable && <p className="border-b border-[var(--admin-border)] px-5 py-3 text-xs text-[var(--admin-muted)]">{t('adminDashboard.reportsUnavailable')}</p>}
+        {!fundraisersAvailable && !reportsAvailable ? (
+          <p className="px-5 py-7 text-center text-sm text-[var(--admin-muted)]">{t('adminDashboard.dataUnavailable')}</p>
+        ) : pendingFundraisers.length === 0 && (!reportsAvailable || pendingReports.length === 0) ? (
           <div className="px-5 py-7 text-center">
             <Check className="mx-auto h-6 w-6 text-[var(--admin-green)]" />
             <p className="mt-2 text-sm font-semibold">{t('adminDashboard.caughtUp')}</p>
@@ -187,7 +194,7 @@ export const AdminDashboard: React.FC = () => {
           </div>
         ) : (
           <div className="grid divide-y divide-[var(--admin-border)] lg:grid-cols-2 lg:divide-x lg:divide-y-0">
-            <section className="p-4 sm:p-5">
+            {fundraisersAvailable && <section className="p-4 sm:p-5">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-sm font-semibold">{t('adminDashboard.pendingFundraisers')}</h3>
                 <span className="rounded-full bg-[var(--admin-red)]/10 px-2 py-0.5 font-mono text-[10px] font-bold text-[var(--admin-red)]">{pendingFundraisers.length}</span>
@@ -209,30 +216,32 @@ export const AdminDashboard: React.FC = () => {
                 </ul>
               ) : <p className="rounded-md bg-[var(--admin-cream)] px-3 py-4 text-sm text-[var(--admin-muted)]">{t('adminDashboard.noPendingFundraisers')}</p>}
               {pendingFundraisers.length > 3 && <button type="button" onClick={() => go('fundraisers')} className="mt-3 text-xs font-semibold text-[var(--admin-green)] hover:underline">{t('adminDashboard.viewAllFundraisers', { count: pendingFundraisers.length })}</button>}
-            </section>
-            <section className="p-4 sm:p-5">
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-sm font-semibold">{t('adminDashboard.pendingReports')}</h3>
-                <span className="rounded-full bg-[var(--admin-red)]/10 px-2 py-0.5 font-mono text-[10px] font-bold text-[var(--admin-red)]">{pendingReports.length}</span>
-              </div>
-              {pendingReports.length ? (
-                <ul className="space-y-2">
-                  {pendingReports.slice(0, 3).map((report) => {
-                    const cause = store.campaignById.get(report.campaignId);
-                    return (
-                      <li key={report.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-[var(--admin-border)] p-3 transition-colors hover:bg-[var(--admin-green)]/[0.04]">
-                        <button type="button" onClick={() => go('reports', report.id)} className="min-w-0 flex-1 text-left">
-                          <span className="block truncate text-sm font-medium">{cause?.title || report.campaignId}</span>
-                          <span className="mt-0.5 block truncate font-mono text-[10px] text-[var(--admin-muted)]">{report.category} · {fmtDateTime(report.createdAt)}</span>
-                        </button>
-                        <button type="button" onClick={() => go('reports', report.id)} className="rounded-md border border-[var(--admin-border)] px-3 py-1.5 text-xs font-semibold hover:bg-[var(--admin-green)]/10">{t('adminDashboard.review')}</button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : <p className="rounded-md bg-[var(--admin-cream)] px-3 py-4 text-sm text-[var(--admin-muted)]">{t('adminDashboard.noPendingReports')}</p>}
-              {pendingReports.length > 3 && <button type="button" onClick={() => go('reports')} className="mt-3 text-xs font-semibold text-[var(--admin-green)] hover:underline">{t('adminDashboard.viewAllReports', { count: pendingReports.length })}</button>}
-            </section>
+            </section>}
+            {reportsAvailable && (
+              <section className="p-4 sm:p-5">
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="text-sm font-semibold">{t('adminDashboard.pendingReports')}</h3>
+                  <span className="rounded-full bg-[var(--admin-red)]/10 px-2 py-0.5 font-mono text-[10px] font-bold text-[var(--admin-red)]">{pendingReports.length}</span>
+                </div>
+                {pendingReports.length ? (
+                  <ul className="space-y-2">
+                    {pendingReports.slice(0, 3).map((report) => {
+                      const cause = store.campaignById.get(report.campaignId);
+                      return (
+                        <li key={report.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-[var(--admin-border)] p-3 transition-colors hover:bg-[var(--admin-green)]/[0.04]">
+                          <button type="button" onClick={() => go('reports', report.id)} className="min-w-0 flex-1 text-left">
+                            <span className="block truncate text-sm font-medium">{cause?.title || report.campaignId}</span>
+                            <span className="mt-0.5 block truncate font-mono text-[10px] text-[var(--admin-muted)]">{report.category} · {fmtDateTime(report.createdAt)}</span>
+                          </button>
+                          <button type="button" onClick={() => go('reports', report.id)} className="rounded-md border border-[var(--admin-border)] px-3 py-1.5 text-xs font-semibold hover:bg-[var(--admin-green)]/10">{t('adminDashboard.review')}</button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : <p className="rounded-md bg-[var(--admin-cream)] px-3 py-4 text-sm text-[var(--admin-muted)]">{t('adminDashboard.noPendingReports')}</p>}
+                {pendingReports.length > 3 && <button type="button" onClick={() => go('reports')} className="mt-3 text-xs font-semibold text-[var(--admin-green)] hover:underline">{t('adminDashboard.viewAllReports', { count: pendingReports.length })}</button>}
+              </section>
+            )}
           </div>
         )}
       </section>
@@ -257,7 +266,9 @@ export const AdminDashboard: React.FC = () => {
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,.8fr)]">
-        <DonationsChart donations={snapshot.donations} />
+        {donationsAvailable
+          ? <DonationsChart donations={snapshot.donations} />
+          : <AdminErrorState title={t('adminDashboard.donationsOverTime')} text={t('adminDashboard.dataUnavailable')} onRetry={() => void store.actions.refresh()} />}
         <section className="overflow-hidden rounded-md border border-[var(--admin-border)] bg-[var(--admin-card)] shadow-[var(--admin-shadow)]">
           <div className="flex items-center justify-between gap-3 border-b border-[var(--admin-border)] px-5 py-4">
             <div>
@@ -266,7 +277,9 @@ export const AdminDashboard: React.FC = () => {
             </div>
             <button type="button" onClick={() => go('activity')} aria-label={t('adminDashboard.viewAllActivity')} title={t('adminDashboard.viewAllActivity')} className="grid h-8 w-8 place-items-center rounded-md border border-[var(--admin-border)] hover:bg-[var(--admin-green)]/10"><ArrowRight className="h-4 w-4" /></button>
           </div>
-          <ActivityList events={snapshot.activity.slice(0, 5)} />
+          {activityAvailable
+            ? <ActivityList events={snapshot.activity.slice(0, 5)} />
+            : <p className="px-5 py-6 text-sm text-[var(--admin-muted)]">{t('adminDashboard.dataUnavailable')}</p>}
         </section>
       </div>
     </div>

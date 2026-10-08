@@ -6,29 +6,25 @@ import {
   Printer,
   Share2,
   CheckCircle2,
-  Clock,
   Building2,
   ShieldCheck,
   Copy,
   Check,
-  Loader2,
   AlertTriangle,
 } from 'lucide-react';
 import { ShareDonationModal } from './ShareDonationModal';
+import { APP_NAME } from '../../../data/content.ts';
 
 interface DonationDetailsModalProps {
   donation: Donation | null;
   isOpen: boolean;
   onClose: () => void;
-  /** Admin fallback: manually confirm when Links.et verification fails or is inconclusive */
-  onSimulateVerify?: (id: string) => void;
 }
 
 export const DonationDetailsModal: React.FC<DonationDetailsModalProps> = ({
   donation,
   isOpen,
   onClose,
-  onSimulateVerify,
 }) => {
   if (!isOpen || !donation) return null;
 
@@ -47,25 +43,15 @@ export const DonationDetailsModal: React.FC<DonationDetailsModalProps> = ({
     window.print();
   };
 
-  const isConfirmed = donation.status === 'confirmed';
-  const isVerifying = donation.status === 'verifying';
+  const isSuccessful = donation.status === 'successful';
   const isFailed = donation.status === 'failed';
-  const isPending = donation.status === 'pending';
 
   const getStatusBadge = () => {
-    if (isConfirmed) {
+    if (isSuccessful) {
       return (
         <span className="px-3 py-1 bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706] font-black uppercase text-[10px] tracking-wider rounded-[1px] flex items-center gap-1.5">
           <CheckCircle2 className="w-3.5 h-3.5" />
-          <span>VERIFIED &amp; CONFIRMED</span>
-        </span>
-      );
-    }
-    if (isVerifying) {
-      return (
-        <span className="px-3 py-1 bg-blue-600 text-white font-black uppercase text-[10px] tracking-wider rounded-[1px] flex items-center gap-1.5">
-          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          <span>VERIFYING PAYMENT</span>
+          <span>SUCCESSFUL</span>
         </span>
       );
     }
@@ -77,12 +63,7 @@ export const DonationDetailsModal: React.FC<DonationDetailsModalProps> = ({
         </span>
       );
     }
-    return (
-      <span className="px-3 py-1 bg-[#9A7432] text-white font-black uppercase text-[10px] tracking-wider rounded-[1px] flex items-center gap-1.5">
-        <Clock className="w-3.5 h-3.5" />
-        <span>AWAITING RECEIPT</span>
-      </span>
-    );
+    return null;
   };
 
   const verifiedAmount = donation.verification?.verifiedAmount ?? donation.verifiedPayment?.amount;
@@ -105,7 +86,7 @@ export const DonationDetailsModal: React.FC<DonationDetailsModalProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-[#1E4D38]/30 dark:border-[#52B788]/30 pb-4">
           <div>
             <span className="text-[10px] font-black uppercase text-[#1E4D38] dark:text-[#52B788] tracking-widest block">
-              LEWEGENE CIVIC LEDGER ENTRY
+              {APP_NAME.toUpperCase()} CIVIC LEDGER ENTRY
             </span>
             <h3 className="font-serif font-black text-2xl text-[#14110E] dark:text-[#FFFFFF] mt-0.5">
               Donation #{donation.id}
@@ -130,8 +111,8 @@ export const DonationDetailsModal: React.FC<DonationDetailsModalProps> = ({
               </span>
             </div>
           </div>
-          <span className="text-[11px] font-black text-emerald-700 dark:text-emerald-400">
-            VERIFIED ESCROW
+          <span className={`text-[11px] font-black ${isSuccessful ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}>
+            {isSuccessful ? 'SUCCESSFUL' : 'FAILED'}
           </span>
         </div>
 
@@ -152,7 +133,7 @@ export const DonationDetailsModal: React.FC<DonationDetailsModalProps> = ({
         )}
 
         {/* Verified: Verification Success Details */}
-        {isConfirmed && (donation.verification || donation.verifiedPayment) && (
+        {isSuccessful && (donation.verification || donation.verifiedPayment) && (
           <div className="p-3.5 border border-[#1E4D38]/30 dark:border-[#52B788]/30 bg-[#1E4D38]/5 dark:bg-[#52B788]/5 space-y-2">
             <div className="flex items-center gap-2 text-[#1E4D38] dark:text-[#52B788] font-black uppercase text-[11px]">
               <ShieldCheck className="w-4 h-4" />
@@ -193,17 +174,6 @@ export const DonationDetailsModal: React.FC<DonationDetailsModalProps> = ({
           </div>
         )}
 
-        {/* Verifying: spinner state */}
-        {isVerifying && (
-          <div className="p-3.5 border border-blue-500/30 bg-blue-50 dark:bg-blue-950/20 flex items-center gap-3">
-            <Loader2 className="w-5 h-5 text-blue-600 dark:text-blue-400 animate-spin shrink-0" />
-            <div className="text-[11px] text-blue-700 dark:text-blue-300">
-              <span className="font-black uppercase block">Verifying your payment...</span>
-              <span>This usually takes a few seconds. The page will update automatically.</span>
-            </div>
-          </div>
-        )}
-
         {/* Details List */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="p-3 border border-[#26211C]/15 dark:border-[#9A7432]/25 bg-[#F2ECE1]/50 dark:bg-[#181512]">
@@ -238,7 +208,7 @@ export const DonationDetailsModal: React.FC<DonationDetailsModalProps> = ({
             <span className="text-[10px] text-zinc-500 uppercase font-bold block">TRANSACTION REFERENCE</span>
             <div className="flex items-center justify-between mt-0.5">
               <span className="font-mono font-black text-[#1E4D38] dark:text-[#52B788]">
-                {donation.reference || 'Pending submission'}
+                {donation.reference || '—'}
               </span>
               {donation.reference && (
                 <button
@@ -271,27 +241,6 @@ export const DonationDetailsModal: React.FC<DonationDetailsModalProps> = ({
               SOLIDARITY NOTE:
             </span>
             <p className="italic text-zinc-700 dark:text-zinc-300 mt-1">"{donation.message}"</p>
-          </div>
-        )}
-
-        {/*
-          Admin Fallback Override — shown only for failed/pending donations.
-          This is the exception path for when Links.et verification fails or is inconclusive;
-          it is NOT the default path every donation goes through.
-        */}
-        {!isConfirmed && !isVerifying && onSimulateVerify && (
-          <div className="p-3.5 border border-[#9A7432]/40 bg-[#EFE7D5]/70 dark:bg-[#1E1A16] flex items-center justify-between gap-3">
-            <div className="text-[11px] text-zinc-700 dark:text-zinc-300">
-              <span className="font-black uppercase block">Admin Fallback Override:</span>
-              <span>Manually confirm this donation if automatic verification was unsuccessful.</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => onSimulateVerify(donation.id)}
-              className="px-3.5 py-1.5 border border-emerald-700 bg-emerald-700 text-white font-bold uppercase text-[10px] cursor-pointer hover:bg-emerald-800 transition-colors shrink-0"
-            >
-              ✓ ADMIN CONFIRM
-            </button>
           </div>
         )}
 

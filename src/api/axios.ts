@@ -1,4 +1,6 @@
 import axios from 'axios';
+import i18n from '../i18n/config.ts';
+import { APP_NAME } from '../data/content.ts';
 
 export class ApiRequestError extends Error {
   constructor(
@@ -48,8 +50,8 @@ api.interceptors.response.use(
       responseMessage ||
       (error.response
         ? error.message
-        : 'Cannot reach the Lewegene API. Start the backend and check VITE_API_BASE_URL.') ||
-      'An unexpected network error occurred';
+        : i18n.t('common.networkUnavailable', { appName: APP_NAME })) ||
+      i18n.t('common.networkError');
     const code = error.response?.data?.error?.code || (error.response ? undefined : 'NETWORK_ERROR');
     return Promise.reject(new ApiRequestError(message, code, error.response?.status));
   }

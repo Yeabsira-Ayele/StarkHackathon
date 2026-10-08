@@ -40,7 +40,7 @@ export const CampaignModerationCard: React.FC<CampaignModerationCardProps> = ({
         <div className="text-right">
           <p className="text-xs text-[#73685B] dark:text-[#A89E90]">የተጠየቀው ግብ</p>
           <p className="text-base font-serif font-bold text-[#1E4D38] dark:text-[#52B788]">
-            {campaign.goalAmount.toLocaleString()} {t('common.currency', 'ብር')}
+            {campaign.goalAmount.toLocaleString()} {t('common.currency')}
           </p>
         </div>
       </div>

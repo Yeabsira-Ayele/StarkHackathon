@@ -5,6 +5,7 @@ import { useVoxide } from '../hooks/useVoxide';
 import { VoiceVisualizer } from '../components/VoiceVisualizer';
 import { VOXIDE_PRESET_PROMPTS } from '../data/voxide.data';
 import { Loading } from '../../../components/Loading';
+import { resolveLanguage } from '../../../i18n/index.ts';
 
 interface VoiceAssistantPageProps {
   onExecuteDonation?: (data: any) => void;
@@ -16,7 +17,7 @@ export const VoiceAssistantPage: React.FC<VoiceAssistantPageProps> = ({
   onExecuteCreation,
 }) => {
   const { t, i18n } = useTranslation();
-  const lang = (i18n.language as 'am' | 'en' | 'om') || 'am';
+  const lang = resolveLanguage(i18n.language);
   const {
     isListening,
     transcript,

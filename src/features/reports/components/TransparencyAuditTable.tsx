@@ -53,7 +53,7 @@ export const TransparencyAuditTable: React.FC<TransparencyAuditTableProps> = ({
                   {rec.organization}
                 </td>
                 <td className="py-3.5 pr-3 text-right font-mono font-bold text-[#1E4D38] dark:text-[#52B788]">
-                  {rec.disbursedAmount.toLocaleString()} {t('common.currency', 'ብር')}
+                  {rec.disbursedAmount.toLocaleString()} {t('common.currency')}
                 </td>
                 <td className="py-3.5 pr-3 text-center text-[#73685B] dark:text-[#A89E90]">
                   {rec.beneficiaryCount.toLocaleString()}

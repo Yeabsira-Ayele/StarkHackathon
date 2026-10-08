@@ -7,12 +7,8 @@ interface PaymentReferenceFormProps {
   amount: number;
   donorName: string;
   receiptUrl?: string;
-  reference?: string;
-  proofUrl?: string;
   isSubmitting: boolean;
   onChangeReceiptUrl?: (url: string) => void;
-  onChangeReference?: (ref: string) => void;
-  onChangeProofUrl?: (url?: string) => void;
   onSubmit: (receiptUrlToSubmit?: string) => void | Promise<void>;
   onBack: () => void;
 }

@@ -27,10 +27,10 @@ export const DonationAmountSelector: React.FC<DonationAmountSelectorProps> = ({
       <div>
         <div className="flex items-center justify-between mb-3">
           <label className="block font-mono text-xs font-black uppercase text-[#14110E] dark:text-[#F4EFE6]">
-            {t('donations.selectAmount', 'Select Contribution Amount')}
+            {t('donations.selectAmount')}
           </label>
           <span className="font-mono text-[10px] text-zinc-500 uppercase">
-            {t('donations.currencyLabel', 'Currency: ETB (Ethiopian Birr)')}
+            {t('donations.currencyLabel')}
           </span>
         </div>
 
@@ -54,7 +54,7 @@ export const DonationAmountSelector: React.FC<DonationAmountSelectorProps> = ({
                   </span>
                   {isSelected && (
                     <span className="text-[10px] font-bold uppercase tracking-wider opacity-90">
-                      {t('donations.selected', '✓ SELECTED')}
+                      {t('donations.selected')}
                     </span>
                   )}
                 </div>
@@ -76,7 +76,7 @@ export const DonationAmountSelector: React.FC<DonationAmountSelectorProps> = ({
       {/* Custom Amount Field */}
       <div className="space-y-2">
         <label className="block font-mono text-xs font-black uppercase text-[#14110E] dark:text-[#F4EFE6]">
-          {t('donations.customAmount', 'Or Enter Custom Amount (ETB)')}:
+          {t('donations.customAmount')}:
         </label>
         <div className="relative">
           <input
@@ -86,7 +86,7 @@ export const DonationAmountSelector: React.FC<DonationAmountSelectorProps> = ({
             step="50"
             value={customAmount ?? ''}
             onChange={(e) => onChangeCustom(e.target.value)}
-            placeholder={t('donations.customAmountPlaceholder', 'e.g. 2500')}
+            placeholder={t('donations.customAmountPlaceholder')}
             className="w-full p-3.5 pr-16 border-2 border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#FFFDF9] dark:bg-[#181512] font-mono text-lg font-black text-[#14110E] dark:text-[#FFFFFF] focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788] transition-colors"
           />
           <span className="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-xs font-black text-[#1E4D38] dark:text-[#52B788]">
@@ -94,7 +94,7 @@ export const DonationAmountSelector: React.FC<DonationAmountSelectorProps> = ({
           </span>
         </div>
         <p className="font-mono text-[11px] text-zinc-500">
-          {t('donations.minimumContribution', 'Minimum contribution is {{min}} ETB. 100% of your contribution goes directly to the cause.', { min: minAmount })}
+          {t('donations.minimumContribution', { min: minAmount })}
         </p>
       </div>
     </div>

@@ -17,8 +17,7 @@ export const CreateCampaignPage: React.FC<CreateCampaignPageProps> = ({
   onBack,
   onCreated,
 }) => {
-  const { t, i18n } = useTranslation();
-  const currentLang = (i18n.language as 'am' | 'en' | 'om') || 'am';
+  const { t } = useTranslation();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
@@ -65,10 +64,10 @@ export const CreateCampaignPage: React.FC<CreateCampaignPageProps> = ({
       <div className="p-6 sm:p-8 border-2 border-[#1E4D38]/30 dark:border-[#9A7432]/40 bg-[#FFFDF9] dark:bg-[#12100E] space-y-6 rounded-[1px] shadow-lg">
         <div>
           <h2 className="font-serif font-black text-2xl sm:text-3xl text-[#14110E] dark:text-[#FFFFFF]">
-            {t('fundraiser.title')}
+            {t('fundraiser.start.title')}
           </h2>
           <p className="font-mono text-xs text-zinc-600 dark:text-zinc-400 mt-1">
-            {t('fundraiser.subtitle')}
+            {t('fundraiser.start.description')}
           </p>
         </div>
 
@@ -82,12 +81,12 @@ export const CreateCampaignPage: React.FC<CreateCampaignPageProps> = ({
           {/* Title */}
           <div>
             <label className="block font-bold uppercase text-[#14110E] dark:text-[#F4EFE6] mb-1">
-              {t('fundraiser.projectTitle')} *
+              {t('fundraiser.form.title')} *
             </label>
             <input
               type="text"
               {...register('title')}
-              placeholder="e.g. Clean Solar Water Borehole for 1,200 Families"
+              placeholder={t('fundraiser.form.titlePlaceholder')}
               className="w-full p-3 border-2 border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#EFE7D5] dark:bg-[#181512] text-[#14110E] dark:text-[#FFFFFF] focus:outline-none focus:border-[#1E4D38]"
             />
             {errors.title && <p className="text-red-600 mt-1">{errors.title.message}</p>}
@@ -97,7 +96,7 @@ export const CreateCampaignPage: React.FC<CreateCampaignPageProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block font-bold uppercase text-[#14110E] dark:text-[#F4EFE6] mb-1">
-                {t('fundraiser.category')} *
+                {t('fundraiser.form.category')} *
               </label>
               <select
                 {...register('category')}
@@ -105,7 +104,7 @@ export const CreateCampaignPage: React.FC<CreateCampaignPageProps> = ({
               >
                 {CAMPAIGN_CATEGORIES.filter((c) => c.id !== 'all').map((cat) => (
                   <option key={cat.id} value={cat.id}>
-                    {cat.labels[currentLang] || cat.label}
+                    {t(`categories.${cat.id}`)}
                   </option>
                 ))}
               </select>
@@ -113,7 +112,7 @@ export const CreateCampaignPage: React.FC<CreateCampaignPageProps> = ({
 
             <div>
               <label className="block font-bold uppercase text-[#14110E] dark:text-[#F4EFE6] mb-1">
-                {t('fundraiser.targetGoal')} *
+                {t('fundraiser.form.goal')} *
               </label>
               <input
                 type="number"
@@ -127,12 +126,12 @@ export const CreateCampaignPage: React.FC<CreateCampaignPageProps> = ({
           {/* Story */}
           <div>
             <label className="block font-bold uppercase text-[#14110E] dark:text-[#F4EFE6] mb-1">
-              {t('fundraiser.story')} *
+              {t('fundraiser.form.story')} *
             </label>
             <textarea
               rows={4}
               {...register('story')}
-              placeholder="Describe the urgent community need, exact execution plan, and budget breakdown..."
+              placeholder={t('fundraiser.form.storyPlaceholder')}
               className="w-full p-3 border-2 border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#EFE7D5] dark:bg-[#181512] text-[#14110E] dark:text-[#FFFFFF] focus:outline-none focus:border-[#1E4D38]"
             />
             {errors.story && <p className="text-red-600 mt-1">{errors.story.message}</p>}
@@ -142,12 +141,12 @@ export const CreateCampaignPage: React.FC<CreateCampaignPageProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block font-bold uppercase text-[#14110E] dark:text-[#F4EFE6] mb-1">
-                Field Coordinator Name *
+                {t('fundraiser.form.coordinator')} *
               </label>
               <input
                 type="text"
                 {...register('creatorName')}
-                placeholder="e.g. Sister Meron Tadesse"
+                placeholder={t('fundraiser.form.coordinatorPlaceholder')}
                 className="w-full p-3 border-2 border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#EFE7D5] dark:bg-[#181512] text-[#14110E] dark:text-[#FFFFFF] focus:outline-none focus:border-[#1E4D38]"
               />
               {errors.creatorName && <p className="text-red-600 mt-1">{errors.creatorName.message}</p>}
@@ -155,12 +154,12 @@ export const CreateCampaignPage: React.FC<CreateCampaignPageProps> = ({
 
             <div>
               <label className="block font-bold uppercase text-[#14110E] dark:text-[#F4EFE6] mb-1">
-                {t('fundraiser.location')} *
+                {t('fundraiser.form.location')} *
               </label>
               <input
                 type="text"
                 {...register('location')}
-                placeholder="e.g. Maychew, Tigray"
+                placeholder={t('fundraiser.form.locationPlaceholder')}
                 className="w-full p-3 border-2 border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#EFE7D5] dark:bg-[#181512] text-[#14110E] dark:text-[#FFFFFF] focus:outline-none focus:border-[#1E4D38]"
               />
               {errors.location && <p className="text-red-600 mt-1">{errors.location.message}</p>}
@@ -171,7 +170,7 @@ export const CreateCampaignPage: React.FC<CreateCampaignPageProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block font-bold uppercase text-[#14110E] dark:text-[#F4EFE6] mb-1">
-                {t('fundraiser.beneficiaries')}
+                {t('createCause.beneficiariesLabel')}
               </label>
               <input
                 type="number"
@@ -183,12 +182,12 @@ export const CreateCampaignPage: React.FC<CreateCampaignPageProps> = ({
 
             <div>
               <label className="block font-bold uppercase text-[#14110E] dark:text-[#F4EFE6] mb-1">
-                {t('fundraiser.impactMetric')}
+                {t('fundraiser.form.impactMetric')}
               </label>
               <input
                 type="text"
                 {...register('impactMetric')}
-                placeholder="e.g. 140m solar pump for clean water"
+                placeholder={t('fundraiser.form.impactMetricPlaceholder')}
                 className="w-full p-3 border-2 border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#EFE7D5] dark:bg-[#181512] text-[#14110E] dark:text-[#FFFFFF] focus:outline-none focus:border-[#1E4D38]"
               />
             </div>
@@ -201,7 +200,7 @@ export const CreateCampaignPage: React.FC<CreateCampaignPageProps> = ({
               className="py-3 px-8 border-2 border-[#1E4D38] bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706] font-mono text-xs font-black tracking-widest uppercase hover:bg-[#163E2C] transition-all cursor-pointer flex items-center gap-2 shadow-md disabled:opacity-50"
             >
               <Send className="w-4 h-4" />
-              <span>{isSubmitting ? t('fundraiser.publishing') : t('fundraiser.publish')}</span>
+              <span>{isSubmitting ? t('createCause.submitting') : t('createCause.publish')}</span>
             </button>
           </div>
         </form>

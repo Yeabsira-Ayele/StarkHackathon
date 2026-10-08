@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ShieldCheck, MapPin, ArrowRight } from 'lucide-react';
 import { Campaign } from '../types/campaign.types';
+import { APP_NAME } from '../../../data/content.ts';
 
 interface CampaignDetailsPageProps {
   campaign: Campaign;
@@ -63,7 +64,7 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center font-mono text-sm">
-                {t('campaigns.intaglioPlate', 'LEWEGENE INTAGLIO PLATE')}
+                {t('campaigns.intaglioPlate', { appName: APP_NAME.toUpperCase() })}
               </div>
             )}
             <div className="absolute bottom-3 left-3 px-3 py-1 bg-[#FFFDF9]/95 dark:bg-[#080706]/95 border border-[#26211C] font-mono text-xs font-bold text-[#1E4D38] dark:text-[#52B788]">
@@ -99,14 +100,14 @@ export const CampaignDetailsPage: React.FC<CampaignDetailsPageProps> = ({
           <div className="p-6 sm:p-8 border-2 border-[#1E4D38] dark:border-[#52B788] bg-[#FFFDF9] dark:bg-[#12100E] space-y-6 rounded-[1px] shadow-lg">
             <div className="space-y-2">
               <span className="font-mono text-xs font-bold text-[#1E4D38] dark:text-[#52B788] tracking-wide uppercase">
-                {campaign.organizationName || t('campaigns.accreditedOrg', 'Accredited Civil Society Org')}
+                {campaign.organizationName || t('campaigns.accreditedOrg')}
               </span>
               <h2 className="font-serif font-black text-2xl text-[#14110E] dark:text-[#FFFFFF] leading-snug">
                 {campaign.title}
               </h2>
               <p className="font-mono text-xs text-zinc-600 dark:text-zinc-400 flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-[#9A7432]" />
-                <span>{campaign.location || t('campaigns.defaultLocation', 'Addis Ababa, Ethiopia')}</span>
+                <span>{campaign.location || t('campaigns.defaultLocation')}</span>
               </p>
             </div>
 

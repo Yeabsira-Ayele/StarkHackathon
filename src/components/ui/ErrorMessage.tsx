@@ -16,7 +16,7 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
   className = '',
 }) => {
   const { t } = useTranslation();
-  const heading = title || t('errors.generic', 'Something went wrong');
+  const heading = title || t('errors.generic');
 
   return (
     <div
@@ -36,7 +36,7 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
           {onRetry && (
             <div className="mt-3">
               <Button size="sm" variant="outline" onClick={onRetry}>
-                {t('common.retry', 'Try Again')}
+                {t('common.retry')}
               </Button>
             </div>
           )}

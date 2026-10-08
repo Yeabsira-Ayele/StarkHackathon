@@ -2,7 +2,7 @@ export type CampaignCategory = 'medical' | 'education' | 'emergency' | 'business
 
 export type CampaignStatus = 'pending' | 'approved' | 'rejected' | 'completed' | 'paused' | 'needs_changes';
 
-export type PaymentStatus = 'pending' | 'completed' | 'failed';
+export type PaymentStatus = 'completed' | 'failed';
 
 export type PaymentRail = 'telebirr' | 'cbe_birr' | 'bank_card' | 'chapa';
 

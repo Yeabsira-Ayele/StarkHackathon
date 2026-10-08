@@ -19,8 +19,7 @@ export function useVoxideCapabilities() {
     voxideClient.register({
       goToPage: {
         description: t(
-          'voxide.capabilities.goToPage.description',
-          'Navigate to a specific page or section in the app.'
+          'voxide.capabilities.goToPage.description'
         ),
         params: {
           page: {
@@ -44,8 +43,7 @@ export function useVoxideCapabilities() {
       },
       filterCampaigns: {
         description: t(
-          'voxide.capabilities.filterCampaigns.description',
-          'Filter causes by category ID: medical, education, emergency, community.'
+          'voxide.capabilities.filterCampaigns.description'
         ),
         params: {
           category: {
@@ -77,16 +75,14 @@ export function useVoxideCapabilities() {
           return {
             status: 'error',
             message: t(
-              'voxide.messages.invalidCategory',
-              'Invalid category. Please select medical, education, emergency, or community.'
+              'voxide.messages.invalidCategory'
             ),
           };
         },
       },
       changeLanguage: {
         description: t(
-          'voxide.capabilities.changeLanguage.description',
-          'Change application language between Amharic (am) and English (en).'
+          'voxide.capabilities.changeLanguage.description'
         ),
         params: {
           language: {
@@ -112,16 +108,14 @@ export function useVoxideCapabilities() {
           return {
             status: 'error',
             message: t(
-              'voxide.messages.invalidLanguage',
-              'Invalid language. Please select am or en.'
+              'voxide.messages.invalidLanguage'
             ),
           };
         },
       },
       startDonation: {
         description: t(
-          'voxide.capabilities.startDonation.description',
-          'Initiate a donation pledge with required confirmation.'
+          'voxide.capabilities.startDonation.description'
         ),
         dangerous: true,
         params: {

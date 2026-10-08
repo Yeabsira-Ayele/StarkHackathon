@@ -15,9 +15,39 @@ export const FundraiserPreview: React.FC<PageProps & { id: string }> = ({ id, go
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (isLoading) return <Loading message="Loading fundraiser preview…" />;
-  if (loadError) return <ErrorState message={loadError.message} onRetry={() => void refresh()} />;
-  if (!f) return <p className="text-sm text-[#1E4D38] dark:text-[#52B788]">This fundraiser could not be found.</p>;
+  if (isLoading) {
+    return (
+      <div className="space-y-5">
+        <div>
+          <h1 className="text-3xl font-serif font-black uppercase text-[#14110E] dark:text-[#F4EFE6]">{t('fundraiser.preview.title')}</h1>
+          <p className="text-sm text-zinc-500">{t('fundraiser.preview.description')}</p>
+        </div>
+        <Loading message="Loading fundraiser preview…" />
+      </div>
+    );
+  }
+  if (loadError) {
+    return (
+      <div className="space-y-5">
+        <div>
+          <h1 className="text-3xl font-serif font-black uppercase text-[#14110E] dark:text-[#F4EFE6]">{t('fundraiser.preview.title')}</h1>
+          <p className="text-sm text-zinc-500">{t('fundraiser.preview.description')}</p>
+        </div>
+        <ErrorState message={loadError.message} onRetry={() => void refresh()} />
+      </div>
+    );
+  }
+  if (!f) {
+    return (
+      <div className="space-y-5">
+        <div>
+          <h1 className="text-3xl font-serif font-black uppercase text-[#14110E] dark:text-[#F4EFE6]">{t('fundraiser.preview.title')}</h1>
+          <p className="text-sm text-zinc-500">{t('fundraiser.preview.description')}</p>
+        </div>
+        <p className="text-sm text-[#1E4D38] dark:text-[#52B788]">This fundraiser could not be found.</p>
+      </div>
+    );
+  }
 
   const submit = async () => {
     setBusy(true);
@@ -46,7 +76,7 @@ export const FundraiserPreview: React.FC<PageProps & { id: string }> = ({ id, go
           {t('fundraiser.preview.backToEdit')}
         </Button>
         <Button isLoading={busy} onClick={submit} icon={<Send className="w-4 h-4" />}>
-          {t('fundraiser.preview.publish')}
+          {t('fundraiser.preview.submit')}
         </Button>
       </div>
     </div>

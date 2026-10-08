@@ -61,8 +61,7 @@ import { useAuthStore } from '../../features/auth/store/auth.store.ts';
 import { DISCOVER_LOCATIONS } from '../../services/lookupService.ts';
 import { CAMPAIGN_CATEGORIES } from '../../mock-data/categories/categories.data.ts';
 import { localizeErrorMessage } from '../../i18n/errorMessage.ts';
-import { Loading } from '../Loading.tsx';
-import { ErrorState } from '../ErrorState.tsx';
+import { APP_NAME } from '../../data/content.ts';
 
 const ETHIOPIAN_REGIONS = DISCOVER_LOCATIONS;
 
@@ -97,7 +96,7 @@ export interface BanknoteMasterCanvasProps {
   onCreateCampaign?: (campaignData: Partial<Campaign>) => Promise<any>;
   onOpenVoice: () => void;
   onOpenScholarxiv?: () => void;
-  language: 'en' | 'am' | 'om';
+  language: 'en' | 'am';
   isDark: boolean;
   onToggleTheme: () => void;
   onDonationCompleted?: (cert: ContributionCertificate) => void;
@@ -113,6 +112,7 @@ export interface BanknoteMasterCanvasProps {
 interface HomeLandingProps {
   campaigns: Campaign[];
   organizations: Organization[];
+  isDataLoading?: boolean;
   totalRaised: number;
   totalDonations: number;
   showHero?: boolean;
@@ -126,6 +126,7 @@ interface HomeLandingProps {
 const HomeLanding: React.FC<HomeLandingProps> = ({
   campaigns,
   organizations,
+  isDataLoading = false,
   totalRaised,
   totalDonations,
   showHero = true,
@@ -159,32 +160,32 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
           <div className="space-y-6">
             <div className="inline-flex items-center gap-2 border border-[#9A7432]/50 bg-[#F7F2E7]/80 px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#805F29] dark:bg-[#161b16] dark:text-[#D8B066]">
               <ShieldCheck className="h-3.5 w-3.5" />
-              <span>{t('home.hero.badge', 'Verified local giving · rooted in Ethiopia')}</span>
+              <span>{t('home.hero.badge')}</span>
             </div>
             <div>
               <h1 className="font-display text-4xl font-black leading-[1.08] tracking-tight text-[#201C18] dark:text-[#F4EFE6] sm:text-6xl">
-                {t('home.hero.titleLead', 'Good grows when')}<br />
-                <span className="text-[#1E4D38] dark:text-[#52B788]">{t('home.hero.titleHighlight', 'we give together.')}</span>
+                {t('home.hero.titleLead')}<br />
+                <span className="text-[#1E4D38] dark:text-[#52B788]">{t('home.hero.titleHighlight')}</span>
               </h1>
               <p className="mt-5 max-w-xl font-serif text-lg leading-relaxed text-[#5A4E3E] dark:text-[#C9BEAC] sm:text-xl">
-                {t('home.hero.description', 'Lewegene brings people and trusted community causes closer. Find a story that moves you, and help make its next chapter possible.')}
+                {t('home.hero.description', { appName: APP_NAME })}
               </p>
-              <p className="mt-3 font-ethiopic text-sm text-[#8B6A34]">{t('home.motto', '« ለወገን ደራሽ ወገን ነው። »')}</p>
+              <p className="mt-3 font-ethiopic text-sm text-[#8B6A34]">{t('home.motto')}</p>
             </div>
             <div className="flex flex-wrap gap-3">
               <button type="button" onClick={onDiscover} className="inline-flex items-center gap-2 border-2 border-[#1E4D38] bg-[#1E4D38] px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-white shadow-md transition hover:bg-[#163E2C]">
-                {t('home.hero.discover', 'Discover causes')} <ArrowRight className="h-4 w-4" />
+                {t('home.hero.discover')} <ArrowRight className="h-4 w-4" />
               </button>
               <button type="button" onClick={onFundraise} className="inline-flex items-center gap-2 border border-[#26211C]/50 bg-[#F7F2E7] px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-[#201C18] transition hover:border-[#1E4D38] hover:text-[#1E4D38] dark:bg-[#1A201B] dark:text-[#F4EFE6]">
-                {t('home.hero.startFundraising', 'Start fundraising')} <ArrowRight className="h-4 w-4" />
+                {t('home.hero.startFundraising')} <ArrowRight className="h-4 w-4" />
               </button>
               <button type="button" onClick={onVoxide} className="inline-flex items-center gap-2 border border-[#9A7432]/60 bg-[#F2EADA]/70 px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-[#805F29] transition hover:bg-[#E1D4BA] dark:bg-[#181612] dark:text-[#D8B066]">
-                <Volume2 className="h-4 w-4" /> {t('home.hero.voxide', 'Voxide')}
+                <Volume2 className="h-4 w-4" /> {t('home.hero.voxide')}
               </button>
             </div>
             <div className="flex flex-wrap gap-x-6 gap-y-2 border-t border-[#26211C]/15 pt-4 font-mono text-[9px] font-bold uppercase tracking-wider text-[#5A4E3E] dark:text-[#B6AA98]">
-              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-[#1E4D38]" /> {t('home.hero.verifiedOrganizations', 'Verified organizations')}</span>
-              <span className="inline-flex items-center gap-1.5"><HandHeart className="h-3.5 w-3.5 text-[#9A7432]" /> {t('home.hero.communityFirst', 'Community-first giving')}</span>
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-[#1E4D38]" /> {t('home.hero.verifiedOrganizations')}</span>
+              <span className="inline-flex items-center gap-1.5"><HandHeart className="h-3.5 w-3.5 text-[#9A7432]" /> {t('home.hero.communityFirst')}</span>
             </div>
           </div>
 
@@ -194,18 +195,18 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
             {heroCampaign?.imageUrl ? (
               <img src={heroCampaign.imageUrl} alt={heroCampaign.title} className="relative block aspect-[4/3] w-full object-cover filter contrast-110 saturate-90" />
             ) : (
-              <div className="relative grid aspect-[4/3] place-items-center bg-[#1E4D38] text-6xl text-[#D8B066]">{t('home.hero.brandMark', 'ለወገን')}</div>
+              <div className="relative grid aspect-[4/3] place-items-center bg-[#1E4D38] text-6xl text-[#D8B066]">{t('home.hero.brandMark')}</div>
             )}
             <div className="absolute inset-0 pointer-events-none intaglio-overlay opacity-50" />
             <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-4 border border-[#B88B45]/60 bg-[#F2ECE1]/95 p-4 shadow-xl dark:bg-[#141210]/95">
               <div className="min-w-0">
-                <span className="font-mono text-[9px] font-black uppercase tracking-widest text-[#1E4D38] dark:text-[#52B788]">{t('home.hero.closeToHome', 'A cause close to home')}</span>
-                <p className="mt-1 truncate font-serif text-base font-bold text-[#201C18] dark:text-[#F4EFE6]">{heroCampaign?.title || t('home.hero.findFirstCause', 'Find your first cause')}</p>
+                <span className="font-mono text-[9px] font-black uppercase tracking-widest text-[#1E4D38] dark:text-[#52B788]">{t('home.hero.closeToHome')}</span>
+                <p className="mt-1 truncate font-serif text-base font-bold text-[#201C18] dark:text-[#F4EFE6]">{heroCampaign?.title || t('home.hero.findFirstCause')}</p>
               </div>
-              <button type="button" onClick={onDiscover} aria-label={t('home.hero.discover', 'Discover causes')} className="grid h-9 w-9 shrink-0 place-items-center border border-[#1E4D38] bg-[#1E4D38] text-white hover:bg-[#163E2C]"><ArrowRight className="h-4 w-4" /></button>
+              <button type="button" onClick={onDiscover} aria-label={t('home.hero.discover')} className="grid h-9 w-9 shrink-0 place-items-center border border-[#1E4D38] bg-[#1E4D38] text-white hover:bg-[#163E2C]"><ArrowRight className="h-4 w-4" /></button>
             </div>
             <div className="absolute -right-5 -top-5 hidden h-16 w-16 rotate-6 flex-col items-center justify-center rounded-full border border-[#B88B45] bg-[#F2ECE1] font-mono text-[8px] font-black leading-tight text-[#1E4D38] dark:bg-[#141210] dark:text-[#D8B066] sm:flex">
-              <HeartHandshake className="mb-0.5 h-5 w-5" /> {t('home.hero.giveLabel', 'GIVE')}<br />{t('home.hero.togetherLabel', 'TOGETHER')}
+              <HeartHandshake className="mb-0.5 h-5 w-5" /> {t('home.hero.giveLabel')}<br />{t('home.hero.togetherLabel')}
             </div>
           </div>
         </div>
@@ -217,13 +218,13 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
         <div className="relative z-10 mb-7 flex flex-wrap items-end justify-between gap-4 border-b-2 border-[#1E4D38]/20 pb-4 dark:border-[#9A7432]/30">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="bg-[#1E4D38] px-2.5 py-1 font-mono text-[9px] font-black uppercase tracking-widest text-white dark:bg-[#52B788] dark:text-[#080706]">{t('home.featured.badge', 'Featured & urgent causes')}</span>
-              <span className="font-mono text-xs font-black uppercase tracking-wider text-[#8B5E14] dark:text-[#D8B066]">{t('home.featured.ledger', '★ Direct underwriting ledger')}</span>
+              <span className="bg-[#1E4D38] px-2.5 py-1 font-mono text-[9px] font-black uppercase tracking-widest text-white dark:bg-[#52B788] dark:text-[#080706]">{t('home.featured.badge')}</span>
+              <span className="font-mono text-xs font-black uppercase tracking-wider text-[#8B5E14] dark:text-[#D8B066]">{t('home.featured.ledger')}</span>
             </div>
-            <h2 className="mt-1.5 font-display text-2xl font-black tracking-tight text-[#14110E] dark:text-white sm:text-3xl">{t('home.featured.title', 'Community causes & live birr progress')}</h2>
-            <p className="mt-2 max-w-xl font-serif text-base text-zinc-600 dark:text-zinc-400">{t('home.featured.description', 'Real needs, led by local communities. Every cause is reviewed before it reaches this page.')}</p>
+            <h2 className="mt-1.5 font-display text-2xl font-black tracking-tight text-[#14110E] dark:text-white sm:text-3xl">{t('home.featured.title')}</h2>
+            <p className="mt-2 max-w-xl font-serif text-base text-zinc-600 dark:text-zinc-400">{t('home.featured.description')}</p>
           </div>
-          <button type="button" onClick={onDiscover} className="inline-flex items-center gap-2 border-b border-[#1E4D38] pb-1 font-mono text-[10px] font-black uppercase tracking-wider text-[#1E4D38] dark:text-[#52B788]">{t('home.featured.browseAll', 'Browse all causes')} <ArrowRight className="h-3.5 w-3.5" /></button>
+          <button type="button" onClick={onDiscover} className="inline-flex items-center gap-2 border-b border-[#1E4D38] pb-1 font-mono text-[10px] font-black uppercase tracking-wider text-[#1E4D38] dark:text-[#52B788]">{t('home.featured.browseAll')} <ArrowRight className="h-3.5 w-3.5" /></button>
         </div>
         {featuredCampaigns.length > 0 ? (
           <div className="relative z-10 grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -233,7 +234,7 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
           </div>
         ) : (
           <div className="relative z-10 border border-dashed border-[#9A7432]/50 bg-[#F7F2E7]/70 p-10 text-center font-mono text-xs text-zinc-600 dark:bg-[#141210] dark:text-zinc-400">
-            {t('home.featured.empty', 'New causes are being prepared. Check back soon or explore our community.')}
+            {t('home.featured.empty')}
           </div>
         )}
       </section>
@@ -242,15 +243,15 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
         <div className="pointer-events-none absolute inset-2 border border-[#1E4D38]/25 dark:border-[#9A7432]/25" />
         <div className="relative mx-auto grid max-w-[1300px] gap-9 px-6 py-8 sm:px-12 lg:grid-cols-[.72fr_1.28fr] lg:items-center lg:px-20 lg:py-10">
           <div>
-            <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[#9A7432]">{t('home.howItWorks.eyebrow', 'How it works')}</p>
-            <h2 className="mt-2 font-display text-2xl font-black leading-tight text-[#201C18] dark:text-[#F4EFE6] sm:text-3xl">{t('home.howItWorks.titleLine1', 'Good things happen')}<br />{t('home.howItWorks.titleLine2', 'one step at a time.')}</h2>
-            <p className="mt-3 max-w-sm font-serif text-base leading-relaxed text-zinc-600 dark:text-zinc-400">{t('home.howItWorks.description', 'Find a community cause, lend your support, and follow the difference you helped make.')}</p>
+            <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[#9A7432]">{t('home.howItWorks.eyebrow')}</p>
+            <h2 className="mt-2 font-display text-2xl font-black leading-tight text-[#201C18] dark:text-[#F4EFE6] sm:text-3xl">{t('home.howItWorks.titleLine1')}<br />{t('home.howItWorks.titleLine2')}</h2>
+            <p className="mt-3 max-w-sm font-serif text-base leading-relaxed text-zinc-600 dark:text-zinc-400">{t('home.howItWorks.description')}</p>
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             {[
-              { number: '01', title: t('home.howItWorks.step1Title', 'Find a cause'), detail: t('home.howItWorks.step1Detail', 'Explore community-led projects and choose a cause that matters to you.'), icon: <Search className="h-5 w-5" /> },
-              { number: '02', title: t('home.howItWorks.step2Title', 'Give what you can'), detail: t('home.howItWorks.step2Detail', 'Every contribution matters. Support the people and purpose you believe in.'), icon: <HandHeart className="h-5 w-5" /> },
-              { number: '03', title: t('home.howItWorks.step3Title', 'See the impact'), detail: t('home.howItWorks.step3Detail', 'Follow cause updates and see how your community moves forward.'), icon: <TrendingUp className="h-5 w-5" /> },
+              { number: '01', title: t('home.howItWorks.step1Title'), detail: t('home.howItWorks.step1Detail'), icon: <Search className="h-5 w-5" /> },
+              { number: '02', title: t('home.howItWorks.step2Title'), detail: t('home.howItWorks.step2Detail'), icon: <HandHeart className="h-5 w-5" /> },
+              { number: '03', title: t('home.howItWorks.step3Title'), detail: t('home.howItWorks.step3Detail'), icon: <TrendingUp className="h-5 w-5" /> },
             ].map((step) => (
               <article key={step.number} className="border border-[#26211C]/20 bg-[#F7F2E7]/75 p-5 dark:border-[#9A7432]/30 dark:bg-[#171a16]">
                 <div className="flex items-center justify-between font-mono text-[10px] font-black text-[#9A7432]"><span>{step.number}</span><span className="text-[#1E4D38] dark:text-[#52B788]">{step.icon}</span></div>
@@ -268,32 +269,32 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
         <div className="relative grid grid-cols-2 gap-6 font-mono text-center lg:grid-cols-4">
           <div className="space-y-1">
             <p className="text-2xl font-black text-[#201C18] dark:text-[#D8B066] sm:text-3xl">
-              {totalRaised.toLocaleString()} ETB
+              {isDataLoading ? '—' : `${totalRaised.toLocaleString()} ${t('common.currency')}`}
             </p>
             <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
-              {t('home.impact.totalUnderwritten', 'TOTAL UNDERWRITTEN BIRR')}
+              {t('home.impact.totalUnderwritten')}
             </p>
           </div>
           <div className="space-y-1">
             <p className="text-2xl font-black text-[#201C18] dark:text-[#D8B066] sm:text-3xl">
-              {totalDonations.toLocaleString()}
+              {isDataLoading ? '—' : totalDonations.toLocaleString()}
             </p>
             <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
-              {t('home.impact.communityPatrons', 'COMMUNITY PATRONS')}
+              {t('home.impact.communityPatrons')}
             </p>
           </div>
           <div className="space-y-1">
             <p className="text-2xl font-black text-[#1E4D38] dark:text-[#52B788] sm:text-3xl">100%</p>
             <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
-              {t('home.impact.directToBeneficiaries', 'DIRECT TO BENEFICIARIES')}
+              {t('home.impact.directToBeneficiaries')}
             </p>
           </div>
           <div className="space-y-1">
             <p className="text-2xl font-black text-[#201C18] dark:text-[#D8B066] sm:text-3xl">
-              {campaigns.length}
+              {isDataLoading ? '—' : campaigns.length}
             </p>
             <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
-              {t('home.impact.verifiedPlates', 'VERIFIED CAUSE PLATES')}
+              {t('home.impact.verifiedPlates')}
             </p>
           </div>
         </div>
@@ -303,9 +304,9 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
       <section id="home-communities" className="scroll-mt-20 mx-auto w-full max-w-[1300px] px-6 py-8 sm:px-12 lg:px-20">
         <div className="relative">
         <div className="mb-7 text-center">
-          <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[#9A7432]">{t('home.communities.eyebrow', 'Stronger, side by side')}</p>
-          <h2 className="mt-2 font-display text-2xl font-black text-[#201C18] dark:text-[#F4EFE6] sm:text-3xl">{t('home.communities.title', 'Communities making good happen')}</h2>
-          <p className="mx-auto mt-2 max-w-xl font-serif text-base text-zinc-600 dark:text-zinc-400">{t('home.communities.description', 'Trusted organizations working alongside their neighbors across Ethiopia.')}</p>
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[#9A7432]">{t('home.communities.eyebrow')}</p>
+          <h2 className="mt-2 font-display text-2xl font-black text-[#201C18] dark:text-[#F4EFE6] sm:text-3xl">{t('home.communities.title')}</h2>
+          <p className="mx-auto mt-2 max-w-xl font-serif text-base text-zinc-600 dark:text-zinc-400">{t('home.communities.description')}</p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {trustedOrganizations.map((organization) => (
@@ -320,7 +321,7 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
               </div>
             </article>
           ))}
-          {trustedOrganizations.length === 0 && <p className="col-span-full text-center font-mono text-xs text-zinc-500">{t('home.communities.empty', 'Community partners will be featured here.')}</p>}
+          {trustedOrganizations.length === 0 && <p className="col-span-full text-center font-mono text-xs text-zinc-500">{t('home.communities.empty')}</p>}
         </div>
         </div>
       </section>
@@ -331,19 +332,19 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
           <div>
             <div className="inline-flex items-center gap-2 border border-[#9A7432]/50 bg-[#FAF6EC] px-3 py-1 font-mono text-[9px] font-black uppercase tracking-[.18em] text-[#805F29] dark:bg-[#181612] dark:text-[#D8B066]">
               <Volume2 className="h-3.5 w-3.5" />
-              {t('home.voxide.badge', 'Lewegene voice assistant')}
+              {t('home.voxide.badge', { appName: APP_NAME })}
             </div>
-            <h2 className="mt-3 font-display text-3xl font-black text-[#201C18] dark:text-[#F4EFE6] sm:text-4xl">{t('home.voxide.title', 'Voxide')}</h2>
-            <p className="mt-1 font-serif text-xl font-bold text-[#1E4D38] dark:text-[#52B788]">{t('home.voxide.tagline', 'Speak. Find. Give.')}</p>
+            <h2 className="mt-3 font-display text-3xl font-black text-[#201C18] dark:text-[#F4EFE6] sm:text-4xl">{t('home.voxide.title')}</h2>
+            <p className="mt-1 font-serif text-xl font-bold text-[#1E4D38] dark:text-[#52B788]">{t('home.voxide.tagline')}</p>
             <p className="mt-3 max-w-2xl font-serif text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
-              {t('home.voxide.description', 'Tell Voxide what you need. It understands your voice and helps you find causes, donate, or start a fundraiser.')}
+              {t('home.voxide.description')}
             </p>
             <div className="mt-5 flex flex-wrap items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-wider text-[#201C18] dark:text-[#E8DEC8] sm:text-xs">
-              <span className="border border-[#26211C]/20 bg-[#FAF6EC] px-3 py-2 dark:border-[#9A7432]/30 dark:bg-[#171a16]">{t('home.voxide.speak', '🎙️ Speak')}</span>
+              <span className="border border-[#26211C]/20 bg-[#FAF6EC] px-3 py-2 dark:border-[#9A7432]/30 dark:bg-[#171a16]">{t('home.voxide.speak')}</span>
               <ArrowRight className="h-4 w-4 text-[#9A7432]" />
-              <span className="border border-[#26211C]/20 bg-[#FAF6EC] px-3 py-2 dark:border-[#9A7432]/30 dark:bg-[#171a16]">{t('home.voxide.understands', '🤖 Voxide understands')}</span>
+              <span className="border border-[#26211C]/20 bg-[#FAF6EC] px-3 py-2 dark:border-[#9A7432]/30 dark:bg-[#171a16]">{t('home.voxide.understands')}</span>
               <ArrowRight className="h-4 w-4 text-[#9A7432]" />
-              <span className="border border-[#26211C]/20 bg-[#FAF6EC] px-3 py-2 dark:border-[#9A7432]/30 dark:bg-[#171a16]">{t('home.voxide.takeAction', '❤️ Take action')}</span>
+              <span className="border border-[#26211C]/20 bg-[#FAF6EC] px-3 py-2 dark:border-[#9A7432]/30 dark:bg-[#171a16]">{t('home.voxide.takeAction')}</span>
             </div>
           </div>
           <button
@@ -352,7 +353,7 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
             className="inline-flex items-center justify-center gap-2 justify-self-start border-2 border-[#1E4D38] bg-[#1E4D38] px-6 py-3 font-mono text-xs font-black uppercase tracking-wider text-white shadow-md transition hover:bg-[#163E2C] lg:justify-self-end"
           >
             <Volume2 className="h-4 w-4" />
-            {t('home.voxide.try', 'Try Voxide')}
+            {t('home.voxide.try')}
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>
@@ -361,12 +362,12 @@ const HomeLanding: React.FC<HomeLandingProps> = ({
       <section className="relative overflow-hidden border-2 border-[#9A7432]/60 bg-[#EAE1CF] px-6 py-8 text-center dark:bg-[#111410] sm:px-12">
         <div className="absolute inset-2 border border-[#9A7432]/25 pointer-events-none" />
         <div className="relative mx-auto max-w-2xl">
-          <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[#9A7432]">{t('home.cta.eyebrow', 'There’s room for you here')}</p>
-          <h2 className="mt-3 font-display text-3xl font-black leading-tight text-[#201C18] dark:text-[#F4EFE6] sm:text-4xl">{t('home.cta.title', 'What good will you help grow?')}</h2>
-          <p className="mx-auto mt-3 max-w-lg font-serif text-base text-zinc-600 dark:text-zinc-400">{t('home.cta.description', 'Bring your community together around a cause, or find a good thing already growing.')}</p>
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[#9A7432]">{t('home.cta.eyebrow')}</p>
+          <h2 className="mt-3 font-display text-3xl font-black leading-tight text-[#201C18] dark:text-[#F4EFE6] sm:text-4xl">{t('home.cta.title')}</h2>
+          <p className="mx-auto mt-3 max-w-lg font-serif text-base text-zinc-600 dark:text-zinc-400">{t('home.cta.description')}</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <button type="button" onClick={onFundraise} className="inline-flex items-center gap-2 border-2 border-[#1E4D38] bg-[#1E4D38] px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-white hover:bg-[#163E2C]">{t('home.cta.startFundraising', 'Start fundraising')} <ArrowRight className="h-4 w-4" /></button>
-            <button type="button" onClick={onDiscover} className="inline-flex items-center gap-2 border border-[#26211C]/40 bg-[#F7F2E7] px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-[#201C18] hover:border-[#1E4D38] dark:bg-[#171a16] dark:text-[#F4EFE6]">{t('home.cta.discover', 'Discover causes')} <ArrowRight className="h-4 w-4" /></button>
+            <button type="button" onClick={onFundraise} className="inline-flex items-center gap-2 border-2 border-[#1E4D38] bg-[#1E4D38] px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-white hover:bg-[#163E2C]">{t('home.cta.startFundraising')} <ArrowRight className="h-4 w-4" /></button>
+            <button type="button" onClick={onDiscover} className="inline-flex items-center gap-2 border border-[#26211C]/40 bg-[#F7F2E7] px-5 py-3 font-mono text-xs font-black uppercase tracking-wider text-[#201C18] hover:border-[#1E4D38] dark:bg-[#171a16] dark:text-[#F4EFE6]">{t('home.cta.discover')} <ArrowRight className="h-4 w-4" /></button>
           </div>
         </div>
       </section>
@@ -459,19 +460,6 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
       return [];
     }
   });
-  const campaignDataModes: BanknoteZoomMode[] = [
-    'overview',
-    'discover',
-    'detail',
-    'pledge',
-    'impact',
-    'treasury',
-    'engrave',
-    'audit',
-  ];
-  const shouldShowCampaignDataState =
-    campaignDataModes.includes(zoomMode) && (isDataLoading || Boolean(dataError));
-
   const navigateToMode = (mode: BanknoteZoomMode, path?: string) => {
     setZoomMode(mode);
     const modePaths: Record<BanknoteZoomMode, string> = {
@@ -621,7 +609,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
     { id: 'other', num: '፰' },
   ].map((category) => ({
     ...category,
-    label: CAMPAIGN_CATEGORIES.find((item) => item.id === category.id)?.labels[language] || category.id,
+    label: t(`categories.${category.id}`),
   }));
   // Navigation Handlers
   const handleOpenDetail = (campaign: Campaign) => {
@@ -775,7 +763,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
 
           <div className="flex items-center gap-4 text-zinc-600 dark:text-zinc-400">
             <span className="font-bold text-[#1E4D38] dark:text-[#52B788] text-[9px] sm:text-[10px]">
-              ★ {t('nav.trustLine', 'ACSO REGISTERED · 0% PLATFORM CUT · 100% DIRECT TO CAUSES')}
+              ★ {t('nav.trustLine')}
             </span>
           </div>
         </div>
@@ -789,10 +777,10 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
             className="cursor-pointer group flex flex-col"
           >
             <h1 className="font-display font-black text-2xl sm:text-3xl tracking-[0.2em] text-[#201C18] dark:text-[#F4EFE6] leading-none transition-colors group-hover:text-[#1E4D38] dark:group-hover:text-[#52B788]">
-              LEWEGENE
+              {APP_NAME.toUpperCase()}
             </h1>
             <span className="font-mono text-[9px] tracking-[0.25em] text-[#9A7432] uppercase font-bold mt-1">
-              {t('nav.tagline', 'Ethiopia · Civic Tender')}
+              {t('nav.tagline')}
             </span>
           </div>
 
@@ -807,7 +795,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   : 'text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]'
               }`}
             >
-              {t('nav.home', 'Home')}
+              {t('nav.home')}
             </button>
 
             <button
@@ -819,7 +807,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   : 'text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]'
               }`}
             >
-              <span>{t('nav.discoverCauses', 'Discover Causes')}</span>
+              <span>{t('nav.discoverCauses')}</span>
               {!isDataLoading && !dataError && (
                 <span className="px-1.5 py-0.2 bg-[#1E4D38] text-white text-[9px] font-bold rounded-xs">
                   {campaigns.length}
@@ -837,8 +825,8 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               }`}
             >
               {showPersonalNavigation && hasFundraisers
-                ? t('nav.myFundraisers', 'My Fundraisers')
-                : t('nav.fundraise', 'Fundraise')}
+                ? t('nav.myFundraisers')
+                : t('nav.fundraise')}
             </button>
 
             {showPersonalNavigation ? (
@@ -852,7 +840,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                       : 'text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]'
                   }`}
                 >
-                  {t('nav.myContributions', 'My Contributions')}
+                  {t('nav.myContributions')}
                 </button>
                 <button
                   type="button"
@@ -863,7 +851,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                       : 'text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]'
                   }`}
                 >
-                  {t('nav.myProfile', 'My Profile')}
+                  {t('nav.myProfile')}
                 </button>
                 {hasReports && (
                   <button
@@ -871,7 +859,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                     onClick={() => navigate('/reports')}
                     className="px-2.5 py-1.5 sm:px-3 sm:py-2 transition-colors cursor-pointer text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
                   >
-                    {t('nav.myReports', 'My Reports')}
+                    {t('nav.myReports')}
                   </button>
                 )}
                 {(authUser?.role === 'foundation' || (authUser?.role as string) === 'organization') && (
@@ -880,7 +868,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                     onClick={() => navigate('/foundation')}
                     className="px-2.5 py-1.5 sm:px-3 sm:py-2 transition-colors cursor-pointer text-[#1E4D38] dark:text-[#52B788] hover:underline"
                   >
-                    {t('nav.orgDashboard', 'Organization Hub')}
+                    {t('nav.orgDashboard')}
                   </button>
                 )}
                 {authUser?.role === 'admin' && (
@@ -889,7 +877,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                     onClick={() => navigate('/admin')}
                     className="px-2.5 py-1.5 sm:px-3 sm:py-2 transition-colors cursor-pointer text-[#9A7432] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
                   >
-                    {t('nav.adminPortal', 'Admin Console')}
+                    {t('nav.adminPortal')}
                   </button>
                 )}
               </>
@@ -899,7 +887,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 onClick={() => navigate('/signup')}
                 className="px-2.5 py-1.5 sm:px-3 sm:py-2 transition-colors cursor-pointer text-[#201C18] dark:text-[#E8DEC8] hover:text-[#1E4D38] dark:hover:text-[#52B788]"
               >
-                {t('nav.signUpLogIn', 'Sign Up / Log In')}
+                {t('nav.signUpLogIn')}
               </button>
             )}
 
@@ -914,17 +902,17 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               type="button"
               onClick={() => (showPersonalNavigation ? navigate('/voxide') : onOpenVoice())}
               className="p-2 border border-[#1E4D38]/60 bg-[#1E4D38]/5 hover:bg-[#1E4D38]/15 text-[#1E4D38] dark:text-[#52B788] transition-colors cursor-pointer flex items-center gap-1.5"
-              title={t('nav.speakVoxide', 'Speak with Voxide Voice Assistant')}
+              title={t('nav.speakVoxide')}
             >
               <Volume2 className="w-3.5 h-3.5" />
-              <span className={`${showPersonalNavigation ? 'font-mono text-[10px] font-bold uppercase' : 'hidden xl:inline font-mono text-[10px] font-bold uppercase'}`}>{t('home.voxide.title', 'Voxide')}</span>
+              <span className={`${showPersonalNavigation ? 'font-mono text-[10px] font-bold uppercase' : 'hidden xl:inline font-mono text-[10px] font-bold uppercase'}`}>{t('home.voxide.title')}</span>
             </button>
 
             {/* Theme Toggle */}
             <button
               type="button"
               onClick={onToggleTheme}
-              title={t('nav.toggleTheme', 'Toggle Parchment / Midnight Ink')}
+              title={t('nav.toggleTheme')}
               className="p-2 border border-[#9A7432]/50 hover:bg-[#9A7432]/15 text-[#201C18] dark:text-[#D8B066] transition-colors cursor-pointer"
             >
               {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
@@ -935,10 +923,10 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsProfileMenuOpen((open) => !open)}
-                  aria-label={t('nav.openProfileMenu', 'Open profile menu')}
+                  aria-label={t('nav.openProfileMenu')}
                   aria-haspopup="menu"
                   aria-expanded={isProfileMenuOpen}
-                  title={t('nav.profileMenuTitle', 'Profile: {{name}}', { name: authUser.name })}
+                  title={t('nav.profileMenuTitle', { name: authUser.name })}
                   className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-full border border-[#9A7432]/60 bg-[#F2ECE1] text-[#1E4D38] transition-colors hover:border-[#1E4D38] dark:bg-[#1C1814] dark:text-[#52B788]"
                 >
                   {authUser.avatarUrl
@@ -948,7 +936,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 {isProfileMenuOpen && (
                   <div
                     role="menu"
-                    aria-label={t('nav.profileOptions', 'Profile options')}
+                    aria-label={t('nav.profileOptions')}
                     className="absolute right-0 top-full z-50 mt-2 w-52 border border-[#9A7432]/40 bg-[#FFFDF9] p-1.5 text-left shadow-lg dark:bg-[#171410]"
                   >
                     <button
@@ -961,7 +949,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                       className="flex w-full items-center gap-2 px-3 py-2.5 text-left font-mono text-[10px] font-bold uppercase tracking-wider text-[#201C18] transition-colors hover:bg-[#1E4D38]/10 hover:text-[#1E4D38] dark:text-[#E8DEC8] dark:hover:bg-[#52B788]/10 dark:hover:text-[#52B788]"
                     >
                       <UserRound className="h-4 w-4" />
-                      {t('nav.myProfile', 'My Profile')}
+                      {t('nav.myProfile')}
                     </button>
                     <button
                       type="button"
@@ -973,7 +961,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                       className="flex w-full items-center gap-2 px-3 py-2.5 text-left font-mono text-[10px] font-bold uppercase tracking-wider text-[#201C18] transition-colors hover:bg-[#1E4D38]/10 hover:text-[#1E4D38] dark:text-[#E8DEC8] dark:hover:bg-[#52B788]/10 dark:hover:text-[#52B788]"
                     >
                       <UserRound className="h-4 w-4" />
-                      {t('nav.editMyProfile', 'Edit My Profile')}
+                      {t('nav.editMyProfile')}
                     </button>
                     <button
                       type="button"
@@ -986,7 +974,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                       className="flex w-full items-center gap-2 px-3 py-2.5 text-left font-mono text-[10px] font-bold uppercase tracking-wider text-[#201C18] transition-colors hover:bg-red-700/10 hover:text-red-800 dark:text-[#E8DEC8] dark:hover:text-red-300"
                     >
                       <LogOut className="h-4 w-4" />
-                      {t('nav.logout', 'Logout')}
+                      {t('nav.logout')}
                     </button>
                   </div>
                 )}
@@ -1013,13 +1001,13 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
           >
             <div className="mb-5 flex items-start justify-between gap-4 border-b border-[#9A7432]/30 pb-4">
               <div>
-                <p className="font-mono text-[10px] font-black uppercase tracking-[.2em] text-[#9A7432]">{t('profile.localDemoProfile', 'Patron Profile')}</p>
-                <h2 id="profile-editor-title" className="mt-1 font-serif text-2xl font-black">{t('profile.editTitle', 'Edit My Profile')}</h2>
+                <p className="font-mono text-[10px] font-black uppercase tracking-[.2em] text-[#9A7432]">{t('profile.localDemoProfile')}</p>
+                <h2 id="profile-editor-title" className="mt-1 font-serif text-2xl font-black">{t('profile.editTitle')}</h2>
               </div>
               <button
                 type="button"
                 onClick={() => setIsProfileEditorOpen(false)}
-                aria-label={t('profile.closeEditorAria', 'Close profile editor')}
+                aria-label={t('profile.closeEditorAria')}
                 className="grid h-8 w-8 place-items-center border border-[#9A7432]/40 text-xl leading-none hover:bg-[#9A7432]/10"
               >
                 ×
@@ -1039,7 +1027,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               }}
             >
               <label className="grid gap-1.5 font-mono text-xs font-bold">
-                {t('profile.name', 'Name')}
+                {t('profile.name')}
                 <input
                   required
                   value={profileName}
@@ -1048,7 +1036,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 />
               </label>
               <label className="grid gap-1.5 font-mono text-xs font-bold">
-                {t('profile.email', 'Email')}
+                {t('profile.email')}
                 <input
                   required
                   type="email"
@@ -1058,27 +1046,27 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 />
               </label>
               <label className="grid gap-1.5 font-mono text-xs font-bold">
-                {t('profile.phone', 'Phone')}
+                {t('profile.phone')}
                 <input
                   value={profilePhone}
                   onChange={(event) => setProfilePhone(event.target.value)}
                   className="border border-[#26211C]/20 bg-white px-3 py-2.5 font-sans text-sm dark:border-[#9A7432]/30 dark:bg-[#0E0D0B]"
                 />
               </label>
-              <p className="text-xs text-zinc-500">{t('profile.changesNote', 'Profile details are synced across your active session.')}</p>
+              <p className="text-xs text-zinc-500">{t('profile.changesNote')}</p>
               <div className="flex justify-end gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => setIsProfileEditorOpen(false)}
                   className="border border-[#9A7432]/50 px-4 py-2.5 font-mono text-xs font-bold uppercase hover:bg-[#9A7432]/10"
                 >
-                  {t('profile.cancel', 'Cancel')}
+                  {t('profile.cancel')}
                 </button>
                 <button
                   type="submit"
                   className="bg-[#1E4D38] px-4 py-2.5 font-mono text-xs font-black uppercase text-white hover:bg-[#163E2C]"
                 >
-                  {t('profile.saveProfile', 'Save Profile')}
+                  {t('profile.saveProfile')}
                 </button>
               </div>
             </form>
@@ -1092,19 +1080,6 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
           Content sits peacefully inside the wide living banknote paper world.
       ───────────────────────────────────────────────────────────────────────────── */}
       <main className="relative z-10 w-full min-h-[calc(100vh-140px)] flex flex-col justify-between">
-        {shouldShowCampaignDataState && (
-          <div className="mx-auto w-full max-w-3xl px-6 py-10">
-            {isDataLoading ? (
-              <Loading variant="full" message={t('common.loading', 'Loading…')} />
-            ) : (
-              <ErrorState
-                message={dataError || t('common.error', 'Could not load platform data.')}
-                onRetry={onRetryData}
-              />
-            )}
-          </div>
-        )}
-        
         {/* ══════════════════════════════════════════════════════════════════════════
             VIEW 1: OVERVIEW (HERO CINEMATIC: WIDE, MINIMALIST, HIGH USABILITY)
         ══════════════════════════════════════════════════════════════════════════ */}
@@ -1114,6 +1089,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
             organizations={organizations}
             totalRaised={totalRaised}
             totalDonations={totalDonations}
+            isDataLoading={isDataLoading}
             onDiscover={() => navigateToMode('discover')}
             onFundraise={() => navigate('/fundraising')}
             onVoxide={onOpenVoice}
@@ -1121,7 +1097,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
           />
         )}
 
-        {!shouldShowCampaignDataState && zoomMode === 'overview' && (
+        {zoomMode === 'overview' && (
           <div className="w-full max-w-[1600px] mx-auto px-6 sm:px-12 lg:px-20 py-12 lg:py-16 space-y-8 animate-in fade-in duration-300">
             
             {/* ── Wide Hero Section: Pure Negative Space & Authority ── */}
@@ -1136,7 +1112,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
 
               <div className="space-y-3">
                 <h1 className="font-display font-black text-4xl sm:text-6xl lg:text-7xl text-[#201C18] dark:text-[#F4EFE6] tracking-tight leading-none banknote-engraved-text">
-                  LEWEGENE
+                  {APP_NAME.toUpperCase()}
                 </h1>
                 
                 <p className="font-serif font-bold text-2xl sm:text-4xl text-[#1E4D38] dark:text-[#52B788] tracking-wide">
@@ -1204,10 +1180,14 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
 
                 <div className="text-right">
                   <span className="font-mono text-xs font-black text-[#1E4D38] dark:text-[#52B788] block">
-                    {filteredCampaigns.length} ACTIVE CAUSE PLATES
+                    {isDataLoading
+                      ? t('common.loading')
+                      : t('explore.activePlates', { count: filteredCampaigns.length })}
                   </span>
                   <span className="font-mono text-[10px] text-zinc-600 dark:text-zinc-400">
-                    {totalRaised.toLocaleString()} ETB PLEDGED ACROSS ETHIOPIA
+                    {isDataLoading
+                      ? t('common.loading')
+                      : t('explore.pledgedAcross', { amount: totalRaised.toLocaleString() })}
                   </span>
                 </div>
               </div>
@@ -1255,10 +1235,10 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                       STATUS &amp; LOCATION:
                     </span>
                     {[
-                      { id: 'all', label: 'ALL' },
-                      { id: 'ending_soon', label: 'ENDING SOON' },
-                      { id: 'started_now', label: 'STARTED NOW' },
-                      { id: 'ongoing', label: 'ONGOING' },
+                      { id: 'all', labelKey: 'common.all' },
+                      { id: 'ending_soon', labelKey: 'banknote.status.ending_soon' },
+                      { id: 'started_now', labelKey: 'banknote.status.started_now' },
+                      { id: 'ongoing', labelKey: 'banknote.status.ongoing' },
                     ].map((status) => (
                       <button
                         key={status.id}
@@ -1270,17 +1250,17 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                             : 'border-[#26211C]/25 bg-[#EAE1CF] dark:bg-[#161411] text-zinc-700 dark:text-zinc-300 hover:border-[#26211C]'
                         }`}
                       >
-                        {status.label}
+                        {t(status.labelKey)}
                       </button>
                     ))}
                     <label className="flex items-center gap-1.5">
-                      <span className="sr-only">Filter by location</span>
+                      <span className="sr-only">{t('banknote.filterByLocation')}</span>
                       <select
                         value={selectedLocation}
                         onChange={(event) => setSelectedLocation(event.target.value)}
                         className="px-2.5 py-1 border border-[#26211C]/25 bg-[#FAF6EC] dark:bg-[#201B16] text-[10px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300 cursor-pointer"
                       >
-                        <option value="all">ALL LOCATIONS</option>
+                        <option value="all">{t('banknote.allLocations')}</option>
                         {ETHIOPIAN_REGIONS.map((location) => <option key={location} value={location}>{location}</option>)}
                       </select>
                     </label>
@@ -1290,7 +1270,24 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
 
               {/* Causes Grid with Money Progress & Quick Pledge Actions */}
               <div className="relative z-10">
-                {filteredCampaigns.length > 0 ? (
+                {isDataLoading ? (
+                  <p role="status" className="p-8 text-center font-mono text-xs text-zinc-500">
+                    {t('common.loading')}
+                  </p>
+                ) : dataError ? (
+                  <div role="alert" className="p-8 text-center border border-dashed border-red-500/40 font-mono text-xs space-y-3">
+                    <p>{dataError}</p>
+                    {onRetryData && (
+                      <button
+                        type="button"
+                        onClick={() => void onRetryData?.()}
+                        className="px-3 py-1 bg-[#1E4D38] text-white font-mono text-xs font-bold uppercase cursor-pointer"
+                      >
+                        {t('common.retry')}
+                      </button>
+                    )}
+                  </div>
+                ) : filteredCampaigns.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredCampaigns.map((camp) => (
                       <BanknotePlateCard
@@ -1329,6 +1326,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               organizations={organizations}
               totalRaised={totalRaised}
               totalDonations={totalDonations}
+              isDataLoading={isDataLoading}
               showHero={false}
               onDiscover={() => navigateToMode('discover')}
               onFundraise={() => navigate('/fundraising')}
@@ -1342,7 +1340,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
         {/* ══════════════════════════════════════════════════════════════════════════
             VIEW 2: DISCOVER CAUSES (SPACIOUS WIDESCREEN GALLERY)
         ══════════════════════════════════════════════════════════════════════════ */}
-        {!shouldShowCampaignDataState && zoomMode === 'discover' && (
+        {zoomMode === 'discover' && (
           <div className="w-full max-w-[1600px] mx-auto px-6 sm:px-12 lg:px-20 py-8 lg:py-12 space-y-8 animate-in fade-in duration-300">
             
             {/* Header Ribbon with Clear Back Button */}
@@ -1366,7 +1364,9 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               </div>
 
               <span className="font-mono text-xs font-black text-[#1E4D38] dark:text-[#52B788]">
-                {t('explore.count', { count: filteredCampaigns.length })}
+                {isDataLoading
+                  ? t('common.loading')
+                  : t('explore.count', { count: filteredCampaigns.length })}
               </span>
             </div>
 
@@ -1450,7 +1450,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
 
             {/* Widescreen 3-Column Causes Grid (Breathable Banknote Plates) */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredCampaigns.map((camp) => (
+              {!isDataLoading && !dataError && filteredCampaigns.map((camp) => (
                 <BanknotePlateCard
                   key={camp.id}
                   campaign={camp}
@@ -1460,7 +1460,28 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               ))}
             </div>
 
-            {filteredCampaigns.length === 0 && (
+            {isDataLoading && (
+              <p role="status" className="py-10 text-center font-mono text-xs text-zinc-500">
+                {t('common.loading')}
+              </p>
+            )}
+
+            {!isDataLoading && dataError && (
+              <div role="alert" className="p-8 text-center border border-dashed border-red-500/40 font-mono text-xs space-y-3">
+                <p>{dataError}</p>
+                {onRetryData && (
+                  <button
+                    type="button"
+                    onClick={() => void onRetryData()}
+                    className="px-3 py-1 bg-[#1E4D38] text-white font-mono text-xs font-bold uppercase cursor-pointer"
+                  >
+                    {t('common.retry')}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {!isDataLoading && !dataError && filteredCampaigns.length === 0 && (
               <div className="p-16 text-center border border-dashed border-[#26211C]/30 bg-[#F2EADA]/80 dark:bg-[#0E0D0B]/80 font-mono space-y-4">
                 <p className="text-base font-bold text-[#1E4D38] dark:text-[#52B788]">
                   {t('explore.emptyTitle')}
@@ -1489,7 +1510,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
         {/* ══════════════════════════════════════════════════════════════════════════
             VIEW 3: CAUSE DETAIL (SPACIOUS, TRANSPARENT LEDGER, CLEAR ACTIONS)
         ══════════════════════════════════════════════════════════════════════════ */}
-        {!shouldShowCampaignDataState && zoomMode === 'detail' && selectedCampaign && (
+        {zoomMode === 'detail' && selectedCampaign && (
           <div className="w-full max-w-[1500px] mx-auto px-6 sm:px-12 lg:px-20 py-8 lg:py-12 space-y-8 animate-in fade-in duration-300">
             
             {/* Top Navigation Ribbon: CLEAR BACK BUTTON */}
@@ -1500,7 +1521,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 className="px-4 py-2 border border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-xs font-black tracking-widest uppercase flex items-center gap-2 hover:bg-[#163E2C] transition-colors cursor-pointer shadow-xs"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>← BACK TO CAUSES</span>
+                <span>← {t('banknote.backToCauses')}</span>
               </button>
 
               <div className="flex items-center gap-3">
@@ -1535,6 +1556,36 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                       ENGRAVED CAUSE PLATE
                     </div>
                   )}
+                  {zoomMode === 'detail' && !selectedCampaign && (
+                    <div className="mx-auto w-full max-w-3xl px-6 py-16 text-center space-y-4">
+                      <h2 className="font-serif font-black text-3xl text-[#201C18] dark:text-[#F4EFE6]">
+                        {t('campaigns.title')}
+                      </h2>
+                      <p className="font-mono text-sm text-zinc-600 dark:text-zinc-400">
+                        {isDataLoading
+                          ? t('common.loading')
+                          : dataError || t('campaigns.emptyDescription')}
+                      </p>
+                      {!isDataLoading && dataError && onRetryData && (
+                        <button
+                          type="button"
+                          onClick={onRetryData}
+                          className="px-4 py-2 border border-[#1E4D38] text-[#1E4D38] dark:border-[#52B788] dark:text-[#52B788] font-mono text-xs font-bold uppercase cursor-pointer"
+                        >
+                          {t('common.retry')}
+                        </button>
+                      )}
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => navigateToMode('discover')}
+                          className="px-4 py-2 bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706] font-mono text-xs font-bold uppercase cursor-pointer"
+                        >
+                          {t('home.exploreCauses')}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   <div className="absolute inset-0 pointer-events-none intaglio-overlay opacity-40 mix-blend-multiply" />
                   
                   <div className="absolute bottom-3 left-3 px-3 py-1 bg-[#EAE1CF]/95 dark:bg-[#080706]/95 border border-[#26211C] font-mono text-xs font-bold text-[#1E4D38] dark:text-[#52B788]">
@@ -1566,16 +1617,16 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 <div className="p-6 border border-[#26211C]/25 dark:border-[#9A7432]/35 bg-[#FCF9F2]/80 dark:bg-[#1E1A17]/80 space-y-3 font-mono text-xs">
                   <h4 className="font-bold text-[#201C18] dark:text-[#F4EFE6] uppercase flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4 text-[#1E4D38] dark:text-[#52B788]" />
-                    <span>CIVIL SOCIETY ACCREDITATION (ACSO REGISTRY)</span>
+                    <span>{t('banknote.accreditation')}</span>
                   </h4>
                   <div className="grid grid-cols-2 gap-4 text-[11px] text-zinc-600 dark:text-zinc-400">
                     <div>
-                      <span className="block text-zinc-400">REGISTRATION LICENSE:</span>
+                      <span className="block text-zinc-400">{t('banknote.registrationLicense')}:</span>
                       <span className="font-bold text-[#201C18] dark:text-[#F4EFE6]">ACSO-ET-58291/2026</span>
                     </div>
                     <div>
-                      <span className="block text-zinc-400">DISBURSEMENT ESCROW:</span>
-                      <span className="font-bold text-emerald-700 dark:text-emerald-400">TELEBIRR &amp; CBE CLEARING</span>
+                      <span className="block text-zinc-400">{t('banknote.disbursementEscrow')}:</span>
+                      <span className="font-bold text-emerald-700 dark:text-emerald-400">{t('donations.clearingRail')}</span>
                     </div>
                   </div>
                 </div>
@@ -1616,11 +1667,11 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   {/* Quick Metric Ledger */}
                   <div className="grid grid-cols-2 gap-3 font-mono text-xs pt-2">
                     <div className="p-3 border border-[#26211C]/20 bg-[#EAE1CF] dark:bg-[#161411]">
-                      <span className="block text-[10px] text-zinc-500 font-bold uppercase">PATRONS</span>
+                      <span className="block text-[10px] text-zinc-500 font-bold uppercase">{t('common.patrons')}</span>
                       <span className="text-lg font-black">{selectedCampaign.donationsCount || 0}</span>
                     </div>
                     <div className="p-3 border border-[#26211C]/20 bg-[#EAE1CF] dark:bg-[#161411]">
-                      <span className="block text-[10px] text-zinc-500 font-bold uppercase">TARGET GOAL</span>
+                      <span className="block text-[10px] text-zinc-500 font-bold uppercase">{t('common.goal')}</span>
                       <span className="text-lg font-black">{selectedCampaign.goalAmount.toLocaleString()} ETB</span>
                     </div>
                   </div>
@@ -1631,7 +1682,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                     onClick={() => handleOpenPledge(selectedCampaign)}
                     className="w-full py-4 border-2 border-[#1E4D38] bg-[#1E4D38] text-white font-mono text-sm font-black tracking-widest uppercase hover:bg-[#163E2C] transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 active:translate-y-px"
                   >
-                    <span>SUPPORT THIS CAUSE (PLEDGE BIRR)</span>
+                    <span>{t('banknote.supportCause')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
 
@@ -1760,7 +1811,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                       disabled={isSubmittingReport}
                       className="border-2 border-[#1E4D38] bg-[#1E4D38] px-4 py-2.5 font-mono text-xs font-black uppercase text-white transition hover:bg-[#163E2C] disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {isSubmittingReport ? t('common.loading', 'Loading…') : t('explore.submitReport')}
+                      {isSubmittingReport ? t('common.loading') : t('explore.submitReport')}
                     </button>
                   </div>
                   {reportFeedback && (
@@ -1784,7 +1835,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
         {/* ══════════════════════════════════════════════════════════════════════════
             VIEW 4: PLEDGE / UNDERWRITING FLOW (MEMBER 4 - COMPLETE SUPPORT FLOW)
         ══════════════════════════════════════════════════════════════════════════ */}
-        {!shouldShowCampaignDataState && zoomMode === 'pledge' && selectedCampaign && (
+        {zoomMode === 'pledge' && selectedCampaign && (
           <div className="w-full max-w-4xl mx-auto px-6 sm:px-12 py-10 lg:py-16">
             <PledgeWizardPage
               campaign={selectedCampaign}
@@ -1797,6 +1848,25 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               onViewVault={openVault}
               onExploreMore={() => navigateToMode('discover')}
             />
+          </div>
+        )}
+        {zoomMode === 'pledge' && !selectedCampaign && (
+          <div className="mx-auto w-full max-w-3xl px-6 py-16 text-center space-y-4">
+            <h2 className="font-serif font-black text-3xl text-[#201C18] dark:text-[#F4EFE6]">
+              {t('campaigns.underwrite')}
+            </h2>
+            <p className="font-mono text-sm text-zinc-600 dark:text-zinc-400">
+              {isDataLoading
+                ? t('common.loading')
+                : dataError || t('campaigns.emptyDescription')}
+            </p>
+            <button
+              type="button"
+              onClick={() => navigateToMode('discover')}
+              className="px-4 py-2 bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706] font-mono text-xs font-bold uppercase cursor-pointer"
+            >
+              {t('home.exploreCauses')}
+            </button>
           </div>
         )}
 
@@ -1831,7 +1901,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
         {/* ══════════════════════════════════════════════════════════════════════════
             VIEW 6: FIELD IMPACT (COMMUNITY AUDIT & VERIFICATION)
         ══════════════════════════════════════════════════════════════════════════ */}
-        {!shouldShowCampaignDataState && zoomMode === 'impact' && (
+        {zoomMode === 'impact' && (
           <div className="w-full max-w-[1500px] mx-auto px-6 sm:px-12 lg:px-20 py-10 lg:py-16 space-y-8 animate-in fade-in duration-300">
             <div className="border-b border-[#26211C]/20 pb-4">
               <h2 className="font-serif font-black text-3xl text-[#201C18] dark:text-[#F4EFE6]">
@@ -1847,13 +1917,13 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 <div key={c.id} className="p-6 border border-[#26211C]/25 bg-[#F2EADA] dark:bg-[#0E0D0B] space-y-4 font-mono">
                   <div className="flex justify-between text-xs font-bold border-b border-[#26211C]/10 pb-2">
                     <span className="text-[#1E4D38] dark:text-[#52B788]">№ {c.serialCode || 'LW-0421'}</span>
-                    <span className="text-[#1E4D38] dark:text-[#52B788]">ACSO CLEARED</span>
+                    <span className="text-[#1E4D38] dark:text-[#52B788]">{t('impactView.acsoCleared')}</span>
                   </div>
                   <h3 className="font-serif font-bold text-xl text-[#201C18] dark:text-[#F4EFE6]">{c.title}</h3>
                   <p className="text-xs text-zinc-600 dark:text-zinc-300 line-clamp-2">{c.impactMetric}</p>
                   <div className="text-[10px] text-zinc-500 flex justify-between pt-2 border-t border-[#26211C]/10">
-                    <span>LOCATION: {c.location}</span>
-                    <span>BENEFICIARIES: {c.beneficiariesTarget} CITIZENS</span>
+                    <span>{t('impactView.locationLabel', { location: c.location })}</span>
+                    <span>{t('impactView.beneficiariesLabel', { count: c.beneficiariesTarget })}</span>
                   </div>
                 </div>
               ))}
@@ -1864,7 +1934,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
         {/* ══════════════════════════════════════════════════════════════════════════
             VIEW 7: FOUNDATION DESK (MANAGEMENT & PROJECT ENGRAVING)
         ══════════════════════════════════════════════════════════════════════════ */}
-        {!shouldShowCampaignDataState && zoomMode === 'treasury' && (
+        {zoomMode === 'treasury' && (
           <div className="w-full max-w-[1500px] mx-auto px-6 sm:px-12 lg:px-20 py-10 lg:py-16 space-y-8 animate-in fade-in duration-300">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#26211C]/20 pb-4">
               <div>
@@ -1914,13 +1984,13 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
             ) : (
             <div className="p-8 border border-[#26211C]/30 bg-[#F2EADA] dark:bg-[#0E0D0B] space-y-6">
               <h3 className="font-serif font-bold text-2xl text-[#201C18] dark:text-[#F4EFE6]">
-                REGISTER &amp; ENGRAVE NEW CAUSE PLATE
+                {t('createCause.title')}
               </h3>
               
               <form onSubmit={handleCreateCauseSubmit} className="space-y-4 font-mono text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block font-bold text-zinc-600 dark:text-zinc-400 mb-1">PROJECT TITLE:</label>
+                    <label className="block font-bold text-zinc-600 dark:text-zinc-400 mb-1">{t('createCause.projectTitleLabel')}</label>
                     <input
                       type="text"
                       required
@@ -1931,26 +2001,24 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   </div>
 
                   <div>
-                    <label className="block font-bold text-zinc-600 mb-1">SECTOR CATEGORY:</label>
+                    <label className="block font-bold text-zinc-600 mb-1">{t('createCause.sectorLabel')}</label>
                     <select
                       value={newCategory}
                       onChange={(e) => setNewCategory(e.target.value as any)}
                       className="w-full p-2.5 border border-[#26211C]/30 bg-[#F7F2E7] focus:outline-none focus:border-[#1E4D38]"
                     >
-                      <option value="water">CLEAN WATER</option>
-                      <option value="education">EDUCATION</option>
-                      <option value="medical">MEDICAL</option>
-                      <option value="emergency">EMERGENCY</option>
-                      <option value="environment">ENVIRONMENT</option>
-                      <option value="community">COMMUNITY</option>
-                      <option value="other">OTHER</option>
+                      {CAMPAIGN_CATEGORIES.filter((category) => category.id !== 'all').map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {t(`categories.${category.id}`)}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="block font-bold text-zinc-600 mb-1">FUNDING GOAL (ETB):</label>
+                    <label className="block font-bold text-zinc-600 mb-1">{t('createCause.fundingGoalLabel')}</label>
                     <input
                       type="number"
                       required
@@ -1962,7 +2030,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   </div>
 
                   <div>
-                    <label className="block font-bold text-zinc-600 mb-1">GEOGRAPHIC LOCATION:</label>
+                    <label className="block font-bold text-zinc-600 mb-1">{t('createCause.locationLabel')}</label>
                     <input
                       type="text"
                       required
@@ -1973,7 +2041,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                   </div>
 
                   <div>
-                    <label className="block font-bold text-zinc-600 mb-1">TARGET BENEFICIARIES:</label>
+                    <label className="block font-bold text-zinc-600 mb-1">{t('createCause.beneficiariesLabel')}</label>
                     <input
                       type="number"
                       required
@@ -1985,7 +2053,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-bold text-zinc-600 mb-1">PROJECT STORY &amp; MILESTONE PLAN:</label>
+                  <label className="block font-bold text-zinc-600 mb-1">{t('createCause.storyLabel')}</label>
                   <textarea
                     rows={4}
                     required
@@ -2019,9 +2087,9 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-0.5">
             <span className="font-bold text-[#201C18] dark:text-[#F4EFE6] block">
-              LEWEGENE CIVIC BANKNOTE · NATIONAL SOLIDARITY REPOSITORY
+              {t('canvasFooter.brandLine', { appName: APP_NAME.toUpperCase() })}
             </span>
-            <span>ACSO ACCREDITATION NO. ET-58291 · ALL RIGHTS RESERVED 2026 / ፳፻፲፰</span>
+            <span>{t('canvasFooter.legalLine')}</span>
           </div>
 
           <div className="flex items-center gap-6">
@@ -2030,16 +2098,16 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
               onClick={() => setShowAcsoModal(true)}
               className="hover:text-[#1E4D38] dark:hover:text-[#52B788] cursor-pointer"
             >
-              ACSO REGULATION
+              {t('canvasFooter.acsoRegulation')}
             </button>
             <button
               type="button"
               onClick={onOpenScholarxiv}
               className="hover:text-[#1E4D38] dark:hover:text-[#52B788] cursor-pointer"
             >
-              ACADEMIC ARCHIVE
+              {t('canvasFooter.academicArchive')}
             </button>
-            <span className="text-[#1E4D38] dark:text-[#52B788] font-bold">100% COMMUNITY OWNED</span>
+            <span className="text-[#1E4D38] dark:text-[#52B788] font-bold">{t('canvasFooter.communityOwned')}</span>
           </div>
         </div>
       </footer>

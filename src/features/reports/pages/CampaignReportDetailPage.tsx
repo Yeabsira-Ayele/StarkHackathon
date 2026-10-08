@@ -32,7 +32,7 @@ export const CampaignReportDetailPage: React.FC<CampaignReportDetailPageProps> =
           className="flex items-center gap-1.5 text-xs text-[#73685B] hover:text-[#14110E] dark:hover:text-[#FAF6EE] mb-2 cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
-          {t('common.back', 'ወደ ኋላ')}
+          {t('common.back')}
         </button>
       )}
 
@@ -69,7 +69,7 @@ export const CampaignReportDetailPage: React.FC<CampaignReportDetailPageProps> =
               የተላለፈ መጠን
             </span>
             <p className="font-mono font-bold text-base text-[#1E4D38] dark:text-[#52B788]">
-              {selectedRecord.disbursedAmount.toLocaleString()} {t('common.currency', 'ብር')}
+              {selectedRecord.disbursedAmount.toLocaleString()} {t('common.currency')}
             </p>
           </div>
 

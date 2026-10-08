@@ -3,6 +3,7 @@ import { ContributionCertificate } from '../../types/index.ts';
 import { ShieldCheck, Award, Download, Share2, Check, ArrowRight, X } from 'lucide-react';
 import { Button } from '../ui/Button.tsx';
 import { toGeezNumber } from '../../services/utils/currencyUtils.ts';
+import { APP_NAME } from '../../data/content.ts';
 
 export interface ContributionCertificateModalProps {
   certificate: ContributionCertificate | null;
@@ -102,7 +103,7 @@ export const ContributionCertificateModal: React.FC<ContributionCertificateModal
                 ARCHIVAL CONTRIBUTION CERTIFICATE
               </p>
               <h2 className="text-3xl sm:text-4xl font-display font-black tracking-tight text-[#26211C] dark:text-[#F4EFE6] leading-tight banknote-engraved-text">
-                LEWEGENE · ለወገን
+                <span className="notranslate">{APP_NAME.toUpperCase()}</span> · ለወገን
               </h2>
               <p className="text-xs font-serif italic text-zinc-600 dark:text-zinc-400">
                 Official acknowledgment of verified civic underwriting and direct philanthropic impact.

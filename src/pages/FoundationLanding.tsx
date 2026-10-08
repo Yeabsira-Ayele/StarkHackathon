@@ -1,4 +1,5 @@
 import React from 'react';
+import { APP_NAME } from '../data/content.ts';
 import { Button } from '../components/ui/Button.tsx';
 import { Card } from '../components/ui/Card.tsx';
 import {
@@ -40,7 +41,7 @@ export const FoundationLanding: React.FC<FoundationLandingProps> = ({
         <div className="relative z-10 max-w-3xl space-y-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#B08A45]/50 bg-[#173C32]/90 text-[#C5A059] text-xs font-semibold tracking-wider uppercase font-mono">
             <Building2 className="w-4 h-4" />
-            <span>Lewegene Foundation Portal · Verified Philanthropy</span>
+            <span>{APP_NAME} Foundation Portal · Verified Philanthropy</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-display font-extrabold tracking-tight text-white leading-tight">
@@ -133,7 +134,7 @@ export const FoundationLanding: React.FC<FoundationLandingProps> = ({
       <section className="bg-surface rounded-2xl border border-border p-8 sm:p-12 shadow-xs space-y-8">
         <div className="max-w-2xl space-y-1">
           <h2 className="text-xl sm:text-2xl font-display font-bold text-primary">
-            How Foundations Launch on Lewegene
+            How Foundations Launch on {APP_NAME}
           </h2>
           <p className="text-xs sm:text-sm text-zinc-500">
             A frictionless, 3-step pathway from registration to campaign publication

@@ -29,10 +29,10 @@ export const DonorInfoForm: React.FC<DonorInfoFormProps> = ({
     <div className="space-y-6 font-mono text-xs">
       <div>
         <h3 className="font-serif font-black text-xl text-[#14110E] dark:text-[#FFFFFF]">
-          {t('donations.step2', 'Donor Information')}
+          {t('donations.step2')}
         </h3>
         <p className="text-zinc-600 dark:text-zinc-400 mt-1">
-          {t('donations.donorInfoDesc', 'Enter your name for your official contribution certificate or choose to remain anonymous.')}
+          {t('donations.donorInfoDesc')}
         </p>
       </div>
 
@@ -41,14 +41,14 @@ export const DonorInfoForm: React.FC<DonorInfoFormProps> = ({
         <div>
           <label className="block font-bold uppercase text-[#14110E] dark:text-[#F4EFE6] mb-1.5 flex items-center gap-1.5">
             <User className="w-3.5 h-3.5 text-[#1E4D38] dark:text-[#52B788]" />
-            <span>{t('donations.patronName', 'Donor Full Name')}:</span>
+            <span>{t('donations.patronName')}:</span>
           </label>
           <input
             type="text"
             disabled={isAnonymous}
-            value={isAnonymous ? t('donations.anonymousPatron', 'Anonymous Patron') : donorName}
+            value={isAnonymous ? t('donations.anonymousPatron') : donorName}
             onChange={(e) => onChangeName(e.target.value)}
-            placeholder={t('donations.donorNamePlaceholder', 'e.g. Almaz Bekele')}
+            placeholder={t('donations.donorNamePlaceholder')}
             className="w-full p-3 border-2 border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#FFFDF9] dark:bg-[#181512] text-[#14110E] dark:text-[#FFFFFF] disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788] transition-colors"
           />
 
@@ -63,10 +63,10 @@ export const DonorInfoForm: React.FC<DonorInfoFormProps> = ({
             />
             <label htmlFor="anonymous-checkbox" className="cursor-pointer text-[#14110E] dark:text-[#E8DEC8]">
               <span className="font-black uppercase block">
-                {t('donations.anonymous', 'Keep my contribution anonymous')}
+                {t('donations.anonymous')}
               </span>
               <span className="text-[11px] text-zinc-500 block mt-0.5">
-                {t('donations.anonymousHint', 'Your name will not appear on the public donor roll or cause ledger.')}
+                {t('donations.anonymousHint')}
               </span>
             </label>
           </div>
@@ -76,17 +76,17 @@ export const DonorInfoForm: React.FC<DonorInfoFormProps> = ({
         <div>
           <label className="block font-bold uppercase text-[#14110E] dark:text-[#F4EFE6] mb-1.5 flex items-center gap-1.5">
             <Mail className="w-3.5 h-3.5 text-[#1E4D38] dark:text-[#52B788]" />
-            <span>{t('donations.emailLabel', 'Email Address (optional)')}:</span>
+            <span>{t('donations.emailLabel')}:</span>
           </label>
           <input
             type="email"
             value={donorEmail}
             onChange={(e) => onChangeEmail(e.target.value)}
-            placeholder={t('donations.emailPlaceholder', 'e.g. donor@gmail.com')}
+            placeholder={t('donations.emailPlaceholder')}
             className="w-full p-3 border-2 border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#FFFDF9] dark:bg-[#181512] text-[#14110E] dark:text-[#FFFFFF] focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788] transition-colors"
           />
           <span className="text-[10px] text-zinc-500 mt-1 block">
-            {t('donations.emailHint', 'Optional. Used for digital contribution certificate and milestone updates.')}
+            {t('donations.emailHint')}
           </span>
         </div>
 
@@ -94,13 +94,13 @@ export const DonorInfoForm: React.FC<DonorInfoFormProps> = ({
         <div>
           <label className="block font-bold uppercase text-[#14110E] dark:text-[#F4EFE6] mb-1.5 flex items-center gap-1.5">
             <MessageSquare className="w-3.5 h-3.5 text-[#1E4D38] dark:text-[#52B788]" />
-            <span>{t('donations.message', 'Solidarity Message or Note')}:</span>
+            <span>{t('donations.message')}:</span>
           </label>
           <textarea
             rows={3}
             value={donorMessage}
             onChange={(e) => onChangeMessage(e.target.value)}
-            placeholder={t('donations.messagePlaceholder', 'Write words of encouragement or a prayer for the beneficiary...')}
+            placeholder={t('donations.messagePlaceholder')}
             className="w-full p-3 border-2 border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#FFFDF9] dark:bg-[#181512] text-[#14110E] dark:text-[#FFFFFF] focus:outline-none focus:border-[#1E4D38] dark:focus:border-[#52B788] transition-colors"
           />
         </div>

@@ -46,7 +46,7 @@ export const Drafts: React.FC<PageProps> = ({ go, toast }) => {
                     <Button
                       size="sm"
                       isLoading={deletingId === f.id}
-                      loadingLabel={t('common.loading', 'Loading…')}
+                      loadingLabel={t('common.loading')}
                       onClick={async () => {
                         setDeletingId(f.id);
                         setActionError(null);

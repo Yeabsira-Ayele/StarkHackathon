@@ -1,4 +1,5 @@
 import React from 'react';
+import { APP_NAME } from '../data/content.ts';
 import { Campaign } from '../types/index.ts';
 import { Card } from '../components/ui/Card.tsx';
 import { Button } from '../components/ui/Button.tsx';
@@ -143,10 +144,10 @@ export const FoundationImpact: React.FC<FoundationImpactProps> = ({
       <div className="p-6 rounded-xl border border-[#B08A45]/30 bg-surface space-y-3">
         <h3 className="text-sm font-bold text-primary flex items-center gap-2">
           <FileCheck className="w-4 h-4 text-accent" />
-          <span>The Lewegene Transparency Standard</span>
+          <span>The {APP_NAME} Transparency Standard</span>
         </h3>
         <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          Unlike traditional crowdfunding, Lewegene requires foundations to submit itemized receipts and photographic evidence before milestone tranches are unlocked. Donors receive automated notifications and can inspect public audit receipts at any time.
+          Unlike traditional crowdfunding, {APP_NAME} requires foundations to submit itemized receipts and photographic evidence before milestone tranches are unlocked. Donors receive automated notifications and can inspect public audit receipts at any time.
         </p>
       </div>
 

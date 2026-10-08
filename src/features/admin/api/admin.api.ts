@@ -3,6 +3,7 @@ import { campaignApi } from '../../../services/api/campaignApi.ts';
 import { Campaign } from '../../campaigns/types/campaign.types';
 import { Organization } from '../../../types/index.ts';
 import {
+  ActivityEvent,
   ActivityType,
   AdminAccount,
   AdminDonation,
@@ -30,10 +31,27 @@ interface BackendOrganization {
   verificationStatus: 'pending' | 'approved' | 'changes_requested' | 'rejected';
   createdAt: string;
   reviewNotes?: string;
-};
+}
+
+function readArray<T>(payload: unknown, keys: string[]): T[] {
+  if (!payload || typeof payload !== 'object') return [];
+  const record = payload as Record<string, unknown>;
+  const candidates = [record, record.data as Record<string, unknown> | undefined].filter(Boolean) as Record<string, unknown>[];
+
+  for (const candidate of candidates) {
+    for (const key of keys) {
+      const value = candidate[key];
+      if (Array.isArray(value)) return value as T[];
+      if (value && typeof value === 'object' && Array.isArray((value as Record<string, unknown>).items)) {
+        return (value as Record<string, unknown>).items as T[];
+      }
+    }
+  }
+  return [];
+}
 
 function toOrgApplication(org: BackendOrganization): OrgApplication {
-  const account = org.payoutAccounts[0];
+  const account = org.payoutAccounts?.[0];
   return {
     id: org._id,
     name: org.name,
@@ -44,16 +62,16 @@ function toOrgApplication(org: BackendOrganization): OrgApplication {
     description: org.description,
     logoUrl: org.logo,
     representative: {
-      name: org.authorizedRepresentative.name,
+      name: org.authorizedRepresentative?.name || 'Authorized representative',
       role: 'Authorized representative',
-      phone: org.authorizedRepresentative.phone,
+      phone: org.authorizedRepresentative?.phone || org.phone,
     },
     bank: {
       bank: account?.bankName || '',
       accountNumber: account?.accountNumber || '',
       accountName: account?.accountHolderName || '',
     },
-    documents: org.verificationDocuments.map((document) => document.url),
+    documents: org.verificationDocuments?.map((document) => document.url).filter(Boolean) || [],
     status: org.verificationStatus === 'changes_requested' ? 'needs_changes' : org.verificationStatus,
     submittedAt: org.createdAt,
     activeCauses: 0,
@@ -96,17 +114,89 @@ function unavailable(feature: string): never {
   throw new Error(`${feature} is not yet supported by the MongoDB backend.`);
 }
 
-async function getSnapshot(): Promise<AdminSnapshot> {
-  const response = await api.get<{ data: { items: BackendOrganization[] } }>('/admin/organizations');
+function normalizeDonation(item: Record<string, unknown>): AdminDonation {
+  const status = String(item.paymentStatus ?? item.status ?? 'completed').toLowerCase();
+  const amount = Number(item.amount ?? 0);
+  const campaignId = typeof item.campaignId === 'string'
+    ? item.campaignId
+    : typeof item.campaignId === 'object' && item.campaignId && '_id' in item.campaignId
+      ? String((item.campaignId as Record<string, unknown>)._id ?? '')
+      : String(item.campaignId ?? '');
+  const reference = String(item.reference ?? item.transactionId ?? item.receiptKey ?? item.certificateId ?? '');
+  const donationId = String(item.id ?? item._id ?? (reference || campaignId || String(Math.random())));
+
   return {
-    users: [],
-    donations: [],
+    id: donationId,
+    campaignId,
+    donorName: String(item.donorName ?? 'Anonymous'),
+    donorEmail: String(item.donorEmail ?? ''),
+    anonymous: Boolean(item.anonymous),
+    amount,
+    bank: String(item.bank ?? item.paymentMethod ?? 'Bank transfer'),
+    accountNumber: String(item.accountNumber ?? ''),
+    reference,
+    status: status === 'failed' || status === 'rejected' ? 'failed' : 'successful',
+    createdAt: String(item.createdAt ?? new Date().toISOString()),
+  };
+}
+
+function normalizeUser(item: Record<string, unknown>): PlatformUser {
+  const role = String(item.role ?? 'USER');
+  const accountType = String(item.accountType ?? (role === 'ORGANIZATION' ? 'organization' : 'individual')); 
+  const fundraisers = Array.isArray(item.fundraisers) ? item.fundraisers.map((fundraiser) => ({
+    id: String((fundraiser as Record<string, unknown>).id ?? (fundraiser as Record<string, unknown>)._id ?? ''),
+    title: String((fundraiser as Record<string, unknown>).title ?? ''),
+    status: String((fundraiser as Record<string, unknown>).status ?? 'pending'),
+  })) : [];
+
+  return {
+    id: String(item.id ?? item._id ?? ''),
+    name: String(item.name ?? 'User'),
+    email: String(item.email ?? ''),
+    phone: String(item.phone ?? ''),
+    accountType: accountType === 'organization' ? 'organization' : 'individual',
+    status: String(item.status ?? 'active') === 'suspended' || String(item.status ?? 'active') === 'banned' ? 'suspended' : 'active',
+    joinedAt: String(item.joinedAt ?? item.createdAt ?? new Date().toISOString()),
+    fundraisers,
+  };
+}
+
+function normalizeActivity(item: Record<string, unknown>): ActivityEvent {
+  return {
+    id: String(item.id ?? item._id ?? `${String(item.type ?? 'event')}-${String(item.at ?? item.createdAt ?? Date.now())}`),
+    type: (item.type as ActivityType) ?? 'admin_action',
+    message: String(item.message ?? ''),
+    actor: String(item.actor ?? 'System'),
+    actorIsAdmin: Boolean(item.actorIsAdmin),
+    refId: item.refId ? String(item.refId) : undefined,
+    at: String(item.at ?? item.createdAt ?? new Date().toISOString()),
+  };
+}
+
+async function getSnapshot(): Promise<AdminSnapshot> {
+  const [usersResult, donationsResult, organizationsResult, activityResult] = await Promise.allSettled([
+    api.get('/admin/users'),
+    api.get('/admin/donations'),
+    api.get('/admin/organizations'),
+    api.get('/admin/activity'),
+  ]);
+
+  const users = usersResult.status === 'fulfilled' ? readArray<Record<string, unknown>>(usersResult.value.data, ['users', 'items']).map(normalizeUser) : [];
+  const donations = donationsResult.status === 'fulfilled' ? readArray<Record<string, unknown>>(donationsResult.value.data, ['donations', 'items']).map(normalizeDonation) : [];
+  const organizations = organizationsResult.status === 'fulfilled'
+    ? readArray<Record<string, unknown>>(organizationsResult.value.data, ['items', 'organizations']).map((organization) => toOrgApplication(organization as unknown as BackendOrganization))
+    : [];
+  const activity = activityResult.status === 'fulfilled' ? readArray<Record<string, unknown>>(activityResult.value.data, ['activity', 'items']).map(normalizeActivity) : [];
+
+  return {
+    users,
+    donations,
     reports: [],
-    organizations: response.data.data.items.map(toOrgApplication),
-    activity: [],
+    organizations,
+    activity,
     admins: [],
     currentAdminId: '',
-    unavailableSections: ['users', 'donations', 'reports', 'activity', 'admins', 'profile'],
+    unavailableSections: ['reports', 'admins', 'profile'],
   };
 }
 
@@ -115,10 +205,6 @@ export const adminApi = {
 
   async logEvent(_type: ActivityType, _message: string, _refId?: string): Promise<AdminSnapshot> {
     return unavailable('Admin activity logging');
-  },
-
-  async decideDonation(_id: string, _decision: 'confirmed' | 'rejected', _note?: string): Promise<AdminSnapshot> {
-    return unavailable('Donation moderation');
   },
 
   async updateReport(_id: string, _status: AdminReport['status'], _note?: string): Promise<AdminSnapshot> {
@@ -142,7 +228,7 @@ export const adminApi = {
   },
 
   async setUserStatus(id: string, status: PlatformUser['status']): Promise<AdminSnapshot> {
-    await api.patch(`/users/${id}/status`, { status });
+    await api.patch(`/admin/users/${id}/status`, { status });
     return getSnapshot();
   },
 
@@ -159,13 +245,17 @@ export const adminApi = {
   },
 
   async getAdminStats(): Promise<AdminStats> {
-    const campaigns = await campaignApi.getAllCampaigns();
+    const dashboard = await api.get('/admin/dashboard');
+    const data = dashboard.data?.data ?? dashboard.data ?? {};
+    const fundraising = data.fundraising ?? {};
+    const donations = data.donations ?? {};
+
     return {
-      pendingCount: campaigns.filter((campaign) => campaign.status === 'pending').length,
-      approvedCount: campaigns.filter((campaign) => campaign.status === 'approved').length,
-      rejectedCount: campaigns.filter((campaign) => campaign.status === 'rejected').length,
-      totalVolumeETB: campaigns.reduce((total, campaign) => total + campaign.raisedAmount, 0),
-      activeFoundations: new Set(campaigns.filter((campaign) => campaign.status === 'approved').map((campaign) => campaign.organizationId)).size,
+      pendingCount: Number(fundraising.pendingCampaigns ?? 0),
+      approvedCount: Number(fundraising.approvedCampaigns ?? 0),
+      rejectedCount: Number(fundraising.rejectedCampaigns ?? 0),
+      totalVolumeETB: Number(donations.totalAmount ?? 0),
+      activeFoundations: Number(data.organizations?.total ?? 0),
     };
   },
 
@@ -174,12 +264,8 @@ export const adminApi = {
   },
 
   async moderateCampaign(campaignId: string, action: ModerationAction, reason?: string): Promise<{ success: boolean }> {
-    const status = action === 'approve' ? 'approved' : action === 'request_changes' ? 'needs_changes' : 'rejected';
-    if (action === 'request_changes') {
-      await api.patch(`/admin/campaigns/${campaignId}`, { status: 'changes_requested', reason });
-    } else {
-      await api.patch(`/admin/campaigns/${campaignId}`, { status, reason });
-    }
+    const status = action === 'approve' ? 'approved' : action === 'request_changes' ? 'changes_requested' : 'rejected';
+    await api.patch(`/admin/campaigns/${campaignId}`, { status, reason });
     return { success: true };
   },
 };

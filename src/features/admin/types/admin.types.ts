@@ -63,7 +63,7 @@ export interface PlatformUser {
   fundraisers: { id: string; title: string; status: string }[];
 }
 
-export type DonationStatus = 'pending' | 'confirmed' | 'rejected';
+export type DonationStatus = 'successful' | 'failed';
 
 export interface AdminDonation {
   id: string;
@@ -77,7 +77,6 @@ export interface AdminDonation {
   reference: string;
   status: DonationStatus;
   createdAt: string;
-  decisionNote?: string;
 }
 
 export type ReportStatus = 'pending' | 'reviewed' | 'resolved' | 'dismissed';

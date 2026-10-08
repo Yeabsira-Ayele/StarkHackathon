@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Campaign } from '../../types/index.ts';
 import { BanknoteRulerGauge } from './BanknoteArtwork.tsx';
 import { ShieldCheck, MapPin, ArrowRight } from 'lucide-react';
+import { APP_NAME } from '../../data/content.ts';
 
 export interface BanknotePlateCardProps {
   campaign: Campaign;
@@ -31,9 +32,9 @@ export const BanknotePlateCard: React.FC<BanknotePlateCardProps> = ({
   const percent = Math.min(Math.round((raised / goal) * 100), 100);
 
   const serial = campaign.serialCode || `№ ${String(campaign.id || '').replace('camp-', '00')}`;
-  const categoryLabel = (campaign.category || 'CIVIC').toUpperCase();
-  const locationLabel = (campaign.location || 'ADDIS ABABA, ETHIOPIA').toUpperCase();
-  const orgName = campaign.organizationName || campaign.creatorName || 'Accredited Civil Society Org';
+  const categoryLabel = t(`categories.${campaign.category || 'other'}`).toUpperCase();
+  const locationLabel = (campaign.location || t('campaigns.defaultLocation')).toUpperCase();
+  const orgName = campaign.organizationName || campaign.creatorName || t('campaigns.accreditedOrg');
 
   return (
     <div
@@ -58,7 +59,7 @@ export const BanknotePlateCard: React.FC<BanknotePlateCardProps> = ({
       {/* ─── TOP BANKNOTE PANEL HEADER ─── */}
       <div className="relative z-10 flex items-center justify-between border-b border-[#26211C]/25 dark:border-[#4A3E33] pb-2 mb-3">
         <div className="flex items-center gap-1.5 font-mono text-[10px] font-black tracking-widest text-[#26211C] dark:text-[#E8DEC8] uppercase">
-          <span>PROJECT</span>
+          <span>{t('banknote.project')}</span>
           <span className="text-[#1E4D38] dark:text-[#52B788] font-bold">№ {serial}</span>
         </div>
 
@@ -76,11 +77,11 @@ export const BanknotePlateCard: React.FC<BanknotePlateCardProps> = ({
           </span>
           {campaign.verifiedOrganization && (
             <span
-              title="Federal ACSO Verified Organization"
+              title={t('banknote.acsoVerified')}
               className="flex items-center gap-1 text-[9px] font-mono font-bold text-[#1E4D38] dark:text-[#52B788]"
             >
               <ShieldCheck className="w-3 h-3 text-[#1E4D38] dark:text-[#52B788]" />
-              <span>ACSO VERIFIED</span>
+              <span>{t('banknote.acsoVerified')}</span>
             </span>
           )}
           <span className="font-mono text-[9px] font-bold text-zinc-500">2026</span>
@@ -98,8 +99,8 @@ export const BanknotePlateCard: React.FC<BanknotePlateCardProps> = ({
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center text-zinc-600 dark:text-zinc-400 font-mono text-xs">
-            <span className="font-display font-black text-lg text-[#1E4D38] dark:text-[#52B788]">LEWEGENE</span>
-            <span>ENGRAVED ARCHIVE</span>
+            <span className="notranslate font-display font-black text-lg text-[#1E4D38] dark:text-[#52B788]">{APP_NAME.toUpperCase()}</span>
+            <span>{t('banknote.engravedArchive')}</span>
           </div>
         )}
 
@@ -148,7 +149,7 @@ export const BanknotePlateCard: React.FC<BanknotePlateCardProps> = ({
             }}
             className="w-full py-2 px-3 border border-[#1E4D38] bg-[#1E4D38] text-white dark:bg-[#1E4D38] dark:border-[#52B788] dark:text-white font-mono text-xs font-black tracking-widest uppercase flex items-center justify-center gap-1.5 hover:bg-[#163E2C] transition-colors cursor-pointer shadow-xs active:translate-y-px"
           >
-            <span>VIEW CAUSE</span>
+            <span>{t('banknote.viewCause')}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         ) : (
@@ -165,7 +166,7 @@ export const BanknotePlateCard: React.FC<BanknotePlateCardProps> = ({
               }}
               className="flex-1 py-2 px-3 border border-[#1E4D38] bg-[#1E4D38] text-white dark:bg-[#1E4D38] dark:border-[#52B788] dark:text-white font-mono text-xs font-black tracking-widest uppercase flex items-center justify-center gap-1.5 hover:bg-[#163E2C] transition-colors cursor-pointer shadow-xs active:translate-y-px"
             >
-              <span>SUPPORT THIS CAUSE</span>
+              <span>{t('banknote.supportCauseShort')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
 
@@ -176,9 +177,9 @@ export const BanknotePlateCard: React.FC<BanknotePlateCardProps> = ({
                 onSelect(campaign);
               }}
               className="py-2 px-2.5 border border-[#26211C] dark:border-[#4A3E33] bg-[#EFE8D8] dark:bg-[#26201B] text-[#201C18] dark:text-[#E8DEC8] font-mono text-[10px] font-bold uppercase hover:bg-[#E5DDCB] transition-colors cursor-pointer"
-              title="Examine complete details and audit report"
+              title={t('common.viewDetails')}
             >
-              DETAILS
+              {t('common.viewDetails')}
             </button>
           </>
         )}
@@ -187,8 +188,8 @@ export const BanknotePlateCard: React.FC<BanknotePlateCardProps> = ({
       {/* ─── BOTTOM SERIAL FOOTER ─── */}
       <div className="relative z-10 mt-2 flex justify-between items-center text-[8px] font-mono text-zinc-500 tracking-wider">
         <span>{serial}</span>
-        <span>{campaign.donationsCount || 0} PATRONS</span>
-        <span>ACSO CLEARING · ፳፻፲፰</span>
+        <span>{campaign.donationsCount || 0} {t('banknote.patrons')}</span>
+        <span>{t('banknote.acsoClearing')} · ፳፻፲፰</span>
       </div>
     </div>
   );

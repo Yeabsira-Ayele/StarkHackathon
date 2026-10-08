@@ -1,6 +1,7 @@
 import React from 'react';
 import { Award, HeartHandshake, GraduationCap, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { resolveLanguage } from '../../../i18n/index.ts';
 import { PatronBadge } from '../types/profile.types';
 
 interface BadgesListProps {
@@ -9,7 +10,7 @@ interface BadgesListProps {
 
 export const BadgesList: React.FC<BadgesListProps> = ({ badges }) => {
   const { i18n } = useTranslation();
-  const lang = (i18n.language as 'am' | 'en' | 'om') || 'am';
+  const lang = resolveLanguage(i18n.language);
 
   const renderIcon = (name: string) => {
     switch (name) {

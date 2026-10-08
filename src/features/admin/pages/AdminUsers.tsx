@@ -21,7 +21,7 @@ export const AdminUsers: React.FC = () => {
     const dons = s.donations.filter((d) => d.donorEmail === email);
     return {
       dons,
-      total: dons.filter((d) => d.status === 'confirmed').reduce((a, d) => a + d.amount, 0),
+      total: dons.filter((d) => d.status === 'successful').reduce((a, d) => a + d.amount, 0),
       reports: s.reports.filter((r) => r.reporterId === id),
     };
   };

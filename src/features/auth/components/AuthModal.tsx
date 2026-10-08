@@ -3,6 +3,7 @@ import { X, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
+import { APP_NAME } from '../../../data/content.ts';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -51,19 +52,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <div className="flex items-center gap-2 text-[#1E4D38] dark:text-[#52B788] mb-1">
           <ShieldCheck className="w-5 h-5" />
           <span className="text-[11px] font-bold uppercase tracking-wider">
-            {t('auth.portalLabel', 'Lewegene Citizen Solidarity Portal')}
+            {t('auth.portalLabel', { appName: APP_NAME })}
           </span>
         </div>
 
         <h2 className="text-xl font-serif font-bold text-[#14110E] dark:text-[#FAF6EE] mb-1">
           {mode === 'login'
-            ? t('auth.modalLoginTitle', 'Sign in to your account')
-            : t('auth.modalRegisterTitle', 'Open a new patron account')}
+            ? t('auth.modalLoginTitle')
+            : t('auth.modalRegisterTitle')}
         </h2>
         <p className="text-xs text-[#73685B] dark:text-[#A89E90] mb-6">
           {description ?? (mode === 'login'
-            ? t('auth.modalLoginDesc', 'Manage your donation certificates and contributions')
-            : t('auth.modalRegisterDesc', 'Support accredited civil society donation projects directly'))}
+            ? t('auth.modalLoginDesc')
+            : t('auth.modalRegisterDesc'))}
         </p>
 
         {mode === 'login' ? (

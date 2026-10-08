@@ -1,6 +1,7 @@
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { useTranslation } from 'react-i18next';
+import { resolveLanguage } from '../../../i18n/index.ts';
 import { SectorBreakdown } from '../types/reports.types';
 
 interface FinancialBreakdownChartProps {
@@ -15,7 +16,7 @@ export const FinancialBreakdownChart: React.FC<FinancialBreakdownChartProps> = (
   selectedSector,
 }) => {
   const { t, i18n } = useTranslation();
-  const lang = (i18n.language as 'am' | 'en' | 'om') || 'am';
+  const lang = resolveLanguage(i18n.language);
 
   const chartData = breakdowns.map((b) => ({
     name: b.label[lang] || b.label.am,
@@ -108,7 +109,7 @@ export const FinancialBreakdownChart: React.FC<FinancialBreakdownChartProps> = (
                         {b.percentage}%
                       </p>
                       <p className="text-[10px] text-[#73685B] dark:text-[#A89E90] font-mono">
-                        {b.totalAmountETB.toLocaleString()} {t('common.currency', 'ብር')}
+                        {b.totalAmountETB.toLocaleString()} {t('common.currency')}
                       </p>
                     </div>
                   </div>

@@ -40,7 +40,7 @@ export const AdminStatsBar: React.FC<AdminStatsBarProps> = ({ stats }) => {
           <span className="text-[10px] font-bold uppercase tracking-wider">የተሰበሰበ ድምር</span>
         </div>
         <p className="text-xl font-serif font-bold text-[#14110E] dark:text-[#FAF6EE]">
-          {(stats.totalVolumeETB / 1000000).toFixed(1)}M {t('common.currency', 'ብር')}
+          {(stats.totalVolumeETB / 1000000).toFixed(1)}M {t('common.currency')}
         </p>
         <p className="text-[10px] text-[#73685B] dark:text-[#A89E90] mt-0.5">በብሔራዊ ኤስክሮ የተጣራ</p>
       </div>

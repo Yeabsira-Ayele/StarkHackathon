@@ -17,9 +17,30 @@ export const FundraiserManagement: React.FC<PageProps & { id: string }> = ({ id,
   const [actionError, setActionError] = useState<string | null>(null);
   const { data: f, isLoading, error, refresh } = useFundraiser(id, reload);
 
-  if (isLoading) return <Loading message="Loading fundraiser…" />;
-  if (error) return <ErrorState message={error.message} onRetry={() => void refresh()} />;
-  if (!f) return <p className="text-sm text-[#1E4D38] dark:text-[#52B788]">This fundraiser could not be found.</p>;
+  if (isLoading) {
+    return (
+      <div className="space-y-5">
+        <h1 className="text-3xl font-serif font-black uppercase text-[#14110E] dark:text-[#F4EFE6]">Manage fundraiser</h1>
+        <Loading message="Loading fundraiser…" />
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="space-y-5">
+        <h1 className="text-3xl font-serif font-black uppercase text-[#14110E] dark:text-[#F4EFE6]">Manage fundraiser</h1>
+        <ErrorState message={error.message} onRetry={() => void refresh()} />
+      </div>
+    );
+  }
+  if (!f) {
+    return (
+      <div className="space-y-5">
+        <h1 className="text-3xl font-serif font-black uppercase text-[#14110E] dark:text-[#F4EFE6]">Manage fundraiser</h1>
+        <p className="text-sm text-[#1E4D38] dark:text-[#52B788]">This fundraiser could not be found.</p>
+      </div>
+    );
+  }
 
   const canEdit = EDITABLE.includes(f.status);
 

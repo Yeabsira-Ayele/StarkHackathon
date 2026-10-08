@@ -1,6 +1,5 @@
 {
   "common": {
-    "appName": "ለወገን",
     "appTagline": "የኢትዮጵያ የሕዝብ ትብብርና ድጋፍ ሰነድ",
     "motto": "ለወገን ደራሽ ወገን ነው።",
     "donate": "አሁኑኑ ይለግሱ",
@@ -12,6 +11,9 @@
     "continue": "ይቀጥሉ",
     "dismiss": "ማሳወቂያውን ዝጋ",
     "loading": "በመጫን ላይ...",
+    "loadingSubmessage": "ከ{{appName}} ማኅበረሰብ አውታረ መረብ ጋር በመገናኘት ላይ",
+    "networkUnavailable": "ከ{{appName}} API ጋር መገናኘት አልተቻለም። የጀርባ አገልጋዩን ያስነሱና VITE_API_BASE_URL ያረጋግጡ።",
+    "networkError": "ያልተጠበቀ የአውታረ መረብ ስህተት ተከስቷል።",
     "error": "ስህተት ተከስቷል",
     "retry": "እንደገና ይሞክሩ",
     "empty": "ምንም መረጃ አልተገኘም",
@@ -44,7 +46,7 @@
     "publishCause": "አዲስ ምክንያት ይፋ አድርግ",
     "acsoVerification": "የሲቪል ማኅበራት ኤጀንሲ ተቋማዊ ማረጋገጫ",
     "auditedReporting": "በኦዲት የተረጋገጠ የምዕራፍ ሪፖርት",
-    "rights": "ለወገን በጎ አድራጎት። መብቱ በህግ የተጠበቀ ነው።",
+    "rights": "{{appName}} በጎ አድራጎት። መብቱ በህግ የተጠበቀ ነው።",
     "tagline": "ቅርስን መጠበቅ · ርህራሄን ማነሳሳት"
   },
   "errors": {
@@ -115,10 +117,46 @@
     "impactMetric": "ተጨባጭ ተጽዕኖ",
     "beneficiaries": "ተጠቃሚ ዜጎች",
     "location": "ቦታ",
-    "intaglioPlate": "የለወገን ህትመት ጠፍጣፋ",
+    "intaglioPlate": "የ{{appName}} ህትመት ጠፍጣፋ",
+    "emptyDescription": "መረጃው ሲገኝ የዘመቻ ዝርዝሮች እዚህ ይታያሉ።",
     "fundedPercent": "{{percent}}% ተሰብስቧል",
     "accreditedOrg": "የተመሰከረ የሲቪል ማኅበር ድርጅት",
-    "defaultLocation": "አዲስ አበባ፣ ኢትዮጵያ"
+    "defaultLocation": "አዲስ አበባ፣ ኢትዮጵያ",
+    "defaultShareTitle": "የማኅበረሰብ ምክንያት"
+  },
+  "categories": {
+    "all": "ሁሉም ምክንያቶች",
+    "medical": "ሕክምናና ጤና",
+    "education": "ትምህርትና ዕውቀት",
+    "emergency": "አደጋና ፈጣን እርዳታ",
+    "water": "ንፁህ የመጠጥ ውሃ",
+    "environment": "አካባቢ ጥበቃ",
+    "community": "ማኅበራዊ ልማት",
+    "business": "የእጅ ጥበብና ንግድ",
+    "other": "ሌሎች ምክንያቶች"
+  },
+  "banknote": {
+    "project": "ፕሮጀክት",
+    "engravedArchive": "የተቀረጸ ማህደር",
+    "viewCause": "ምክንያቱን ይመልከቱ",
+    "supportCauseShort": "ይህን ምክንያት ይደግፉ",
+    "acsoVerified": "በACSO የተረጋገጠ",
+    "acsoClearing": "የACSO ማጣሪያ",
+    "filterByLocation": "በቦታ አጣራ",
+    "allLocations": "ሁሉም ቦታዎች",
+    "backToCauses": "ወደ ምክንያቶች ተመለስ",
+    "accreditation": "የሲቪል ማኅበራት እውቅና (ACSO መዝገብ)",
+    "registrationLicense": "የምዝገባ ፈቃድ",
+    "disbursementEscrow": "የገንዘብ መቀበያ ሂሳብ",
+    "telebirrCbeClearing": "Telebirr እና CBE ማጣሪያ",
+    "patrons": "ለጋሾች",
+    "targetGoalLabel": "የታለመ ግብ",
+    "supportCause": "ይህን ምክንያት ይደግፉ (በብር ይለግሱ)",
+    "status": {
+      "ending_soon": "በቅርቡ የሚያበቃ",
+      "started_now": "አሁን የተጀመረ",
+      "ongoing": "በሂደት ላይ"
+    }
   },
   "donations": {
     "title": "የዜግነት መተሳሰብ ልገሳ",
@@ -136,6 +174,7 @@
     "settling": "በብሎክቼይን እየተረጋገጠ ነው...",
     "certificateTitle": "የዜግነት ትብብር ምስክር ወረቀት",
     "certificateDesc": "በብሔራዊ ዲጂታል ማህደር የተመዘገበ ኦፊሴላዊ የልገሳ ማስረጃ",
+    "shareText": "በ{{appName}} ላይ ለ\"{{campaign}}\" {{amount}} ብር አዋጥቻለሁ። ይህን የተረጋገጠ ምክንያት ለመደገፍ ከእኔ ጋር ይቀላቀሉ፦",
     "donorInfoDesc": "ለይፋዊው የልገሳ መዝገብና የምስክር ወረቀት ስምዎን ያስገቡ ወይም ስም-አልባ ለመሆን ይምረጡ።",
     "donorNamePlaceholder": "ለምሳሌ፡ አልማዝ በቀለ",
     "anonymousHint": "ስምዎ በሕዝብ ለጋሽ ዝርዝር ወይም በምክንያት መዝገብ ላይ አይታይም።",
@@ -176,7 +215,7 @@
     "passcode": "የይለፍ ቃል",
     "fullName": "ሙሉ ስም",
     "role": "የተጠቃሚ ሚና",
-    "portalLabel": "ለወገን የዜግነት መተሳሰብ ፖርታል",
+    "portalLabel": "{{appName}} የዜጎች የመተሳሰብ ፖርታል",
     "modalLoginTitle": "ወደ መለያዎ ይግቡ",
     "modalRegisterTitle": "አዲስ የለጋሽ መለያ ይክፈቱ",
     "modalLoginDesc": "የልገሳ ዲጂታል ምስክር ወረቀቶችዎንና አስተዋጽኦዎችን ያስተዳድሩ",
@@ -270,7 +309,7 @@
     "cancel": "ይቅር",
     "saveProfile": "መገለጫን አስቀምጥ",
     "closeEditorAria": "የመገለጫ አርታዒን ዝጋ",
-    "space": "የእርስዎ የLEWEGENE ገጽ",
+    "space": "የእርስዎ የ{{appName}} ገጽ",
     "verifiedAccount": "የተረጋገጠ የዜጋ መለያ",
     "account": "መለያ",
     "roleDonor": "ለጋሽ",
@@ -295,6 +334,12 @@
     "authenticatedOnly": "የመገለጫ መረጃ ለገቡ ተጠቃሚዎች ብቻ ይገኛል።"
   },
   "admin": {
+    "access": {
+      "loginDescription": "የአስተዳዳሪውን የሥራ ቦታ ለመክፈት በአስተዳዳሪ መለያ ይግቡ።",
+      "deniedTitle": "የአስተዳዳሪ ፈቃድ ያስፈልጋል",
+      "deniedDescription": "ይህ መለያ የአስተዳዳሪ ፈቃድ የለውም። የመድረኩን መዝገቦች ለማየት በአስተዳዳሪ መለያ ይግቡ።",
+      "backHome": "ወደ ዋናው ገጽ ይመለሱ"
+    },
     "title": "የቁጥጥር ዴስክ",
     "pending": "ውሳኔ የሚጠባበቁ",
     "approve": "አጽድቅ",
@@ -371,7 +416,7 @@
       "badge": "በኢትዮጵያ ሥር የሰደደ የአካባቢ ድጋፍ",
       "titleLead": "መልካምነት ያድጋል",
       "titleHighlight": "አብረን ስንሰጥ።",
-      "description": "ለወገን ሰዎችንና ታማኝ የማኅበረሰብ ምክንያቶችን ያቀራርባል። የሚነካዎትን ታሪክ ይምረጡና ቀጣዩ ምዕራፍ እንዲሳካ ያግዙ።",
+      "description": "{{appName}} ሰዎችንና ታማኝ የማኅበረሰብ ምክንያቶችን ያቀራርባል። የሚነካዎትን ታሪክ ይምረጡና ቀጣዩ ምዕራፍ እንዲሳካ ያግዙ።",
       "discover": "ምክንያቶችን ያግኙ",
       "startFundraising": "ገንዘብ ማሰባሰብ ይጀምሩ",
       "voxide": "Voxide",
@@ -416,7 +461,7 @@
       "empty": "የማኅበረሰብ አጋሮች እዚህ ይታያሉ።"
     },
     "voxide": {
-      "badge": "የለወገን የድምፅ ረዳት",
+      "badge": "{{appName}} የድምፅ ረዳት",
       "title": "Voxide",
       "tagline": "ይናገሩ። ያግኙ። ይስጡ።",
       "description": "ለVoxide የሚፈልጉትን ይንገሩ። ድምፅዎን ተረድቶ ምክንያቶችን እንዲያገኙ፣ እንዲለግሱ ወይም ገንዘብ ማሰባሰብ እንዲጀምሩ ይረዳዎታል።",
@@ -573,6 +618,11 @@
       "chooseLocation": "ቦታ ይምረጡ",
       "story": "ታሪክ",
       "storyPlaceholder": "ማን እርዳታ ይፈልጋል፣ ምን ተፈጠረና ገንዘቡ እንዴት ይውላል።",
+      "locationPlaceholder": "የፕሮጀክቱን ቦታ ያስገቡ",
+      "coordinator": "የመስክ አስተባባሪ ስም",
+      "coordinatorPlaceholder": "የመስክ አስተባባሪውን ስም ያስገቡ",
+      "impactMetric": "የተጽዕኖ መለኪያ",
+      "impactMetricPlaceholder": "የፕሮጀክቱን ሊለካ የሚችል ተጽዕኖ ይግለጹ",
       "goal": "ግብ",
       "deadline": "የመጨረሻ ቀን (አማራጭ)",
       "goalLocked": "ከመጽደቁ በኋላ ግቡ ሊቀየር አይችልም።",
@@ -588,16 +638,6 @@
         "medical": "ሕክምና",
         "water": "ውሃ",
         "craft": "የእጅ ጥበብ"
-      },
-      "categories": {
-        "medical": "ሕክምና",
-        "education": "ትምህርት",
-        "emergency": "ድንገተኛ እርዳታ",
-        "water": "ንጹህ ውሃ",
-        "environment": "አካባቢ",
-        "community": "ማኅበረሰብ",
-        "business": "የእጅ ጥበብ",
-        "other": "ሌላ"
       },
       "locations": {
         "addisAbaba": "አዲስ አበባ",
@@ -831,7 +871,7 @@
     "beneficiariesLabel": "ተጠቃሚዎች፦ {{count}} ዜጎች"
   },
   "canvasFooter": {
-    "brandLine": "ለወገን · የዜጎች የአንድነት መዝገብ",
+    "brandLine": "{{appName}} · የዜጎች የአንድነት መዝገብ",
     "legalLine": "የACSO ፈቃድ ቁጥር ET-58291 · መብቱ በሕግ የተጠበቀ ነው 2026 / አዲስ አበባ",
     "acsoRegulation": "የACSO ደንብ",
     "academicArchive": "የምርምር ማህደር",
@@ -871,7 +911,7 @@
     "milestoneNotifications": "የተደገፉ ፕሮጀክቶች የኦዲት ማስረጃ ሲያቀርቡ አሳውቀኝ"
   },
   "notifications": {
-    "platformUpdate": "የለወገን መድረክ ዝማኔ",
+    "platformUpdate": "{{appName}} መድረክ ዝማኔ",
     "donationReceived": "በ{{rail}} {{amount}} ብር ተቀብለናል። ይፋዊ ምስክር ወረቀት ተዘጋጅቷል!",
     "voiceDonationReceived": "በድምፅ የተፈቀደው {{amount}} ብር ልገሳ ተረጋግጧል! የማህደር ምስክር ወረቀት ዝግጁ ነው።",
     "paymentFailed": "ክፍያው አልተሳካም",
@@ -882,6 +922,8 @@
     "causeApproved": "ምክንያቱ ጸድቆ በሕዝብ ማሰሻ ላይ ታትሟል።",
     "causeRejected": "ምክንያቱ ውድቅ ተደርጎ ወደ ማህደር ተወስዷል።",
     "campaignLoadFailed": "የዘመቻ መረጃን መጫን አልተቻለም",
+    "organizationLoadFailed": "የድርጅት መረጃን መጫን አልተቻለም።",
+    "adminCampaignLoadFailed": "በግምገማ ላይ ያሉ ዘመቻዎችን መጫን አልተቻለም።",
     "loadingOrganization": "የድርጅት መገለጫ በመጫን ላይ...",
     "organizationNotFound": "ድርጅቱ አልተገኘም።",
     "backHome": "ወደ መነሻ ገጽ ተመለስ",
@@ -892,6 +934,7 @@
   "settings": {
     "title": "የመለያ ቅንብሮች",
     "description": "የግል መረጃዎን፣ ቋንቋዎንና የማሳወቂያ ምርጫዎችዎን ያስተካክሉ።",
+    "loadError": "የመገለጫ መረጃዎ አልተገኘም።",
     "saved": "የመለያ መረጃዎ በተሳካ ሁኔታ ተዘምኗል!",
     "saveError": "የመለያ ቅንብሮችን ማስቀመጥ አልተቻለም። እንደገና ይሞክሩ።",
     "fullName": "ሙሉ ስም",
@@ -908,20 +951,23 @@
     "emailRequired": "የኢሜይል አድራሻዎን ያስገቡ"
   },
   "adminDashboard": {
+    "dataUnavailable": "ይህ መረጃ በተገናኘው የጀርባ አገልጋይ አልቀረበም።",
+    "reportsUnavailable": "በተገናኘው የጀርባ አገልጋይ ሪፖርቶችን መገምገም አይቻልም።",
+    "notAvailable": "አይገኝም",
     "trendNoChange": "በዚህ ወር ምንም ለውጥ የለም",
     "trendNew": "በዚህ ወር አዲስ",
     "trendVsLastMonth": "ከባለፈው ወር {{percent}}%",
     "recentTrend": "የቅርብ ሰባት ቀናት አዝማሚያ",
     "donationsOverTime": "በጊዜ የተደረጉ ልገሳዎች",
-    "lastSixMonths": "የተረጋገጡ አስተዋጽኦዎች · ያለፉት ስድስት ወራት",
-    "noDonations": "ገና የተረጋገጠ ልገሳ የለም",
-    "confirmDonationHint": "አዝማሚያውን ለመጀመር የቀረበ ልገሳን ያረጋግጡ።",
+    "lastSixMonths": "የተሳኩ አስተዋጽኦዎች · ያለፉት ስድስት ወራት",
+    "noDonations": "ገና የተሳካ ልገሳ የለም",
+    "verifiedDonationHint": "Links.et ክፍያውን ካረጋገጠ በኋላ የተረጋገጠ የልገሳ መረጃ እዚህ ይታያል።",
     "approved": "የገንዘብ ማሰባሰቢያው ተረጋግጧል።",
     "approveFailed": "ገንዘብ ማሰባሰቡን ማጽደቅ አልተቻለም።",
     "totalUsers": "ጠቅላላ ተጠቃሚዎች",
     "organizations": "ድርጅቶች",
     "totalDonations": "ጠቅላላ ልገሳዎች",
-    "confirmedContributions": "{{count}} የተረጋገጡ አስተዋጽኦዎች",
+    "successfulContributions": "{{count}} የተሳኩ አስተዋጽኦዎች",
     "totalRaised": "ጠቅላላ የተሰበሰበ",
     "title": "ዳሽቦርድ",
     "description": "የመድረኩ ተጠቃሚዎች፣ የተሰበሰበ ገንዘብና ግምገማ የሚጠብቁ ጉዳዮች አጠቃላይ እይታ።",
@@ -945,6 +991,10 @@
     "recentActivity": "የቅርብ ጊዜ እንቅስቃሴ",
     "latestChanges": "በመድረኩ ላይ የቅርብ ጊዜ ለውጦች",
     "viewAllActivity": "ሁሉንም እንቅስቃሴ ይመልከቱ"
+  },
+  "adminPortal": {
+    "partialLoad": "አንዳንድ የአስተዳዳሪ መረጃዎች መጫን አልቻሉም።",
+    "retry": "እንደገና ሞክር"
   },
   "adminUsers": {
     "title": "ተጠቃሚዎች",
@@ -970,7 +1020,7 @@
     "reactivate": "ተጠቃሚውን እንደገና አንቃ",
     "suspended": "የተጠቃሚው መለያ ታግዷል።",
     "reactivated": "የተጠቃሚው መለያ እንደገና ንቁ ሆኗል።",
-    "donationsTotal": "ልገሳዎች ({{count}}) · {{amount}} ተረጋግጠዋል",
+    "donationsTotal": "ልገሳዎች ({{count}}) · {{amount}} ተሳክተዋል",
     "noDonations": "ምንም ልገሳ የለም",
     "noFundraisers": "ምንም ገንዘብ ማሰባሰብ የለም",
     "reportsFiled": "የቀረቡ ሪፖርቶች ({{count}})",
@@ -1018,6 +1068,8 @@
       "reviewed": "ተገምግሟል",
       "approved": "ጸድቋል",
       "confirmed": "ተረጋግጧል",
+      "successful": "ተሳክቷል",
+      "failed": "አልተሳካም",
       "resolved": "ተፈትቷል",
       "active": "ንቁ",
       "completed": "ተጠናቋል",
@@ -1039,22 +1091,18 @@
   },
   "adminDonations": {
     "title": "ልገሳዎች",
-    "description": "ልገሳዎች በዲጂታል ደረሰኝ አገናኞች ይረጋገጣሉ፤ በጥበቃ ላይ ያሉ ወይም አከራካሪ መዝገቦች በአስተዳዳሪ ይገመገማሉ።",
+    "description": "Links.et የእያንዳንዱን ልገሳ ደረሰኝ፣ መጠንና የተቀባይ ሂሳብ በራስ-ሰር ያረጋግጣል።",
     "search": "ለጋሽ፣ ምክንያት፣ ማጣቀሻ ይፈልጉ…",
     "empty": "እዚህ ምንም ልገሳ የለም",
     "donor": "ለጋሽ",
     "reference": "ማጣቀሻ",
     "anonymous": "ስም-አልባ",
-    "confirmed": "ልገሳው ተረጋግጧል።",
     "donation": "ልገሳ",
     "anonymousPublic": "ስም-አልባ (በሕዝብ የሚታይ)",
     "donorEmail": "የለጋሽ ኢሜይል",
-    "paymentToVerify": "ማረጋገጥ ያለበት ክፍያ",
+    "paymentVerification": "የክፍያ ማረጋገጫ",
     "paymentReference": "የክፍያ ማጣቀሻ",
-    "verifyHint": "ከማረጋገጥዎ በፊት ማጣቀሻውን ከባንክ ሂሳብ መግለጫ ጋር ያረጋግጡ።",
-    "rejectTitle": "ልገሳውን ውድቅ አድርግ",
-    "rejectDescription": "ለምሳሌ፦ በባንክ መግለጫው ውስጥ ማጣቀሻው አልተገኘም።",
-    "rejected": "ልገሳው ውድቅ ተደርጓል።"
+    "verifyHint": "Links.et የክፍያ ዝርዝሮችን በራስ-ሰር ያረጋግጣል፤ የአስተዳዳሪ ማረጋገጫ አያስፈልግም።"
   },
   "organization": {
     "signupTitle": "የድርጅት ምዝገባ",

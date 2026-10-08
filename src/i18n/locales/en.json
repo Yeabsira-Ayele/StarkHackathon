@@ -1,6 +1,5 @@
 {
   "common": {
-    "appName": "LEWEGENE",
     "appTagline": "National Citizen Solidarity Tender",
     "motto": "Supporting Ethiopia's People & Purpose",
     "donate": "Pledge Now",
@@ -12,6 +11,9 @@
     "continue": "Continue",
     "dismiss": "Dismiss notification",
     "loading": "Loading...",
+    "loadingSubmessage": "Connecting to the {{appName}} community network",
+    "networkUnavailable": "Cannot reach the {{appName}} API. Start the backend and check VITE_API_BASE_URL.",
+    "networkError": "An unexpected network error occurred.",
     "error": "An error occurred",
     "retry": "Try Again",
     "empty": "No items found",
@@ -44,7 +46,7 @@
     "publishCause": "Publish New Cause",
     "acsoVerification": "ACSO Institutional Verification",
     "auditedReporting": "Audited Milestone Reporting",
-    "rights": "Lewegene Philanthropy. All rights reserved.",
+    "rights": "{{appName}} Philanthropy. All rights reserved.",
     "tagline": "Preserving Heritage · Inspiring Compassion"
   },
   "errors": {
@@ -115,10 +117,46 @@
     "impactMetric": "Impact Commitment",
     "beneficiaries": "Citizens Reached",
     "location": "Location",
-    "intaglioPlate": "LEWEGENE INTAGLIO PLATE",
+    "intaglioPlate": "{{appName}} INTAGLIO PLATE",
+    "emptyDescription": "Campaign information will appear here when available.",
     "fundedPercent": "{{percent}}% FUNDED",
     "accreditedOrg": "Accredited Civil Society Org",
-    "defaultLocation": "Addis Ababa, Ethiopia"
+    "defaultLocation": "Addis Ababa, Ethiopia",
+    "defaultShareTitle": "a community cause"
+  },
+  "categories": {
+    "all": "All Causes",
+    "medical": "Medical & Health",
+    "education": "Education & Schools",
+    "emergency": "Disaster & Relief",
+    "water": "Clean Water",
+    "environment": "Environment",
+    "community": "Community Support",
+    "business": "Artisan & Craft",
+    "other": "Other Causes"
+  },
+  "banknote": {
+    "project": "Project",
+    "engravedArchive": "Engraved archive",
+    "viewCause": "View cause",
+    "supportCauseShort": "Support this cause",
+    "acsoVerified": "ACSO verified",
+    "acsoClearing": "ACSO clearing",
+    "filterByLocation": "Filter by location",
+    "allLocations": "All locations",
+    "backToCauses": "Back to causes",
+    "accreditation": "Civil society accreditation (ACSO registry)",
+    "registrationLicense": "Registration license",
+    "disbursementEscrow": "Disbursement escrow",
+    "telebirrCbeClearing": "Telebirr & CBE clearing",
+    "patrons": "Patrons",
+    "targetGoalLabel": "Target goal",
+    "supportCause": "Support this cause (pledge Birr)",
+    "status": {
+      "ending_soon": "Ending soon",
+      "started_now": "Started now",
+      "ongoing": "Ongoing"
+    }
   },
   "donations": {
     "title": "Civic Promissory Underwrite",
@@ -136,6 +174,7 @@
     "settling": "Settling On-Chain...",
     "certificateTitle": "Digital Solidarity Certificate",
     "certificateDesc": "Official immutable record minted to the National Civic Repository",
+    "shareText": "I just contributed {{amount}} ETB to \"{{campaign}}\" on {{appName}}. Join me in supporting this verified cause:",
     "donorInfoDesc": "Enter your name for your official contribution certificate or choose to remain anonymous.",
     "donorNamePlaceholder": "e.g. Almaz Bekele",
     "anonymousHint": "Your name will not appear on the public donor roll or cause ledger.",
@@ -176,7 +215,7 @@
     "passcode": "Passcode",
     "fullName": "Full Name",
     "role": "User Role",
-    "portalLabel": "Lewegene Citizen Solidarity Portal",
+    "portalLabel": "{{appName}} Citizen Solidarity Portal",
     "modalLoginTitle": "Sign in to your account",
     "modalRegisterTitle": "Open a new patron account",
     "modalLoginDesc": "Manage your donation certificates and contributions",
@@ -270,7 +309,7 @@
     "cancel": "Cancel",
     "saveProfile": "Save Profile",
     "closeEditorAria": "Close profile editor",
-    "space": "Your LEWEGENE space",
+    "space": "Your {{appName}} space",
     "verifiedAccount": "Verified citizen account",
     "account": "account",
     "roleDonor": "Donor",
@@ -295,6 +334,12 @@
     "authenticatedOnly": "Profile data is available only for authenticated accounts."
   },
   "admin": {
+    "access": {
+      "loginDescription": "Sign in with an administrator account to open the admin workspace.",
+      "deniedTitle": "Administrator access required",
+      "deniedDescription": "This account does not have administrator permissions. Sign in with an administrator account to view platform records.",
+      "backHome": "Return to the public site"
+    },
     "title": "Compliance Desk",
     "pending": "Pending Review",
     "approve": "Approve",
@@ -371,7 +416,7 @@
       "badge": "Verified local giving · rooted in Ethiopia",
       "titleLead": "Good grows when",
       "titleHighlight": "we give together.",
-      "description": "Lewegene brings people and trusted community causes closer. Find a story that moves you, and help make its next chapter possible.",
+      "description": "{{appName}} brings people and trusted community causes closer. Find a story that moves you, and help make its next chapter possible.",
       "discover": "Discover causes",
       "startFundraising": "Start fundraising",
       "voxide": "Voxide",
@@ -416,7 +461,7 @@
       "empty": "Community partners will be featured here."
     },
     "voxide": {
-      "badge": "Lewegene voice assistant",
+      "badge": "{{appName}} voice assistant",
       "title": "Voxide",
       "tagline": "Speak. Find. Give.",
       "description": "Tell Voxide what you need. It understands your voice and helps you find causes, donate, or start a fundraiser.",
@@ -573,6 +618,11 @@
       "chooseLocation": "Choose a location",
       "story": "Story",
       "storyPlaceholder": "Who needs help, what happened, and how the money will be used.",
+      "locationPlaceholder": "Enter the project location",
+      "coordinator": "Field coordinator name",
+      "coordinatorPlaceholder": "Enter the field coordinator's name",
+      "impactMetric": "Impact metric",
+      "impactMetricPlaceholder": "Describe the measurable project impact",
       "goal": "Goal",
       "deadline": "Deadline (optional)",
       "goalLocked": "The goal cannot change after approval.",
@@ -588,16 +638,6 @@
         "medical": "Medical",
         "water": "Water",
         "craft": "Craft"
-      },
-      "categories": {
-        "medical": "Medical",
-        "education": "Education",
-        "emergency": "Emergency",
-        "water": "Clean water",
-        "environment": "Environment",
-        "community": "Community",
-        "business": "Artisan & Craft",
-        "other": "Other"
       },
       "locations": {
         "addisAbaba": "Addis Ababa",
@@ -831,7 +871,7 @@
     "beneficiariesLabel": "BENEFICIARIES: {{count}} CITIZENS"
   },
   "canvasFooter": {
-    "brandLine": "LEWEGENE CIVIC BANKNOTE · NATIONAL SOLIDARITY REPOSITORY",
+    "brandLine": "{{appName}} CIVIC BANKNOTE · NATIONAL SOLIDARITY REPOSITORY",
     "legalLine": "ACSO ACCREDITATION NO. ET-58291 · ALL RIGHTS RESERVED 2026 / አዲስ አበባ",
     "acsoRegulation": "ACSO REGULATION",
     "academicArchive": "ACADEMIC ARCHIVE",
@@ -844,7 +884,7 @@
     "statusApproved": "ACSO Verified Foundation",
     "statusNeedsChanges": "Action Required",
     "statusRejected": "Unverified / Not Approved",
-    "pendingNotice": "Your application is currently being reviewed by Lewegene administrators and ACSO compliance officers.",
+    "pendingNotice": "Your application is currently being reviewed by {{appName}} administrators and ACSO compliance officers.",
     "lockedFundraising": "Fundraising and campaign publication are disabled until your organization is verified.",
     "documents": "Verification Documents",
     "documentsHint": "Optional: Upload up to 3 supporting documents (ACSO certificate, TIN, board letter)",
@@ -886,7 +926,7 @@
     "milestoneNotifications": "Notify me when funded projects post audited milestone evidence"
   },
   "notifications": {
-    "platformUpdate": "Lewegene Platform Update",
+    "platformUpdate": "{{appName}} Platform Update",
     "donationReceived": "Received {{amount}} ETB via {{rail}}. Official certificate generated!",
     "voiceDonationReceived": "Voice-authorized {{amount}} ETB donation verified! Archival certificate ready.",
     "paymentFailed": "Payment failed",
@@ -897,6 +937,8 @@
     "causeApproved": "Cause approved and published to the public feed.",
     "causeRejected": "Cause rejected and archived.",
     "campaignLoadFailed": "Failed to load campaign data",
+    "organizationLoadFailed": "Could not load organization data.",
+    "adminCampaignLoadFailed": "Could not load pending campaign reviews.",
     "loadingOrganization": "Loading organization profile...",
     "organizationNotFound": "Organization not found.",
     "backHome": "Back to home",
@@ -907,6 +949,7 @@
   "settings": {
     "title": "Account settings",
     "description": "Update your personal information, language, and notification preferences.",
+    "loadError": "Your profile is unavailable.",
     "saved": "Your account details were updated successfully!",
     "saveError": "Could not save your account settings. Please try again.",
     "fullName": "Full name",
@@ -923,20 +966,23 @@
     "emailRequired": "Enter your email address"
   },
   "adminDashboard": {
+    "dataUnavailable": "This data is not provided by the connected backend yet.",
+    "reportsUnavailable": "Report review is unavailable from the connected backend.",
+    "notAvailable": "Not available",
     "trendNoChange": "No change this month",
     "trendNew": "New this month",
     "trendVsLastMonth": "{{percent}}% vs last month",
     "recentTrend": "Recent seven-day trend",
     "donationsOverTime": "Donations over time",
-    "lastSixMonths": "Confirmed contributions · last six months",
-    "noDonations": "No confirmed donations yet",
-    "confirmDonationHint": "Confirm a submitted donation to start the trend.",
+    "lastSixMonths": "Successful contributions · last six months",
+    "noDonations": "No successful donations yet",
+    "verifiedDonationHint": "Verified donation data appears here once Links.et confirms payment.",
     "approved": "Fundraiser verified.",
     "approveFailed": "Could not approve fundraiser.",
     "totalUsers": "Total users",
     "organizations": "Organizations",
     "totalDonations": "Total donations",
-    "confirmedContributions": "{{count}} confirmed contributions",
+    "successfulContributions": "{{count}} successful contributions",
     "totalRaised": "Total raised",
     "title": "Dashboard",
     "description": "Platform-wide overview of users, money raised, and items waiting for review.",
@@ -960,6 +1006,10 @@
     "recentActivity": "Recent activity",
     "latestChanges": "Latest changes across the platform",
     "viewAllActivity": "View all activity"
+  },
+  "adminPortal": {
+    "partialLoad": "Some admin data could not be loaded.",
+    "retry": "Retry"
   },
   "adminUsers": {
     "title": "Users",
@@ -985,7 +1035,7 @@
     "reactivate": "Reactivate user",
     "suspended": "User suspended.",
     "reactivated": "User reactivated.",
-    "donationsTotal": "Donations ({{count}}) · {{amount}} confirmed",
+    "donationsTotal": "Donations ({{count}}) · {{amount}} successful",
     "noDonations": "No donations",
     "noFundraisers": "No fundraisers",
     "reportsFiled": "Reports filed ({{count}})",
@@ -1033,6 +1083,8 @@
       "reviewed": "Reviewed",
       "approved": "Approved",
       "confirmed": "Confirmed",
+      "successful": "Successful",
+      "failed": "Failed",
       "resolved": "Resolved",
       "active": "Active",
       "completed": "Completed",
@@ -1054,23 +1106,19 @@
   },
   "adminDonations": {
     "title": "Donations",
-    "description": "Donations are verified via digital receipt links, with admin review for pending or disputed records.",
+    "description": "Links.et verifies each donation's receipt, amount, and receiving account automatically.",
     "search": "Search donor, cause, reference…",
     "empty": "No donations here",
     "donor": "Donor",
     "reference": "Reference",
     "anonymous": "Anonymous",
-    "confirmed": "Donation confirmed.",
     "donation": "Donation",
     "anonymousPublic": "Anonymous (shown publicly)",
     "donorEmail": "Donor email",
-    "paymentToVerify": "Payment to verify",
+    "paymentVerification": "Payment verification",
     "paymentReference": "Payment reference",
-    "verifyHint": "Check the reference against the bank statement before confirming.",
-    "rejectTitle": "Reject donation",
-    "rejectDescription": "For example: reference not found in the bank statement.",
-    "rejected": "Donation rejected."
-    },
+    "verifyHint": "Links.et verifies payment details automatically; no admin confirmation is needed."
+  },
     "adminReports": {
       "title": "Reports",
       "description": "Review reports submitted about fundraisers and take appropriate action.",

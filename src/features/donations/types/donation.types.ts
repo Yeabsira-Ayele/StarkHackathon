@@ -3,17 +3,10 @@ import type { PaymentRail as AppPaymentRail } from '../../../types/index.ts';
 export type PaymentRail = 'telebirr' | 'cbe_birr' | 'bank_card' | 'chapa' | 'cbe' | 'boa' | 'awash' | 'coop' | 'dashen';
 
 /**
- * Donation status values — Links.et automatic verification flow:
- *   - pending:   donation record created, payment reference not yet submitted
- *   - verifying: reference submitted, backend is calling Links.et to verify (resolves near-instantly)
- *   - confirmed: Links.et verified the payment successfully
- *   - failed:    Links.et could not verify the reference; donor can resubmit a different reference
- *
- * Admin manual confirm/reject is kept as a fallback path only (see Member 5 admin area),
- * not the default path every donation goes through.
+ * Persisted donation records are exposed only after Links.et verification returns
+ * a final result.
  */
-export type DonationStatus = 'pending' | 'verifying' | 'confirmed' | 'failed';
-export type PaymentStatus = 'pending' | 'completed' | 'failed'; // for backward compatibility
+export type DonationStatus = 'successful' | 'failed';
 
 export interface CampaignPayoutAccount {
   bankId: string;
@@ -23,9 +16,8 @@ export interface CampaignPayoutAccount {
 }
 
 /**
- * Verification result returned by the Links.et payment verification service.
- * The backend calls Links.et — the frontend only submits the reference and displays
- * whatever status comes back.
+ * Verification details returned by the backend after it verifies the receipt
+ * with Links.et.
  */
 export interface VerificationResult {
   verifiedAt: string | null;
@@ -36,7 +28,7 @@ export interface VerificationResult {
 
 export interface VerifiedReceiptData {
   verified: boolean;
-  status: 'completed' | 'failed' | 'pending';
+  status: 'completed' | 'failed';
   amount: number;
   sender: string;
   receiver: string;
@@ -76,7 +68,6 @@ export interface Donation {
   certificateId?: string;
   
   // Backward compatibility fields
-  paymentStatus?: PaymentStatus;
   paymentRail?: PaymentRail;
   transactionReference?: string;
 }
@@ -102,6 +93,7 @@ export interface ContributionCertificate {
 export interface CreateDonationPayload {
   campaignId: string;
   amount: number;
+  receiptUrl: string;
   donorName?: string;
   donorEmail?: string;
   donorPhone?: string;
@@ -110,39 +102,11 @@ export interface CreateDonationPayload {
   message?: string;
 }
 
-export interface SubmitReferencePayload {
-  donationId: string;
-  reference: string;
-  proofUrl?: string;
-}
-
-export interface SubmitReceiptPayload {
-  donationId: string;
-  receiptUrl: string;
-  proofUrl?: string;
-  reference?: string;
-}
-
 export interface DonationSummaryStats {
   totalAmount: number;
   totalDonationsCount: number;
   causesSupportedCount: number;
-  confirmedCount: number;
-  pendingCount: number;
-  verifyingCount: number;
+  successfulCount: number;
   failedCount: number;
   largestDonation: number;
-}
-
-// Backward compatibility alias
-export interface DonationSubmitPayload {
-  campaignId: string;
-  amount: number;
-  donorName: string;
-  message?: string;
-  paymentRail: PaymentRail;
-  donorEmail?: string;
-  anonymous?: boolean;
-  bankId?: string;
-  reference?: string;
 }

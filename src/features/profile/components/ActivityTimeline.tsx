@@ -46,7 +46,7 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
             <div className="text-right shrink-0">
               {act.amount && (
                 <p className="text-xs font-bold text-[#1E4D38] dark:text-[#52B788] font-mono">
-                  +{act.amount.toLocaleString()} {t('common.currency', 'ብር')}
+                  +{act.amount.toLocaleString()} {t('common.currency')}
                 </p>
               )}
               {act.certificateId && onViewCertificate && (

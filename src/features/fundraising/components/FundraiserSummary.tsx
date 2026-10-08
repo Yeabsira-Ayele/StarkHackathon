@@ -1,8 +1,8 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card } from './bn.tsx';
 import type { Fundraiser } from '../types/fundraiser.types.ts';
 import { useBanks } from '../hooks/useBanks.ts';
-import { useCategories } from '../hooks/useCategories.ts';
 import { useOrganizations } from '../hooks/useOrganizations.ts';
 import { formatDate, formatEtb } from './format.ts';
 
@@ -22,8 +22,8 @@ const Row: React.FC<{ label: string; children: React.ReactNode }> = ({ label, ch
 
 /** Read-only view of a fundraiser. Used by Preview and Management so they never drift apart. */
 export const FundraiserSummary: React.FC<{ fundraiser: Fundraiser }> = ({ fundraiser: f }) => {
+  const { t } = useTranslation();
   const banks = useBanks().data;
-  const categories = useCategories().data;
   const orgs = useOrganizations().data;
 
   return (
@@ -39,7 +39,7 @@ export const FundraiserSummary: React.FC<{ fundraiser: Fundraiser }> = ({ fundra
       <Card className="p-5">
         <h2 className="font-serif font-black uppercase text-xl text-[#14110E] dark:text-[#F4EFE6]">{f.title}</h2>
         <p className="text-xs text-zinc-500 mt-1">
-          {categories.find((c) => c.id === f.category)?.name} · {f.location}
+          {t(`categories.${f.category}`)} · {f.location}
         </p>
         <p className="mt-4 text-sm text-[#14110E] dark:text-[#F4EFE6] whitespace-pre-line leading-relaxed">{f.story}</p>
       </Card>

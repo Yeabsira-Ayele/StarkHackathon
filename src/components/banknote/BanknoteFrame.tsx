@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { GuillocheCanvas } from './GuillocheCanvas.tsx';
+import { APP_NAME } from '../../data/content.ts';
 import {
   Mic,
   Moon,
@@ -24,8 +25,8 @@ export interface BanknoteFrameProps {
   pendingCount?: number;
   userRole: 'donor' | 'foundation';
   onRoleChange: (role: 'donor' | 'foundation') => void;
-  language: 'en' | 'am' | 'om';
-  onLanguageChange: (lang: 'en' | 'am' | 'om') => void;
+  language: 'en' | 'am';
+  onLanguageChange: (lang: 'en' | 'am') => void;
   isDark: boolean;
   onToggleDark: () => void;
   onTriggerDemoTour?: (tourType: 'donor' | 'foundation' | 'connected') => void;
@@ -109,7 +110,7 @@ export const BanknoteFrame: React.FC<BanknoteFrameProps> = ({
                 <span className="text-xs font-serif text-[#B08A45] tracking-[0.3em] uppercase">ለወገን ደራሽ ወገን ነው</span>
               </div>
               <h1 className="text-2xl sm:text-4xl font-display font-black tracking-tight text-[#173C32] dark:text-[#E8DEC8] leading-none">
-                LEWEGENE · ለወገን
+                {APP_NAME.toUpperCase()} · ለወገን
               </h1>
               <p className="text-[11px] font-serif italic text-zinc-500 dark:text-zinc-400">
                 The Living Ethiopian Banknote for Civic Solidarity &amp; Transparent Philanthropy

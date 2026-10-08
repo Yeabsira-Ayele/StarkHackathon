@@ -5,7 +5,6 @@ import { useDonationStore, SupportFlowStep } from '../store/donation.store';
 import {
   useCampaignPayoutAccounts,
   useCreateDonation,
-  useSubmitReceiptVerification,
 } from '../hooks/useDonations';
 import { DonationAmountSelector } from './DonationAmountSelector';
 import { DonorInfoForm } from './DonorInfoForm';
@@ -49,9 +48,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
     isAnonymous,
     donorMessage,
     selectedBankId,
-    reference,
     receiptUrl,
-    proofUrl,
     createdDonation,
     setStep,
     setAmount,
@@ -61,45 +58,26 @@ export const SupportModal: React.FC<SupportModalProps> = ({
     setIsAnonymous,
     setDonorMessage,
     setSelectedBankId,
-    setReference,
     setReceiptUrl,
-    setProofUrl,
     setCreatedDonation,
     resetWizard,
   } = useDonationStore();
 
   const createDonationMutation = useCreateDonation();
-  const submitReceiptMutation = useSubmitReceiptVerification();
   const [flowError, setFlowError] = useState<string | null>(null);
 
   const selectedAccount = payoutAccounts.find((account) => account.bankId === selectedBankId);
 
   // Advance from Bank Selection to Account Details
-  const handleProceedToAccountDetails = async () => {
+  const handleProceedToAccountDetails = () => {
     if (!selectedAccount) return;
     setFlowError(null);
-    try {
-      // Create pending donation in backend / state
-      const res = await createDonationMutation.mutateAsync({
-        campaignId: campaign.id,
-        amount,
-        donorName: isAnonymous ? 'Anonymous Patron' : (donorName.trim() || 'Anonymous Patron'),
-        donorEmail: donorEmail.trim() || undefined,
-        anonymous: isAnonymous,
-        bankId: selectedAccount.bankId,
-        message: donorMessage.trim() || undefined,
-      });
-
-      setCreatedDonation(res);
-      setStep(4);
-    } catch (err: any) {
-      setFlowError(err.message || 'Failed to initialize donation record');
-    }
+    setStep(4);
   };
 
   // Submit payment receipt link for verification (primary flow)
   const handleSubmitReceiptVerification = async (submittedUrl?: string) => {
-    if (!createdDonation) return;
+    if (!selectedAccount) return;
     const targetUrl = (submittedUrl || receiptUrl || '').trim();
     if (!targetUrl) {
       setFlowError('Please paste your payment receipt link to continue.');
@@ -107,14 +85,15 @@ export const SupportModal: React.FC<SupportModalProps> = ({
     }
     setFlowError(null);
     try {
-      const updated = await submitReceiptMutation.mutateAsync({
-        donationId: createdDonation.id,
-        payload: {
-          donationId: createdDonation.id,
-          receiptUrl: targetUrl,
-          proofUrl,
-          reference: reference.trim() || undefined,
-        },
+      const updated = await createDonationMutation.mutateAsync({
+        campaignId: campaign.id,
+        amount,
+        receiptUrl: targetUrl,
+        donorName: isAnonymous ? 'Anonymous Patron' : (donorName.trim() || 'Anonymous Patron'),
+        donorEmail: donorEmail.trim() || undefined,
+        anonymous: isAnonymous,
+        bankId: selectedAccount.bankId,
+        message: donorMessage.trim() || undefined,
       });
 
       setCreatedDonation(updated);
@@ -168,7 +147,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
                 { s: 3, label: '3. BANK' },
                 { s: 4, label: '4. ACCOUNT' },
                 { s: 5, label: '5. RECEIPT LINK' },
-                { s: 6, label: '6. CONFIRMED' },
+                { s: 6, label: '6. RESULT' },
               ].map((item) => (
                 <div
                   key={item.s}
@@ -298,17 +277,11 @@ export const SupportModal: React.FC<SupportModalProps> = ({
                 <button
                   type="button"
                   onClick={handleProceedToAccountDetails}
-                  disabled={createDonationMutation.isPending || !selectedAccount || accountsUnavailable || payoutAccounts.length === 0}
+                  disabled={!selectedAccount || accountsUnavailable || payoutAccounts.length === 0}
                   className="py-3 px-8 border-2 border-[#1E4D38] bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706] font-mono text-xs font-black tracking-widest uppercase hover:bg-[#163E2C] transition-all cursor-pointer flex items-center gap-2 shadow-xs disabled:opacity-50"
                 >
-                  {createDonationMutation.isPending ? (
-                    <span>INITIALIZING ESCROW...</span>
-                  ) : (
-                    <>
-                      <span>SEE ACCOUNT DETAILS &amp; PAY</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
+                  <span>SEE ACCOUNT DETAILS &amp; PAY</span>
+                  <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -332,12 +305,8 @@ export const SupportModal: React.FC<SupportModalProps> = ({
               amount={amount}
               donorName={isAnonymous ? 'Anonymous Patron' : (donorName || 'Anonymous Patron')}
               receiptUrl={receiptUrl}
-              reference={reference}
-              proofUrl={proofUrl}
-              isSubmitting={submitReceiptMutation.isPending}
+              isSubmitting={createDonationMutation.isPending}
               onChangeReceiptUrl={setReceiptUrl}
-              onChangeReference={setReference}
-              onChangeProofUrl={setProofUrl}
               onSubmit={handleSubmitReceiptVerification}
               onBack={() => setStep(4)}
             />
@@ -353,6 +322,10 @@ export const SupportModal: React.FC<SupportModalProps> = ({
                 if (onViewContributions) {
                   onViewContributions();
                 }
+              }}
+              onRetryReference={() => {
+                setCreatedDonation(null);
+                setStep(5);
               }}
             />
           )}

@@ -6,7 +6,6 @@ import {
   Award,
   ArrowRight,
   ArrowLeft,
-  Clock,
   CheckCircle2,
   Filter,
   DollarSign,
@@ -15,11 +14,9 @@ import {
   Share2,
   Printer,
   Eye,
-  Loader2,
   AlertTriangle,
 } from 'lucide-react';
-import { useMyContributions, useConfirmDonation } from '../hooks/useDonations';
-import { Loading } from '../../../components/ui/Loading';
+import { useMyContributions } from '../hooks/useDonations';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorState } from '../../../components/ErrorState';
 import { Donation, DonationStatus, ContributionCertificate } from '../types/donation.types';
@@ -40,132 +37,64 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { data, isLoading, isError, error, refetch } = useMyContributions();
-  const confirmDonationMutation = useConfirmDonation();
 
   const [statusFilter, setStatusFilter] = useState<StatusFilterValue>('all');
   const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
 
-  if (isError) {
-    return (
-      <ErrorState
-        title="Donation history is unavailable"
-        message={error instanceof Error ? error.message : 'Could not load your contribution history.'}
-        onRetry={() => void refetch()}
-      />
-    );
-  }
-
-  if (isLoading) {
-    return <Loading message="Opening your secure patron contribution ledger..." />;
-  }
-
-  if (!data) {
-    return (
-      <ErrorState
-        title="Donation history is unavailable"
-        message="Could not load your contribution history."
-        onRetry={() => void refetch()}
-      />
-    );
-  }
-
-  const donations = data.donations;
-  const stats = data.stats;
+  const donations = data?.donations ?? [];
+  const stats = data?.stats ?? {
+    totalAmount: 0,
+    totalDonationsCount: 0,
+    causesSupportedCount: 0,
+    successfulCount: 0,
+    failedCount: 0,
+    largestDonation: 0,
+  };
 
   const filteredDonations = donations.filter((d) => {
     if (statusFilter === 'all') return true;
     return d.status === statusFilter;
   });
 
-  /**
-   * Admin fallback: manually confirm a donation when Links.et verification
-   * fails or is inconclusive. This is NOT the default path — it's for edge cases only.
-   */
-  const handleSimulateVerify = async (id: string) => {
-    setActionError(null);
-    try {
-      const updated = await confirmDonationMutation.mutateAsync(id);
-      setSelectedDonation(updated);
-    } catch (err: any) {
-      setActionError(err.message || 'Verification failed');
-    }
-  };
-
   const getStatusBadge = (donation: Donation) => {
     switch (donation.status) {
-      case 'confirmed':
+      case 'successful':
         return (
           <>
             <CheckCircle2 className="w-3 h-3" />
-            <span>CONFIRMED</span>
-          </>
-        );
-      case 'verifying':
-        return (
-          <>
-            <Loader2 className="w-3 h-3 animate-spin" />
-            <span>VERIFYING</span>
+            <span>SUCCESSFUL</span>
           </>
         );
       case 'failed':
         return (
           <>
             <AlertTriangle className="w-3 h-3" />
-            <span>VERIFICATION FAILED</span>
-          </>
-        );
-      case 'pending':
-      default:
-        return (
-          <>
-            <Clock className="w-3 h-3" />
-            <span>AWAITING RECEIPT</span>
+            <span>FAILED</span>
           </>
         );
     }
   };
 
   const getStatusBadgeColor = (status: DonationStatus) => {
-    switch (status) {
-      case 'confirmed':
-        return 'bg-[#1E4D38]/10 text-[#1E4D38] dark:text-[#52B788]';
-      case 'verifying':
-        return 'bg-blue-500/10 text-blue-600 dark:text-blue-400';
-      case 'failed':
-        return 'bg-red-500/10 text-red-600 dark:text-red-400';
-      case 'pending':
-      default:
-        return 'bg-[#9A7432]/10 text-[#9A7432]';
-    }
+    return status === 'successful'
+      ? 'bg-[#1E4D38]/10 text-[#1E4D38] dark:text-[#52B788]'
+      : 'bg-red-500/10 text-red-600 dark:text-red-400';
   };
 
   const getFilterCount = (status: StatusFilterValue): number => {
     if (status === 'all') return donations.length;
-    if (status === 'confirmed') return stats.confirmedCount;
-    if (status === 'pending') return stats.pendingCount;
-    if (status === 'verifying') return stats.verifyingCount;
-    if (status === 'failed') return stats.failedCount;
-    return 0;
+    if (status === 'successful') return stats.successfulCount;
+    return stats.failedCount;
   };
 
   const filterTabs: { value: StatusFilterValue; label: string }[] = [
     { value: 'all', label: 'ALL' },
-    { value: 'confirmed', label: 'CONFIRMED' },
-    { value: 'pending', label: 'PENDING' },
-    { value: 'verifying', label: 'VERIFYING' },
+    { value: 'successful', label: 'SUCCESSFUL' },
     { value: 'failed', label: 'FAILED' },
   ];
 
   return (
     <div className="w-full space-y-8 animate-in fade-in duration-300">
-      {actionError && (
-        <div role="alert" className="p-3 border border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-300 font-mono text-xs flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>{actionError}</span>
-        </div>
-      )}
-
       {/* Top Return Navigation Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
@@ -175,14 +104,14 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
             className="px-3.5 py-2 border border-[#26211C]/40 dark:border-[#9A7432]/50 bg-[#FFFDF9] dark:bg-[#12100E] font-mono text-xs font-black uppercase tracking-wider flex items-center gap-2 hover:border-[#1E4D38] hover:text-[#1E4D38] dark:hover:border-[#52B788] dark:hover:text-[#52B788] transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>{t('nav.backToHome', 'Back to Home')}</span>
+            <span>{t('nav.backToHome')}</span>
           </button>
           <button
             type="button"
             onClick={onExploreCauses}
             className="px-3.5 py-2 border border-[#26211C]/30 dark:border-[#9A7432]/40 bg-transparent font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300 hover:border-[#1E4D38] hover:text-[#1E4D38] dark:hover:border-[#52B788] dark:hover:text-[#52B788] transition-colors cursor-pointer"
           >
-            <span>{t('nav.backToExplore', 'Back to Explore')}</span>
+            <span>{t('nav.backToExplore')}</span>
           </button>
         </div>
       </div>
@@ -194,7 +123,7 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
             PATRON CITIZEN VAULT
           </span>
           <h2 className="font-serif font-black text-3xl sm:text-4xl text-[#14110E] dark:text-[#FFFFFF] mt-1.5">
-            {t('nav.myContributions', 'My Contributions')}
+            {t('nav.myContributions')}
           </h2>
           <p className="font-mono text-xs text-zinc-600 dark:text-zinc-400">
             Audited record of your verified contributions, payment receipts, and commemorative certificates.
@@ -206,29 +135,42 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
           onClick={onExploreCauses}
           className="py-2.5 px-5 border-2 border-[#1E4D38] bg-[#1E4D38] text-white dark:bg-[#52B788] dark:text-[#080706] font-mono text-xs font-black uppercase cursor-pointer hover:bg-[#163E2C] shadow-xs"
         >
-          + {t('campaigns.underwrite', 'Underwrite New Cause')}
+          + {t('campaigns.underwrite')}
         </button>
       </div>
+
+      {isLoading && (
+        <p role="status" className="font-mono text-xs text-zinc-500">
+          Opening your secure patron contribution ledger...
+        </p>
+      )}
+      {isError && (
+        <ErrorState
+          title="Donation history is unavailable"
+          message={error instanceof Error ? error.message : 'Could not load your contribution history.'}
+          onRetry={() => void refetch()}
+        />
+      )}
 
       {/* Aggregate Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 font-mono text-center">
         <div className="p-6 border-2 border-[#26211C]/20 dark:border-[#9A7432]/35 bg-[#FFFDF9] dark:bg-[#12100E] space-y-1 rounded-[1px]">
           <span className="text-3xl font-black text-[#1E4D38] dark:text-[#52B788]">
-            {stats.totalAmount.toLocaleString()} ETB
+            {data ? `${stats.totalAmount.toLocaleString()} ETB` : '—'}
           </span>
           <span className="block text-[10px] text-zinc-500 uppercase font-bold">TOTAL CONTRIBUTED</span>
         </div>
 
         <div className="p-6 border-2 border-[#26211C]/20 dark:border-[#9A7432]/35 bg-[#FFFDF9] dark:bg-[#12100E] space-y-1 rounded-[1px]">
           <span className="text-3xl font-black text-[#14110E] dark:text-[#FFFFFF]">
-            {stats.causesSupportedCount}
+            {data ? stats.causesSupportedCount : '—'}
           </span>
           <span className="block text-[10px] text-zinc-500 uppercase font-bold">CAUSES SUPPORTED</span>
         </div>
 
         <div className="p-6 border-2 border-[#26211C]/20 dark:border-[#9A7432]/35 bg-[#FFFDF9] dark:bg-[#12100E] space-y-1 rounded-[1px]">
           <span className="text-3xl font-black text-[#1E4D38] dark:text-[#52B788]">
-            {stats.largestDonation.toLocaleString()} ETB
+            {data ? `${stats.largestDonation.toLocaleString()} ETB` : '—'}
           </span>
           <span className="block text-[10px] text-zinc-500 uppercase font-bold">LARGEST CONTRIBUTION</span>
         </div>
@@ -236,20 +178,15 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
         <div className="p-6 border-2 border-[#26211C]/20 dark:border-[#9A7432]/35 bg-[#FFFDF9] dark:bg-[#12100E] space-y-1 rounded-[1px]">
           <div className="flex items-center justify-center gap-2">
             <span className="text-2xl font-black text-emerald-700 dark:text-emerald-400">
-              {stats.confirmedCount} ✓
+              {data ? `${stats.successfulCount} ✓` : '—'}
             </span>
-            {stats.pendingCount > 0 && (
-              <span className="text-sm font-black text-amber-600 dark:text-amber-400">
-                ({stats.pendingCount} Pending)
-              </span>
-            )}
-            {stats.failedCount > 0 && (
+            {data && stats.failedCount > 0 && (
               <span className="text-sm font-black text-red-500 dark:text-red-400">
                 ({stats.failedCount} Failed)
               </span>
             )}
           </div>
-          <span className="block text-[10px] text-zinc-500 uppercase font-bold">VERIFICATION STATUS</span>
+          <span className="block text-[10px] text-zinc-500 uppercase font-bold">FINAL PAYMENT RESULTS</span>
         </div>
       </div>
 
@@ -288,12 +225,14 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
         <EmptyState
           title="No Contributions Found"
           description={
-            statusFilter === 'all'
+            isError
+              ? 'Your contribution records could not be loaded. Retry to check your ledger, or explore verified causes.'
+              : statusFilter === 'all'
               ? 'You have not recorded any contributions yet. Explore verified causes to make your first contribution.'
               : `No ${statusFilter} contributions at the moment.`
           }
           onReset={onExploreCauses}
-          actionText={t('common.explore', 'Explore Causes')}
+          actionText={t('common.explore')}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-mono">
@@ -331,7 +270,7 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
                     <p className="text-[11px] text-zinc-500">
                       Bank: {donation.bankName || 'Unavailable'} • Ref:{' '}
                       <span className="font-black text-[#1E4D38] dark:text-[#52B788]">
-                        {donation.reference || 'Pending'}
+                        {donation.reference || '—'}
                       </span>
                     </p>
                     {/* Show failure reason snippet on card */}
@@ -371,7 +310,6 @@ export const PatronVaultPage: React.FC<PatronVaultPageProps> = ({
           donation={selectedDonation}
           isOpen={!!selectedDonation}
           onClose={() => setSelectedDonation(null)}
-          onSimulateVerify={handleSimulateVerify}
         />
       )}
     </div>

@@ -6,6 +6,8 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Route, Routes, useNavigate, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import type { AppLanguage } from './i18n/config.ts';
+import { APP_NAME } from './data/content.ts';
 import { Campaign, CampaignCategory, ContributionCertificate, Organization, PaymentRail } from './types/index.ts';
 import { campaignApi } from './services/api/campaignApi.ts';
 import { BanknoteMasterCanvas } from './components/banknote/BanknoteMasterCanvas.tsx';
@@ -23,7 +25,6 @@ import { useAuth } from './features/auth/hooks/useAuth.ts';
 import { AdminPortal } from './features/admin/pages/AdminPortal.tsx';
 import MyReportsPage from './features/profile/MyReportsPage.tsx';
 import { useAuthStore } from './features/auth/store/auth.store.ts';
-import { LANGUAGE_CHANGED_EVENT } from './i18n/config.ts';
 import { FoundationRegister } from './pages/FoundationRegister.tsx';
 import { FoundationDashboard } from './pages/FoundationDashboard.tsx';
 import { OrganizationProfile } from './pages/OrganizationProfile.tsx';
@@ -64,7 +65,7 @@ function PlatformApp({
   openVoice = false,
 }: PlatformAppProps) {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, isAuthenticated } = useAuth();
   const [currentView, setCurrentView] = useState<AppView>('campaigns');
   const [userRole, setUserRole] = useState<'donor' | 'foundation'>('donor');
@@ -89,24 +90,7 @@ function PlatformApp({
   // Scholarxiv Ideation Trail Drawer
   const [isScholarxivOpen, setIsScholarxivOpen] = useState<boolean>(false);
 
-  // Multi-language state (Rule 7: Amharic is the default display language)
-  const [language, setLanguage] = useState<'en' | 'am' | 'om'>(() => {
-    try {
-      return (localStorage.getItem('lewegene_language') as any) || 'am';
-    } catch {
-      return 'am';
-    }
-  });
-
-  // Keep local state in sync whenever any navbar (or Voxide) switches language.
-  useEffect(() => {
-    const handleLanguageChanged = (event: Event) => {
-      const detail = (event as CustomEvent<'am' | 'en' | 'om'>).detail;
-      if (detail === 'am' || detail === 'en' || detail === 'om') setLanguage(detail);
-    };
-    window.addEventListener(LANGUAGE_CHANGED_EVENT, handleLanguageChanged);
-    return () => window.removeEventListener(LANGUAGE_CHANGED_EVENT, handleLanguageChanged);
-  }, []);
+  const language: AppLanguage = i18n.resolvedLanguage === 'en' ? 'en' : 'am';
 
   // Daylight Ivory / Midnight Dark Slate Theme
   const [isDark, setIsDark] = useState<boolean>(() => {
@@ -150,35 +134,52 @@ function PlatformApp({
   const loadData = async () => {
     setIsLoading(true);
     setError(null);
-    try {
-      const [publicCampaigns, orgList] = await Promise.all([
-        campaignApi.getCampaigns(),
-        campaignApi.getOrganizations(),
-      ]);
-      const pendingList = user?.role === 'admin'
-        ? await campaignApi.getAdminCampaigns()
-        : [];
-      setCampaigns(publicCampaigns);
-      setPendingCampaigns(pendingList);
-      setOrganizations(orgList);
-      if (user?.role === 'foundation') {
-        setCurrentOrganization(await organizationService.getByUserId(user.id, user.email));
-      } else {
-        setCurrentOrganization(null);
-      }
-      if (initialMode === 'pledge' && !initialCampaignId && publicCampaigns.length > 0) {
-        setSelectedCampaign(publicCampaigns[0]);
-      }
-    } catch (err: any) {
-      setError(localizeErrorMessage(t, err, 'notifications.campaignLoadFailed'));
-    } finally {
-      setIsLoading(false);
+    setPendingCampaigns([]);
+    setCurrentOrganization(null);
+
+    const requests: Promise<void>[] = [
+      campaignApi.getCampaigns().then((publicCampaigns) => {
+        setCampaigns(publicCampaigns);
+        setIsLoading(false);
+        if (initialMode === 'pledge' && !initialCampaignId && publicCampaigns.length > 0) {
+          setSelectedCampaign(publicCampaigns[0]);
+        }
+      }).catch((err: unknown) => {
+        setError(localizeErrorMessage(t, err, 'notifications.campaignLoadFailed'));
+        setIsLoading(false);
+      }),
+      campaignApi.getOrganizations().then(setOrganizations).catch((err: unknown) => {
+        showToast({ error: err, fallbackKey: 'notifications.organizationLoadFailed' }, 'info');
+      }),
+    ];
+
+    if (user?.role === 'admin') {
+      requests.push(
+        campaignApi.getAdminCampaigns().then(setPendingCampaigns).catch((err: unknown) => {
+          showToast({ error: err, fallbackKey: 'notifications.adminCampaignLoadFailed' }, 'info');
+        })
+      );
     }
+
+    if (user?.role === 'foundation') {
+      requests.push(
+        organizationService.getByUserId(user.id, user.email).then(setCurrentOrganization).catch((err: unknown) => {
+          showToast({ error: err, fallbackKey: 'notifications.organizationLoadFailed' }, 'info');
+        })
+      );
+    }
+
+    await Promise.all(requests);
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    void loadData();
+  }, [
+    user?.id ?? null,
+    user?.email ?? null,
+    user?.role ?? null,
+    user?.organizationId ?? null,
+  ]);
 
   useEffect(() => {
     setIsVoiceBarOpen(openVoice);
@@ -368,8 +369,8 @@ function PlatformApp({
 
     const handleVoxideLang = (e: any) => {
       const newLang = e.detail?.language;
-      if (newLang === 'am' || newLang === 'en' || newLang === 'om') {
-        setLanguage(newLang);
+      if (newLang === 'am' || newLang === 'en') {
+        void i18n.changeLanguage(newLang);
       }
     };
 
@@ -397,7 +398,7 @@ function PlatformApp({
       window.removeEventListener('voxide:language' as any, handleVoxideLang);
       window.removeEventListener('voxide:start_donation' as any, handleVoxideDonation);
     };
-  }, [campaigns, selectedCampaign]);
+  }, [campaigns, selectedCampaign, i18n]);
 
   return (
     <div className={`min-h-screen bg-[#F2ECE1] dark:bg-[#080706] text-[#201C18] dark:text-[#F4EFE6] font-sans selection:bg-[#9A7432]/30 selection:text-[#1E4D38] transition-colors duration-200 ${isDark ? 'dark' : ''}`}>
@@ -519,7 +520,7 @@ function PlatformApp({
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="flex-1 text-xs">
-            <p className="font-semibold text-primary">{t('notifications.platformUpdate')}</p>
+            <p className="font-semibold text-primary">{t('notifications.platformUpdate', { appName: APP_NAME })}</p>
             <p className="text-zinc-600 dark:text-zinc-400 mt-0.5 leading-relaxed">
               {'key' in toast.message
                 ? t(toast.message.key, toast.message.values)
@@ -530,7 +531,7 @@ function PlatformApp({
           </div>
           <button
             onClick={() => setToast(null)}
-            aria-label={t('common.dismiss', 'Dismiss notification')}
+            aria-label={t('common.dismiss')}
             className="text-zinc-400 hover:text-primary text-xs p-1 cursor-pointer"
           >
             &times;
@@ -576,12 +577,41 @@ function SignInRequiredRoute({
 
 function AdminRoute() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [isDark, setIsDark] = useState(() => localStorage.getItem('lewegene_theme') === 'dark');
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark);
     localStorage.setItem('lewegene_theme', isDark ? 'dark' : 'light');
   }, [isDark]);
+
+  if (!isAuthenticated) {
+    return (
+      <SignInRequiredRoute description={t('admin.access.loginDescription')}>
+        <div />
+      </SignInRequiredRoute>
+    );
+  }
+
+  if (user?.role !== 'admin') {
+    return (
+      <main className="min-h-screen bg-[#F2ECE1] px-4 py-16 text-center text-[#201C18] dark:bg-[#080706] dark:text-[#F4EFE6]">
+        <h1 className="font-serif text-2xl font-bold">{t('admin.access.deniedTitle')}</h1>
+        <p className="mx-auto mt-3 max-w-lg text-sm text-zinc-600 dark:text-zinc-400">
+          {t('admin.access.deniedDescription')}
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="mt-6 rounded-md bg-[#1E4D38] px-4 py-2 text-sm font-semibold text-white"
+        >
+          {t('admin.access.backHome')}
+        </button>
+      </main>
+    );
+  }
 
   return (
     <AdminPortal

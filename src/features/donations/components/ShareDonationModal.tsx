@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Donation } from '../types/donation.types';
 import { Copy, Check, X, Share2, Send, MessageCircle } from 'lucide-react';
+import { APP_NAME } from '../../../data/content.ts';
 
 interface ShareDonationModalProps {
   donation: Donation;
@@ -13,12 +15,16 @@ export const ShareDonationModal: React.FC<ShareDonationModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const { t } = useTranslation();
+  const [copied, setCopied] = useState<boolean>(false);
   if (!isOpen) return null;
 
-  const [copied, setCopied] = useState<boolean>(false);
-
   const shareUrl = `${window.location.origin}/?campaignId=${donation.campaignId}`;
-  const shareText = `I just contributed ${donation.amount.toLocaleString()} ETB to "${donation.campaignTitle || 'a community campaign'}" on Lewegene. Join me in supporting this verified cause:`;
+  const shareText = t('donations.shareText', {
+    amount: donation.amount.toLocaleString(),
+    campaign: donation.campaignTitle || t('campaigns.defaultShareTitle'),
+    appName: APP_NAME,
+  });
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(`${shareText} ${shareUrl}`);

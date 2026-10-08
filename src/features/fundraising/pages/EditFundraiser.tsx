@@ -13,9 +13,36 @@ export const EditFundraiser: React.FC<PageProps & { id: string }> = ({ id, go, t
   const { t } = useTranslation();
   const { data: f, isLoading, error, refresh } = useFundraiser(id);
 
-  if (isLoading) return <Loading message={t('fundraiser.manage.loading')} />;
-  if (error) return <ErrorState message={error.message} onRetry={() => void refresh()} />;
-  if (!f) return <p className="text-sm text-[#1E4D38] dark:text-[#52B788]">{t('fundraiser.manage.notFound')}</p>;
+  if (isLoading) {
+    return (
+      <div className="space-y-5">
+        <h1 className="text-3xl font-serif font-black uppercase text-[#14110E] dark:text-[#F4EFE6]">
+          {t('fundraiser.form.editTitle')}
+        </h1>
+        <Loading message={t('fundraiser.manage.loading')} />
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="space-y-5">
+        <h1 className="text-3xl font-serif font-black uppercase text-[#14110E] dark:text-[#F4EFE6]">
+          {t('fundraiser.form.editTitle')}
+        </h1>
+        <ErrorState message={error.message} onRetry={() => void refresh()} />
+      </div>
+    );
+  }
+  if (!f) {
+    return (
+      <div className="space-y-5">
+        <h1 className="text-3xl font-serif font-black uppercase text-[#14110E] dark:text-[#F4EFE6]">
+          {t('fundraiser.form.editTitle')}
+        </h1>
+        <p className="text-sm text-[#1E4D38] dark:text-[#52B788]">{t('fundraiser.manage.notFound')}</p>
+      </div>
+    );
+  }
   if (!EDITABLE.includes(f.status)) {
     return <p className="text-sm text-zinc-500">{t('fundraiser.form.cannotEdit')}</p>;
   }

@@ -5,7 +5,6 @@ import { useReports } from '../hooks/useReports';
 import { ImpactSummaryCard } from '../components/ImpactSummaryCard';
 import { FinancialBreakdownChart } from '../components/FinancialBreakdownChart';
 import { TransparencyAuditTable } from '../components/TransparencyAuditTable';
-import { Loading } from '../../../components/Loading';
 import { ErrorState } from '../../../components/ErrorState';
 import { EmptyState } from '../../../components/EmptyState';
 
@@ -19,22 +18,11 @@ export const TransparencyReportsPage: React.FC<TransparencyReportsPageProps> = (
   const { t } = useTranslation();
   const { overview, isLoading, error, refetch, selectedSector, setSelectedSector, setSelectedRecord } = useReports();
 
-  if (isLoading) {
-    return <Loading variant="full" message="የግልጽነትና ኦዲት መረጃዎችን በመጫን ላይ..." />;
-  }
-
-  if (error || !overview) {
-    return (
-      <ErrorState
-        message={error instanceof Error ? error.message : 'Transparency reports are unavailable.'}
-        onRetry={() => void refetch()}
-      />
-    );
-  }
-
-  const filteredRecords = selectedSector
-    ? overview.auditRecords.filter((r) => r.campaignTitle.toLowerCase().includes(selectedSector))
-    : overview.auditRecords;
+  const filteredRecords = overview
+    ? selectedSector
+      ? overview.auditRecords.filter((r) => r.campaignTitle.toLowerCase().includes(selectedSector))
+      : overview.auditRecords
+    : [];
 
   return (
     <div className="w-full max-w-6xl mx-auto px-4 py-8 space-y-6">
@@ -55,18 +43,34 @@ export const TransparencyReportsPage: React.FC<TransparencyReportsPageProps> = (
         </div>
       </div>
 
-      {/* Top Metrics Cards */}
-      <ImpactSummaryCard overview={overview} />
+      {isLoading && (
+        <p role="status" className="font-mono text-xs text-zinc-500">
+          የግልጽነትና ኦዲት መረጃዎችን በመጫን ላይ...
+        </p>
+      )}
+      {error && (
+        <ErrorState
+          message={error instanceof Error ? error.message : 'Transparency reports are unavailable.'}
+          onRetry={() => void refetch()}
+        />
+      )}
 
-      {/* Sector Breakdown Chart */}
-      <FinancialBreakdownChart
-        breakdowns={overview.sectorBreakdowns}
-        selectedSector={selectedSector}
-        onSelectSector={(s) => setSelectedSector(selectedSector === s ? null : s)}
-      />
+      {overview && (
+        <>
+          {/* Top Metrics Cards */}
+          <ImpactSummaryCard overview={overview} />
+
+          {/* Sector Breakdown Chart */}
+          <FinancialBreakdownChart
+            breakdowns={overview.sectorBreakdowns}
+            selectedSector={selectedSector}
+            onSelectSector={(s) => setSelectedSector(selectedSector === s ? null : s)}
+          />
+        </>
+      )}
 
       {/* Audit Table */}
-      {filteredRecords.length > 0 ? (
+      {overview && filteredRecords.length > 0 ? (
         <TransparencyAuditTable
           records={filteredRecords}
           onSelectRecord={(rec) => {
@@ -74,14 +78,19 @@ export const TransparencyReportsPage: React.FC<TransparencyReportsPageProps> = (
             onSelectRecord?.(rec.id);
           }}
         />
-      ) : (
+      ) : overview ? (
         <EmptyState
           title={selectedSector ? 'ለተመረጠው ዘርፍ የኦዲት መዝገብ አልተገኘም' : 'ምንም የኦዲት መዝገብ የለም'}
           description={selectedSector ? undefined : 'የኦዲት መዝገቦች ሲገኙ እዚህ ይታያሉ።'}
           actionLabel={selectedSector ? 'ማጣሪያዎችን ዳግም አስጀምር' : undefined}
           onAction={selectedSector ? () => setSelectedSector(null) : undefined}
         />
-      )}
+      ) : !isLoading && !error ? (
+        <EmptyState
+          title="የኦዲት መዝገቦች የሉም"
+          description="የግልጽነት መረጃ ሲገኝ እዚህ ይታያል።"
+        />
+      ) : null}
     </div>
   );
 };

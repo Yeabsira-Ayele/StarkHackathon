@@ -16,7 +16,7 @@ export const Loading: React.FC<LoadingProps> = ({
   className = '',
 }) => {
   const { t } = useTranslation();
-  const loadingText = message || t('common.loading', 'በመጫን ላይ...');
+  const loadingText = message || t('common.loading');
 
   if (variant === 'skeleton') {
     return (

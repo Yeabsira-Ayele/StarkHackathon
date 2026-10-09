@@ -29,8 +29,24 @@ Admin-only routes expect the `x-admin-key` header, compared to `ADMIN_KEY`.
 - `POST /api/auth/google` with `{ credential }` verifies a Google Identity Services ID token and signs in or creates a user from its verified email. The server requires `GOOGLE_CLIENT_ID`; sign-in creates the account automatically if the email is new.
 - `GET /api/auth/me` returns the current user and, for organization accounts, its organization details. Send the JWT in `Authorization: Bearer <token>`.
 - `PATCH /api/users/me` accepts profile fields including `preferredLanguage` (`am` or `en`) for the language options shown in the frontend. Older stored values are normalized to Amharic by the frontend.
-- `POST /api/organizations/signup` requires that Google-authenticated bearer token and creates an organization application for the signed-in account. Organization contact details are separate from the account's verified Google email.
-- To grant `SUPER_ADMIN` to a verified Google account, first sign in to the app with that account, then run `node scripts/promote-google-super-admin.js <email>` from the backend directory. The script only promotes an existing, active account linked to a verified Google identity; it does not create or link accounts.
+- `POST /api/organizations/signup` requires an authenticated bearer token and creates an organization application for the signed-in account for admin review. Any authenticated account may submit; regular users become organization accounts, while administrator roles are preserved. Organization contact details are separate from the account's verified Google email. An account may have only one organization application.
+- `yeabsiraayele42@gmail.com` is the configured Super Admin account. Its verified Google account is promoted automatically at sign-in or on its next authenticated API request, so an existing session does not need to be recreated. Other verified Google accounts can be promoted with `node scripts/promote-google-super-admin.js <email>` from the backend directory; the script only promotes an existing, active account linked to a verified Google identity.
+
+### Admin dashboard and reports
+
+- `GET /api/admin/dashboard` returns aggregate counts and totals in `data`.
+- `GET /api/admin/reports` requires an admin role and returns persisted reports in `{ reports, items, total }`, including reporter and campaign display fields.
+- `POST /api/reports` requires authentication and accepts `{ campaignId, category, details, evidence? }`. Categories are `False Information`, `Fraud / Scam`, `Misleading Content`, and `Other`. The authenticated user is recorded as the reporter.
+- `GET /api/reports/me` returns the signed-in user's reports.
+- `PATCH /api/admin/reports/:id` requires an admin role and accepts `{ status, note? }`, where status is `reviewed`, `resolved`, or `dismissed`.
+- `GET /api/admin/admins` returns all non-deleted administrator accounts and their basic information; Super Admin only.
+- `GET /api/admin/admin-candidates` returns paginated active regular users eligible for admin access; Super Admin only.
+- `POST /api/admin/admins` accepts `{ userId }` for an existing active regular user, promotes that account to `ADMIN`, and invalidates its existing tokens; Super Admin only.
+- `DELETE /api/admin/admins/:id` removes `ADMIN` access by demoting the account to `USER` and invalidating its existing tokens; Super Admin only. Super Admin accounts cannot be removed through this endpoint.
+- `GET /api/admin/users` omits administrator accounts for regular admins. Looking up an administrator through `GET /api/admin/users/:id` is also restricted to Super Admins.
+- `GET /api/reports/transparency` returns totals and campaign-grouped summaries derived from completed donation records for publicly visible pending or approved campaigns. These are donation totals, not disbursements or independent audit records.
+- `GET /api/reports/audits/:id` returns the completed-donation summary for one publicly visible campaign using `{ success, data: { record } }`. Despite the legacy route name, it does not represent an audit or disbursement.
+- `GET /api/users/me` and `PATCH /api/users/me` return/load and update the signed-in user's profile. `PATCH /api/users/me/password` requires `{ currentPassword, newPassword }` and returns a replacement token after a successful password change.
 
 ## Rate limits
 

@@ -21,9 +21,6 @@ const signupOrganization = async (userId, body) => {
 
   const user = await User.findById(userId);
   if (!user) throw new AppError('Account not found', 404, 'USER_NOT_FOUND');
-  if (user.role !== 'USER') {
-    throw new AppError('This account cannot submit an organization application.', 403, 'FORBIDDEN');
-  }
   if (await Organization.findOne({ userId })) {
     throw new AppError('This account already has an organization application.', 409, 'ORGANIZATION_EXISTS');
   }
@@ -49,17 +46,24 @@ const signupOrganization = async (userId, body) => {
     payoutAccounts: cleanAccounts(body.payoutAccounts),
   });
   try {
-    user.role = 'ORGANIZATION';
-    await user.save();
+    if (user.role === 'USER') {
+      user.role = 'ORGANIZATION';
+      await user.save();
+    }
   } catch (err) {
     await Organization.deleteOne({ _id: organization._id });
     throw err;
   }
 
-  return {
-    ...await buildAuthResponse(user),
-    organization: organization.toObject(),
-  };
+  const authResponse = await buildAuthResponse(user);
+  if (!authResponse.organization) {
+    authResponse.organization = {
+      _id: organization._id,
+      name: organization.name,
+      verificationStatus: organization.verificationStatus,
+    };
+  }
+  return authResponse;
 };
 
 const getMyOrganization = async (userId) => {

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "test": "node --test test/campaignController.test.js test/donationController.test.js test/adminAuthorization.test.js test/adminCampaignReview.test.js test/adminDonationManagement.test.js test/LinkEt.test.js test/savedCauses.test.js test/organizationAccess.test.js"
+    "test": "node --test test/campaignController.test.js test/donationController.test.js test/adminAuthorization.test.js test/adminCampaignReview.test.js test/adminDonationManagement.test.js test/LinkEt.test.js test/savedCauses.test.js test/organizationAccess.test.js test/organizationSignup.test.js"
   },
   "engines": {
     "node": ">=18"

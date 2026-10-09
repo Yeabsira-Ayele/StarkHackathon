@@ -81,7 +81,7 @@ export const PaymentReferenceForm: React.FC<PaymentReferenceFormProps> = ({
         )}
         <div className="flex justify-between gap-3 border-t pt-4">
           <button type="button" onClick={onBack} disabled={isSubmitting} className="rounded border px-4 py-2 font-bold disabled:opacity-50">← BACK</button>
-          <button type="submit" disabled={isSubmitting} className="inline-flex items-center gap-2 rounded bg-primary px-5 py-3 font-bold text-primary-foreground disabled:opacity-50">
+          <button type="submit" disabled={isSubmitting} className="inline-flex items-center gap-2 rounded bg-primary px-5 py-3 font-bold text-white dark:text-[#1E1A17] disabled:opacity-50">
             {isSubmitting ? 'VERIFYING…' : 'VERIFY RECEIPT'} <ArrowRight className="h-4 w-4" />
           </button>
         </div>

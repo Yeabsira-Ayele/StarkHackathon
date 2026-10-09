@@ -21,3 +21,9 @@ export const useReports = () => {
     setSelectedRecord,
   };
 };
+
+export const useMyReports = (userId: string | undefined, enabled = true) => useQuery({
+  queryKey: ['reports', 'mine', userId],
+  queryFn: () => reportsApi.getMyReports(),
+  enabled: Boolean(userId) && enabled,
+});

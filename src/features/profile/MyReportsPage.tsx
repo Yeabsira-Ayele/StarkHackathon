@@ -6,15 +6,17 @@ import { LanguageSwitcher } from '../../components/common/LanguageSwitcher.tsx';
 import type { AdminReport } from '../admin/types/admin.types.ts';
 import { useAuthStore } from '../auth/store/auth.store.ts';
 import { APP_NAME } from '../../data/content.ts';
-import { reportsApi } from '../reports/api/reports.api.ts';
+import { useMyReports } from '../reports/hooks/useReports.ts';
 
 const MyReportsPage = () => {
   const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
-  const [reports, setReports] = useState<AdminReport[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [loadAttempt, setLoadAttempt] = useState(0);
+  const token = useAuthStore((state) => state.token);
+  const isAuthenticated = Boolean(user && token);
+  const reportsQuery = useMyReports(user?.id, isAuthenticated);
+  const reports = reportsQuery.data ?? [];
+  const loading = isAuthenticated && reportsQuery.isPending;
+  const error = reportsQuery.error;
   const [isDark, setIsDark] = useState<boolean>(() => {
     try {
       return localStorage.getItem('lewegene_theme') === 'dark';
@@ -33,39 +35,15 @@ const MyReportsPage = () => {
   }, [isDark]);
 
   useEffect(() => {
-    let active = true;
-    setReports([]);
-    if (!user) {
-      setError(null);
-      setLoading(false);
-      return () => {
-        active = false;
-      };
-    }
-
-    const loadReports = async (showLoading: boolean) => {
-      if (showLoading) setLoading(true);
-      setError(null);
-      try {
-        const items = await reportsApi.getMyReports();
-        if (active) setReports(items);
-      } catch (cause: unknown) {
-        if (active) setError(cause instanceof Error ? cause.message : t('myReports.loadError'));
-      } finally {
-        if (active && showLoading) setLoading(false);
-      }
-    };
-
-    void loadReports(true);
-    const refreshReports = () => void loadReports(false);
+    if (!isAuthenticated) return;
+    const refreshReports = () => void reportsQuery.refetch();
     const intervalId = window.setInterval(refreshReports, 30_000);
     window.addEventListener('focus', refreshReports);
     return () => {
-      active = false;
       window.clearInterval(intervalId);
       window.removeEventListener('focus', refreshReports);
     };
-  }, [user?.id, loadAttempt, t]);
+  }, [isAuthenticated, user?.id, reportsQuery.refetch]);
 
   const statusTone: Record<AdminReport['status'], string> = {
     pending: 'border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-300',
@@ -135,7 +113,7 @@ const MyReportsPage = () => {
           </span>
         </header>
 
-        {!user && (
+        {!isAuthenticated && (
           <p className="mt-6 border border-[#9A7432]/30 bg-white/60 p-5 text-sm dark:bg-white/[.03]">
             {t('myReports.signInRequired')}
           </p>
@@ -143,11 +121,11 @@ const MyReportsPage = () => {
         {loading && <p role="status" className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">{t('myReports.loading')}</p>}
         {error && (
           <div role="alert" className="mt-6 border border-red-700/30 bg-red-50 p-4 text-sm text-red-800 dark:bg-red-950/30 dark:text-red-200">
-            <p>{error}</p>
-            <button type="button" className="mt-2 underline" onClick={() => setLoadAttempt((attempt) => attempt + 1)}>{t('common.retry')}</button>
+            <p>{error instanceof Error ? error.message : t('myReports.loadError')}</p>
+            <button type="button" className="mt-2 underline" onClick={() => void reportsQuery.refetch()}>{t('common.retry')}</button>
           </div>
         )}
-        {!loading && !error && user && reports.length === 0 && (
+        {!loading && !error && isAuthenticated && reports.length === 0 && (
           <p className="mt-6 border border-[#9A7432]/30 bg-white/60 p-5 text-sm dark:bg-white/[.03]">
             {t('myReports.empty')}
           </p>

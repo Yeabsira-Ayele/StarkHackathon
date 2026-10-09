@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +21,7 @@ import { CreateCampaignPage } from '../../features/fundraiser/pages/CreateCampai
 import { FoundationDashboardPage } from '../../features/fundraiser/pages/FoundationDashboardPage';
 import FundraisingApp from '../../features/fundraising/FundraisingApp';
 import ProfilePage from '../../features/profile/ProfilePage';
+import { useMyReports } from '../../features/reports/hooks/useReports';
 import {
   Search,
   ArrowLeft,
@@ -108,7 +110,6 @@ export interface BanknoteMasterCanvasProps {
   dataError?: string | null;
   onRetryData?: () => void;
   onRequireLogin?: (action: 'donate' | 'fundraise' | 'report' | 'save') => void;
-  onFoundationAccessDenied?: () => void;
 }
 
 interface HomeLandingProps {
@@ -481,15 +482,17 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
   dataError = null,
   onRetryData,
   onRequireLogin,
-  onFoundationAccessDenied,
 }) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const authUser = useAuthStore((state) => state.user);
   const authToken = useAuthStore((state) => state.token);
   const setAuthUser = useAuthStore((state) => state.setUser);
   const logout = useAuthStore((state) => state.logout);
-  const showPersonalNavigation = isAuthenticated && Boolean(authUser);
+  const showPersonalNavigation = isAuthenticated && Boolean(authUser && authToken);
+  const myReportsQuery = useMyReports(authUser?.id, showPersonalNavigation);
+  const hasReports = myReportsQuery.isSuccess && (myReportsQuery.data?.length ?? 0) > 0;
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isProfileEditorOpen, setIsProfileEditorOpen] = useState(false);
   const [profileName, setProfileName] = useState(authUser?.name || '');
@@ -521,7 +524,12 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
     setProfilePhone(authUser.phone || '');
   }, [isProfileEditorOpen, authUser]);
 
-  const hasReports = Boolean(authUser);
+  useEffect(() => {
+    if (showPersonalNavigation && myReportsQuery.isError) {
+      console.error('Failed to load current user reports for navigation:', myReportsQuery.error);
+    }
+  }, [showPersonalNavigation, myReportsQuery.isError, myReportsQuery.error]);
+
   const hasFundraisers = false;
 
   // Navigation State
@@ -648,12 +656,8 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
   };
 
   const openFoundationDesk = () => {
-    if (!isAuthenticated) {
-      onRequireLogin?.('fundraise');
-      return;
-    }
     if (!canAccessFoundation) {
-      onFoundationAccessDenied?.();
+      navigate('/organizations/register');
       return;
     }
     navigate('/foundation');
@@ -795,6 +799,7 @@ export const BanknoteMasterCanvas: React.FC<BanknoteMasterCanvasProps> = ({
         details: reportDetails.trim() || `Reported for ${reportReason.replaceAll('_', ' ')}.`,
         evidence: [],
       });
+      void queryClient.invalidateQueries({ queryKey: ['reports', 'mine', reporterId] });
       setReportFeedback({ key: 'explore.reportSubmitted' });
       setReportReason('');
       setReportDetails('');

@@ -407,7 +407,6 @@ function PlatformApp({
           }
           navigate('/login');
         }}
-        onFoundationAccessDenied={() => navigate('/organizations/register')}
         onDonate={handleDonate}
         onApproveCampaign={handleAdminApprove}
         onRejectCampaign={handleAdminReject}
@@ -681,6 +680,7 @@ function FoundationDeskRoute() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
+  const canAccessFoundation = user?.role === 'foundation' || user?.role === 'admin';
   const [org, setOrg] = useState<Organization | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
@@ -689,6 +689,13 @@ function FoundationDeskRoute() {
 
   useEffect(() => {
     let active = true;
+    if (!canAccessFoundation || !user) {
+      setLoading(false);
+      setOrg(null);
+      return () => {
+        active = false;
+      };
+    }
     setLoading(true);
     setError(null);
     (async () => {
@@ -711,6 +718,10 @@ function FoundationDeskRoute() {
     };
   }, [user, retryKey, t]);
 
+  if (!canAccessFoundation) {
+    return <OrganizationRegisterRoute />;
+  }
+
   if (loading) {
     return <div className="p-12 text-center font-mono text-xs">{t('notifications.loadingFoundation')}</div>;
   }
@@ -720,19 +731,7 @@ function FoundationDeskRoute() {
   }
 
   if (!org) {
-    return (
-      <div className="min-h-screen bg-[#F2ECE1] dark:bg-[#080706] text-[#201C18] dark:text-[#F4EFE6] px-4 sm:px-6 py-8 text-center font-mono text-xs space-y-4">
-        <p>{t('notifications.noOrganization')}</p>
-        <div className="flex items-center justify-center gap-4">
-          <button onClick={() => navigate('/')} className="underline cursor-pointer">
-            ← {t('nav.backToHome')}
-          </button>
-          <button onClick={() => navigate('/organizations/register')} className="underline cursor-pointer">
-            {t('notifications.registerOrganization')}
-          </button>
-        </div>
-      </div>
-    );
+    return <OrganizationRegisterRoute />;
   }
 
   return (

@@ -62,10 +62,38 @@ const payoutProvider = (account) => {
   return null;
 };
 
-const accountNumberMatches = (receiptAccount, expectedAccountNumber) => {
-  const actual = String(receiptAccount || "").replace(/\D/g, "");
-  const expected = String(expectedAccountNumber || "").replace(/\D/g, "");
+// Ethiopian mobile numbers appear as 0912345678, 912345678, 251912345678 or
+// +251912345678. Reduce all of them to the 9-digit national form.
+const canonicalPhone = (digits) => {
+  if (/^251\d{9}$/.test(digits)) return digits.slice(3);
+  if (/^0\d{9}$/.test(digits)) return digits.slice(1);
+  return digits;
+};
+
+const accountNumberMatches = (receiptAccount, expectedAccountNumber, provider) => {
+  let actual = String(receiptAccount || "").replace(/\D/g, "");
+  let expected = String(expectedAccountNumber || "").replace(/\D/g, "");
+  if (provider === "telebirr") {
+    actual = canonicalPhone(actual);
+    expected = canonicalPhone(expected);
+  }
   return Boolean(actual && expected && actual === expected);
+};
+
+// Safe-to-log description of why two account numbers differ. Never logs full
+// account numbers or the receipt URL: only lengths, last 4 digits, mask flag.
+const describeAccountMismatch = (receiptAccount, expectedAccountNumber) => {
+  const receiptText = String(receiptAccount || "");
+  const receiptDigits = receiptText.replace(/\D/g, "");
+  const expectedDigits = String(expectedAccountNumber || "").replace(/\D/g, "");
+  return {
+    receiptMissing: !receiptDigits,
+    receiptLooksMasked: /[*xX\u2022\u00b7#]/.test(receiptText),
+    receiptDigitCount: receiptDigits.length,
+    expectedDigitCount: expectedDigits.length,
+    receiptLast4: receiptDigits.slice(-4),
+    expectedLast4: expectedDigits.slice(-4),
+  };
 };
 
 // ------------------------------------------------------------- validation
@@ -439,7 +467,11 @@ const verifyDonationReceipt = async (rawUrl, payoutAccount) => {
       "wrong_provider"
     );
   }
-  if (!accountNumberMatches(n.receiverAccount, payoutAccount.accountNumber)) {
+  if (!accountNumberMatches(n.receiverAccount, payoutAccount.accountNumber, expectedProvider)) {
+    console.warn("[links.et] receiver account mismatch", {
+      source: receipt?.source,
+      ...describeAccountMismatch(n.receiverAccount, payoutAccount.accountNumber),
+    });
     throw new VerificationError(
       "The receipt does not confirm the selected campaign payment account",
       422,

@@ -382,3 +382,68 @@ test('accepts the exact destination when the receipt holder name is formatted di
     { provider: 'telebirr', amount: 250, receiptKey: 'telebirr:REF123' }
   );
 });
+
+test('accepts telebirr phone numbers written in a different but equivalent format', async () => {
+  for (const [saved, shown] of [
+    ['0912345678', '251912345678'],
+    ['251912345678', '0912345678'],
+    ['+251 912 345 678', '912345678'],
+  ]) {
+    mockVerifiedReceipt({
+      source: 'telebirr-html',
+      receiptNo: 'REF-PHONE',
+      settledAmount: '250 Birr',
+      creditedPartyName: 'Lewegene Charity',
+      creditedPartyAccountNo: shown,
+      transactionStatus: 'Completed',
+    });
+    const result = await linksEt.verifyDonationReceipt(
+      'https://transactioninfo.ethiotelecom.et/receipt/123',
+      { ...payoutAccount, accountNumber: saved }
+    );
+    assert.equal(result.amount, 250);
+  }
+});
+
+test('phone normalisation never makes a different number match', async () => {
+  mockVerifiedReceipt({
+    source: 'telebirr-html',
+    receiptNo: 'REF-PHONE2',
+    settledAmount: '250 Birr',
+    creditedPartyName: 'Lewegene Charity',
+    creditedPartyAccountNo: '251912345679',
+    transactionStatus: 'Completed',
+  });
+  await assert.rejects(
+    linksEt.verifyDonationReceipt('https://transactioninfo.ethiotelecom.et/receipt/123', {
+      ...payoutAccount,
+      accountNumber: '0912345678',
+    }),
+    (error) => error.code === 'wrong_receiver_account'
+  );
+});
+
+test('logs a safe summary (no full account numbers) when the receiver account mismatches', async () => {
+  const warnings = [];
+  const originalWarn = console.warn;
+  console.warn = (...args) => warnings.push(JSON.stringify(args));
+  try {
+    mockVerifiedReceipt({
+      source: 'telebirr-html',
+      receiptNo: 'REF-MASK',
+      settledAmount: '250 Birr',
+      creditedPartyName: 'Lewegene Charity',
+      creditedPartyAccountNo: '2519****5678',
+      transactionStatus: 'Completed',
+    });
+    await assert.rejects(
+      linksEt.verifyDonationReceipt('https://transactioninfo.ethiotelecom.et/receipt/123', payoutAccount),
+      (error) => error.code === 'wrong_receiver_account'
+    );
+  } finally {
+    console.warn = originalWarn;
+  }
+  const logged = warnings.join('');
+  assert.match(logged, /receiptLooksMasked":true/);
+  assert.ok(!logged.includes(payoutAccount.accountNumber));
+});

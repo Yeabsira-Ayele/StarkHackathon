@@ -21,12 +21,14 @@ interface BackendOrganization {
   _id: string;
   name: string;
   organizationType: string;
+  registrationNo?: string;
+  website?: string;
   officialEmail: string;
   phone: string;
   location: string;
   description: string;
   logo?: string;
-  authorizedRepresentative: { name: string; phone: string };
+  authorizedRepresentative: { name: string; phone: string; role?: string; email?: string };
   payoutAccounts: { bankName: string; accountNumber: string; accountHolderName: string }[];
   verificationDocuments: { name?: string; url: string }[];
   verificationStatus: 'pending' | 'approved' | 'changes_requested' | 'rejected';
@@ -95,6 +97,8 @@ function toOrgApplication(org: BackendOrganization): OrgApplication {
     id: org._id,
     name: org.name,
     organizationType: org.organizationType,
+    registrationNo: org.registrationNo,
+    website: org.website,
     officialEmail: org.officialEmail,
     phone: org.phone,
     address: org.location,
@@ -102,8 +106,9 @@ function toOrgApplication(org: BackendOrganization): OrgApplication {
     logoUrl: org.logo,
     representative: {
       name: org.authorizedRepresentative?.name || 'Authorized representative',
-      role: 'Authorized representative',
+      role: org.authorizedRepresentative?.role || 'Authorized representative',
       phone: org.authorizedRepresentative?.phone || org.phone,
+      email: org.authorizedRepresentative?.email,
     },
     bank: {
       bank: account?.bankName || '',
@@ -129,6 +134,8 @@ export function organizationToOrgApplication(org: Organization): OrgApplication 
     id: org.id,
     name: org.name,
     organizationType: org.type,
+    registrationNo: org.registrationNo,
+    website: org.website,
     officialEmail: org.contactEmail,
     phone: org.contactPhone,
     address: org.location,

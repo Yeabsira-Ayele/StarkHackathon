@@ -41,6 +41,10 @@ export const campaignApi = {
     return backendCampaignApi.getOrganizations();
   },
 
+  async getMyOrganization(): Promise<Organization | null> {
+    return backendCampaignApi.getMyOrganization();
+  },
+
   async getOrganizationById(id: string): Promise<Organization | null> {
     try {
       const response = await api.get<{ data: { organization: Record<string, unknown> } }>(`/organizations/${id}`);

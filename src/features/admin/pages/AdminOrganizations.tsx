@@ -72,6 +72,8 @@ export const AdminOrganizations: React.FC = () => {
               <DetailGrid items={[
                 [t('adminOrganizations.officialEmail'), open.officialEmail], [t('adminOrganizations.phone'), open.phone],
                 [t('adminUi.type'), <span className="capitalize">{open.organizationType}</span>], [t('adminOrganizations.locationAddress'), open.address],
+                ['Registration number', open.registrationNo || 'Not provided'],
+                ['Website', open.website ? <a href={open.website} target="_blank" rel="noreferrer" className="text-accent underline">{open.website}</a> : 'Not provided'],
                 [t('adminUi.submitted'), fmtDate(open.submittedAt)], [t('adminOrganizations.verificationStatus'), <StatusBadge status={open.status} />],
               ]} />
               <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mt-4 mb-1">{t('adminUi.descriptionLabel')}</p>
@@ -90,12 +92,12 @@ export const AdminOrganizations: React.FC = () => {
               </div>
             </Panel>
 
-            <Panel title={t('adminOrganizations.representative')}><DetailGrid cols={3} items={[[ t('adminOrganizations.name'), open.representative.name], [t('adminOrganizations.role'), open.representative.role], [t('adminOrganizations.phone'), open.representative.phone]]} /></Panel>
+            <Panel title={t('adminOrganizations.representative')}><DetailGrid cols={3} items={[[ t('adminOrganizations.name'), open.representative.name], [t('adminOrganizations.role'), open.representative.role], [t('adminOrganizations.phone'), open.representative.phone], ['Email', open.representative.email || 'Not provided']]} /></Panel>
             <Panel title={t('adminOrganizations.bankAccount')}><DetailGrid cols={3} items={[[ t('adminUi.bank'), open.bank.bank], [t('adminUi.accountNumber'), open.bank.accountNumber], [t('adminOrganizations.accountName'), open.bank.accountName]]} /></Panel>
 
             <Panel title={t('adminOrganizations.verificationDocuments')}>
               {open.documents.length === 0 ? <p className="font-mono text-xs text-[#8B2626]">{t('adminOrganizations.noDocuments')}</p> : (
-                <ul className="space-y-2">{open.documents.map((d) => <li key={d} className="flex items-center gap-2 font-mono text-xs"><FileText className="w-4 h-4 text-[#9A7432]" />{d}</li>)}</ul>
+                <ul className="space-y-2">{open.documents.map((d) => <li key={d} className="flex items-center gap-2 font-mono text-xs"><FileText className="w-4 h-4 text-[#9A7432]" /><a href={d} target="_blank" rel="noreferrer" className="break-all text-accent underline">{d}</a></li>)}</ul>
               )}
             </Panel>
 

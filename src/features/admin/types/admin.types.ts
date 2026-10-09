@@ -101,12 +101,14 @@ export interface OrgApplication {
   id: string;
   name: string;
   organizationType: string;
+  registrationNo?: string;
+  website?: string;
   officialEmail: string;
   phone: string;
   address: string;
   description: string;
   logoUrl?: string;
-  representative: { name: string; role: string; phone: string };
+  representative: { name: string; role: string; phone: string; email?: string };
   bank: { bank: string; accountNumber: string; accountName: string };
   documents: string[];
   status: OrgApplicationStatus;

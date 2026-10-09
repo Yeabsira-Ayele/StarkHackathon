@@ -70,6 +70,11 @@ export const authApi = {
     return mapBackendAuthResponse(response.data.data);
   },
 
+  async registerOrganization(payload: Record<string, unknown>): Promise<BackendAuthResponse> {
+    const response = await api.post<BackendEnvelope<BackendAuthResponse>>('/organizations/signup', payload);
+    return response.data.data;
+  },
+
   async getCurrentUser(): Promise<User | null> {
     const response = await api.get<BackendEnvelope<{ user: BackendUser; organization?: BackendOrganization | null }>>('/auth/me');
     return mapBackendUser(response.data.data.user, response.data.data.organization);

@@ -28,6 +28,7 @@ import {
 export interface FoundationRegisterProps {
   onSuccess: (org: Organization) => void;
   onCancel: () => void;
+  onOpenExisting: () => void;
 }
 
 const PRESET_LOGOS = [
@@ -40,11 +41,17 @@ const PRESET_LOGOS = [
 export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
   onSuccess,
   onCancel,
+  onOpenExisting,
 }) => {
   const { t } = useTranslation();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [existingOrganization, setExistingOrganization] = useState<Organization | null>(null);
+  const [isCheckingApplication, setIsCheckingApplication] = useState(false);
+  const [checkedAccountId, setCheckedAccountId] = useState<string | null>(null);
+  const [applicationLookupError, setApplicationLookupError] = useState<string | null>(null);
+  const [lookupRetryKey, setLookupRetryKey] = useState(0);
 
   // 1. Organization Information
   const [name, setName] = useState('');
@@ -69,14 +76,39 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
   const [accountName, setAccountName] = useState('');
 
   // 4. Supporting Documents (Optional, max 3 files)
-  const [documents, setDocuments] = useState<string[]>([
-    'acso_registration_certificate.pdf',
-  ]);
-  const [docNameInput, setDocNameInput] = useState('');
+  const [documents, setDocuments] = useState<string[]>([]);
+  const [documentUrlInput, setDocumentUrlInput] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [submittedOrg, setSubmittedOrg] = useState<Organization | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) return;
+    let active = true;
+    setIsCheckingApplication(true);
+    setApplicationLookupError(null);
+    organizationService.getByUserId(user.id, user.email)
+      .then((organization) => {
+        if (active) setExistingOrganization(organization);
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setApplicationLookupError(
+            error instanceof Error ? error.message : 'Unable to check for an existing organization application.'
+          );
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setCheckedAccountId(user.id);
+          setIsCheckingApplication(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [isAuthenticated, user?.id, user?.email, lookupRetryKey]);
 
   useEffect(() => {
     if (!user) return;
@@ -86,15 +118,25 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
   }, [user]);
 
   const handleAddDocument = () => {
-    if (!docNameInput.trim()) return;
+    const value = documentUrlInput.trim();
+    if (!value) return;
     if (documents.length >= 3) {
       setErrorMsg('A maximum of 3 supporting verification documents can be attached.');
       return;
     }
-    const clean = docNameInput.trim();
-    const formatted = clean.endsWith('.pdf') ? clean : `${clean}.pdf`;
-    setDocuments([...documents, formatted]);
-    setDocNameInput('');
+    try {
+      const url = new URL(value);
+      if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Unsupported document link');
+    } catch {
+      setErrorMsg('Enter a valid HTTPS or HTTP link to a supporting document.');
+      return;
+    }
+    if (documents.includes(value)) {
+      setErrorMsg('This document link has already been added.');
+      return;
+    }
+    setDocuments((current) => [...current, value]);
+    setDocumentUrlInput('');
     setErrorMsg(null);
   };
 
@@ -131,6 +173,10 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
 
   const handleSubmitRegistration = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (documents.length === 0) {
+      setErrorMsg('Add at least one link to an organization verification document.');
+      return;
+    }
     if (!bankName.trim() || !accountNumber.trim() || !accountName.trim()) {
       setErrorMsg('Receiving bank name, account number, and account holder name are required.');
       return;
@@ -142,7 +188,7 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
       const payload: Partial<Organization> = {
         name: name.trim(),
         type,
-        registrationNo: registrationNo.trim() || `ACSO/ET/${new Date().getFullYear()}/${Math.floor(1000 + Math.random() * 9000)}`,
+        registrationNo: registrationNo.trim(),
         location: location.trim(),
         contactEmail: contactEmail.trim().toLowerCase(),
         contactPhone: contactPhone.trim(),
@@ -193,6 +239,77 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
             Your verified Google email will be used for your account. Organization contact details are collected separately.
           </p>
           <GoogleAuthButton />
+        </Card>
+      </div>
+    );
+  }
+
+  if (isAuthLoading || isCheckingApplication || (isAuthenticated && user?.id && checkedAccountId !== user.id)) {
+    return (
+      <div className="max-w-xl mx-auto py-10">
+        <Card className="p-6 border-border bg-surface text-center text-sm text-zinc-500">
+          Checking for an organization application associated with your account…
+        </Card>
+      </div>
+    );
+  }
+
+  if (applicationLookupError) {
+    return (
+      <div className="max-w-xl mx-auto py-10 space-y-4">
+        <Card className="p-6 border-border bg-surface space-y-4">
+          <h1 className="text-lg font-display font-bold text-primary">Unable to check your application</h1>
+          <p role="alert" className="text-sm text-zinc-500">{applicationLookupError}</p>
+          <div className="flex gap-3">
+            <Button variant="outline" type="button" onClick={onCancel}>Back to home</Button>
+            <Button variant="accent" type="button" onClick={() => setLookupRetryKey((key) => key + 1)}>
+              Try again
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (existingOrganization) {
+    const statusLabel: Record<Organization['verificationStatus'], string> = {
+      pending: 'Pending review',
+      under_review: 'Under review',
+      approved: 'Approved',
+      verified: 'Verified',
+      needs_changes: 'Changes requested',
+      rejected: 'Rejected',
+    };
+    return (
+      <div className="max-w-2xl mx-auto py-8 sm:py-12">
+        <Card className="p-6 sm:p-8 border-border bg-surface shadow-xs space-y-5">
+          <div className="space-y-2">
+            <span className="inline-flex rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
+              {statusLabel[existingOrganization.verificationStatus]}
+            </span>
+            <h1 className="text-2xl font-display font-bold text-primary">
+              An organization is already registered
+            </h1>
+            <p className="text-sm text-zinc-500">
+              This account is associated with the following Lewegene organization. You can’t submit a duplicate application.
+            </p>
+          </div>
+          <div className="rounded-xl border border-border bg-surface-alt p-4 space-y-2 text-sm">
+            <p><span className="font-semibold text-primary">Organization:</span> {existingOrganization.name}</p>
+            <p><span className="font-semibold text-primary">Contact email:</span> {existingOrganization.contactEmail}</p>
+            <p><span className="font-semibold text-primary">Location:</span> {existingOrganization.location}</p>
+            {existingOrganization.decisionNote && (
+              <p className="border-t border-border pt-2">
+                <span className="font-semibold text-primary">Review note:</span> {existingOrganization.decisionNote}
+              </p>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button variant="accent" type="button" onClick={onOpenExisting} icon={<ArrowRight className="w-4 h-4" />} iconPosition="right">
+              View organization workspace
+            </Button>
+            <Button variant="outline" type="button" onClick={onCancel}>Back to home</Button>
+          </div>
         </Card>
       </div>
     );
@@ -563,11 +680,11 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
                     Supporting Verification Documents
                   </h2>
                   <span className="text-[11px] font-mono text-zinc-500">
-                    {documents.length}/3 attached (Optional)
+                    {documents.length}/3 links added (Required)
                   </span>
                 </div>
                 <p className="text-[11px] text-zinc-500 mt-0.5">
-                  Upload ACSO certificate, TIN certificate, or board resolution letter (maximum 3 files).
+                  Add shareable links to your ACSO certificate, TIN certificate, or board resolution. Make sure reviewers can access them.
                 </p>
               </div>
 
@@ -575,11 +692,11 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
               {documents.length < 3 && (
                 <div className="flex gap-2">
                   <input
-                    type="text"
-                    placeholder="e.g. ACSO_Certificate_2026.pdf"
-                    value={docNameInput}
-                    onChange={(e) => setDocNameInput(e.target.value)}
-                    className="flex-1 px-3 py-2 rounded-lg border border-border bg-surface text-xs font-mono"
+                    type="url"
+                    placeholder="https://drive.google.com/…"
+                    value={documentUrlInput}
+                    onChange={(e) => setDocumentUrlInput(e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-lg border border-border bg-surface text-xs"
                   />
                   <Button
                     type="button"
@@ -588,7 +705,7 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
                     onClick={handleAddDocument}
                     icon={<UploadCloud className="w-3.5 h-3.5" />}
                   >
-                    Attach File
+                    Add Link
                   </Button>
                 </div>
               )}
@@ -603,13 +720,15 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
                     >
                       <div className="flex items-center gap-2 truncate">
                         <FileText className="w-4 h-4 text-accent shrink-0" />
-                        <span className="truncate">{doc}</span>
+                        <a href={doc} target="_blank" rel="noreferrer" className="truncate text-accent underline underline-offset-2">
+                          {doc}
+                        </a>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleRemoveDocument(idx)}
                         className="text-red-500 hover:text-red-700 p-1 cursor-pointer"
-                        title="Remove file"
+                        title="Remove document link"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -617,7 +736,7 @@ export const FoundationRegister: React.FC<FoundationRegisterProps> = ({
                   ))}
                 </div>
               ) : (
-                <p className="text-[11px] text-zinc-400 italic">No files attached yet. (Documents are optional).</p>
+                <p className="text-[11px] text-zinc-400 italic">At least one verification document link is required.</p>
               )}
             </div>
 

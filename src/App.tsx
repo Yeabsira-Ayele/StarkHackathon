@@ -609,8 +609,9 @@ function OrganizationRegisterRoute() {
   return (
     <div className="min-h-screen bg-[#F2ECE1] dark:bg-[#080706] text-[#201C18] dark:text-[#F4EFE6] px-4 py-8">
       <FoundationRegister
-        onSuccess={(org) => navigate(`/organizations/${org.id}`)}
+        onSuccess={() => navigate('/foundation')}
         onCancel={() => navigate('/')}
+        onOpenExisting={() => navigate('/foundation')}
       />
     </div>
   );
@@ -692,17 +693,12 @@ function FoundationDeskRoute() {
     setError(null);
     (async () => {
       try {
-        const orgList = await organizationService.list();
-        const myOrg =
-          orgList.find(
-            (o) =>
-              o.id === user?.organizationId ||
-              (user?.email && o.contactEmail?.toLowerCase() === user.email.toLowerCase()) ||
-              o.userId === user?.id
-          ) || orgList[0];
-        const camps = await campaignApi.getAllCampaigns();
+        const [myOrg, camps] = await Promise.all([
+          user?.id ? organizationService.getByUserId(user.id, user.email) : Promise.resolve(null),
+          campaignApi.getAllCampaigns(),
+        ]);
         if (!active) return;
-        setOrg(myOrg || null);
+        setOrg(myOrg);
         setCampaigns(camps);
       } catch (cause) {
         if (active) setError(localizeErrorMessage(t, cause, 'notifications.campaignLoadFailed'));

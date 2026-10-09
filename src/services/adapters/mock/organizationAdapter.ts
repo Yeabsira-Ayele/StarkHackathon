@@ -12,15 +12,9 @@ export const mockOrganizationAdapter = {
   },
 
   getByUserId: async (userId: string, email?: string): Promise<Organization | null> => {
-    const list = await campaignApi.getOrganizations();
-    return (
-      list.find(
-        (o) =>
-          (o.userId && o.userId === userId) ||
-          (email && o.contactEmail.toLowerCase() === email.toLowerCase()) ||
-          (o.representative?.email && email && o.representative.email.toLowerCase() === email.toLowerCase())
-      ) || null
-    );
+    void userId;
+    void email;
+    return campaignApi.getMyOrganization();
   },
 
   register: async (data: Partial<Organization>): Promise<Organization> => {

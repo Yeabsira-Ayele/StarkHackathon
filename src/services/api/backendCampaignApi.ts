@@ -1,4 +1,6 @@
-import { api } from '../../api/axios.ts';
+import { api, ApiRequestError } from '../../api/axios.ts';
+import { authApi, mapBackendUser } from '../../features/auth/api/auth.api.ts';
+import { useAuthStore } from '../../features/auth/store/auth.store.ts';
 import {
   Campaign,
   CampaignCategory,
@@ -198,17 +200,24 @@ function normalizeOrganization(value: unknown): Organization {
   if (!organizationId) throw new Error('The backend returned an organization without an ID.');
   const organizationType = String(firstValue(organization, ['organizationType', 'type'], 'other'));
   const submittedAt = validDate(firstValue(organization, ['createdAt', 'submittedAt'], undefined));
-  const verificationStatus = String(firstValue(organization, ['verificationStatus', 'status'], 'pending'));
+  const backendVerificationStatus = String(firstValue(organization, ['verificationStatus', 'status'], 'pending'));
+  const verificationStatus = backendVerificationStatus === 'changes_requested'
+    ? 'needs_changes'
+    : backendVerificationStatus;
+  if (!['pending', 'approved', 'rejected', 'verified', 'needs_changes', 'under_review'].includes(verificationStatus)) {
+    throw new Error(`The backend returned an unsupported organization status: ${verificationStatus}.`);
+  }
   return {
     id: organizationId,
     name: String(firstValue(organization, ['name', 'organizationName'], '')),
     type: typeMap[organizationType] || 'registered_ngo',
-    registrationNo: '',
+    registrationNo: String(firstValue(organization, ['registrationNo'], '')),
     verified: verificationStatus === 'approved' || verificationStatus === 'verified',
     verificationStatus: verificationStatus as Organization['verificationStatus'],
     foundedYear: new Date(submittedAt).getFullYear(),
     location: String(firstValue(organization, ['location', 'address'], '')),
     description: String(firstValue(organization, ['description'], '')),
+    website: typeof organization.website === 'string' ? organization.website : undefined,
     contactEmail: String(firstValue(organization, ['officialEmail', 'email', 'contactEmail'], '')),
     contactPhone: String(firstValue(organization, ['phone', 'contactPhone'], '')),
     activeProjectsCount: 0,
@@ -219,7 +228,8 @@ function normalizeOrganization(value: unknown): Organization {
       ? {
           name: String(firstValue(asRecord(organization.authorizedRepresentative) || {}, ['name'], '')),
           phone: String(firstValue(asRecord(organization.authorizedRepresentative) || {}, ['phone'], '')),
-          role: 'Authorized representative',
+          role: String(firstValue(asRecord(organization.authorizedRepresentative) || {}, ['role'], 'Authorized representative')),
+          email: String(firstValue(asRecord(organization.authorizedRepresentative) || {}, ['email'], '')) || undefined,
         }
       : undefined,
     bank: firstAccount
@@ -231,9 +241,15 @@ function normalizeOrganization(value: unknown): Organization {
       : undefined,
     documents: verificationDocuments.map((document) => {
       const entry = asRecord(document);
-      return entry ? String(firstValue(entry, ['name', 'url'], '')) : String(document);
+      return entry ? String(firstValue(entry, ['url', 'name'], '')) : String(document);
     }).filter(Boolean),
     submittedAt,
+    userId: relatedId(organization.userId),
+    decisionNote: typeof organization.reviewNotes === 'string'
+      ? organization.reviewNotes
+      : typeof organization.decisionNote === 'string'
+        ? organization.decisionNote
+        : undefined,
   };
 }
 
@@ -314,9 +330,59 @@ export const backendCampaignApi = {
     return organizations.map(normalizeOrganization);
   },
 
+  async getMyOrganization(): Promise<Organization | null> {
+    try {
+      const response = await api.get<unknown>('/organizations/me');
+      const envelope = asRecord(response.data);
+      const data = envelope ? asRecord(envelope.data) : undefined;
+      const organization = data?.organization;
+      return organization ? normalizeOrganization(organization) : null;
+    } catch (error) {
+      if (error instanceof ApiRequestError && error.code === 'ORGANIZATION_NOT_FOUND') return null;
+      throw error;
+    }
+  },
+
   async registerOrganization(data: Partial<Organization>): Promise<Organization> {
-    const response = await api.post<Organization>('/organizations', data);
-    return response.data;
+    const organizationTypes: Record<Organization['type'], string> = {
+      registered_ngo: 'ngo',
+      charity_foundation: 'charity',
+      community_coop: 'community',
+      faith_based: 'religious',
+    };
+    const response = await authApi.registerOrganization({
+      name: data.name,
+      registrationNo: data.registrationNo,
+      officialEmail: data.contactEmail,
+      phone: data.contactPhone,
+      organizationType: data.type ? organizationTypes[data.type] : undefined,
+      location: data.location,
+      description: data.description,
+      website: data.website,
+      logo: data.logoUrl,
+      authorizedRepresentative: {
+        name: data.representative?.name,
+        phone: data.representative?.phone,
+        role: data.representative?.role,
+        email: data.representative?.email,
+      },
+      verificationDocuments: (data.documents || []).map((url) => ({ name: url.split('/').pop(), url })),
+      payoutAccounts: data.bank
+        ? [{
+            bankName: data.bank.bank,
+            accountNumber: data.bank.accountNumber,
+            accountHolderName: data.bank.accountName,
+          }]
+        : [],
+    });
+    if (!response.organization) {
+      throw new Error('The backend accepted the organization application but did not return its record.');
+    }
+    useAuthStore.getState().setUser(
+      mapBackendUser(response.user, response.organization),
+      response.token,
+    );
+    return normalizeOrganization(response.organization);
   },
 
   async postCampaignUpdate(

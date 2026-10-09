@@ -160,21 +160,31 @@ const statusValue = (value) => {
   return "";
 };
 
+// Matched exactly (after stripping case/punctuation) so values such as
+// "Unsuccessful", "Incomplete" or "Not completed" can never count as success.
+const SUCCESS_STATUSES = new Set([
+  "completed",
+  "complete",
+  "success",
+  "successful",
+  "succeeded",
+  "paid",
+  "settled",
+  "confirmed",
+  "approved",
+]);
+
 const isSuccessfulStatus = (value) => {
-  const normalized = statusValue(value).toLowerCase();
-  if (!normalized) return false;
-  return [
-    "completed",
-    "complete",
-    "success",
-    "successful",
-    "succeeded",
-    "paid",
-    "settled",
-    "confirmed",
-    "approved",
-  ].some((token) => normalized === token || normalized.includes(token));
+  const normalized = statusValue(value).toLowerCase().replace(/[^a-z]/g, "");
+  return SUCCESS_STATUSES.has(normalized);
 };
+
+// Receipt sources for which links.et documents NO status field
+// (https://links.et/docs/verify.md). For these the bank-fetched receipt itself
+// is the evidence: links.et only returns ok:true after fetching and parsing the
+// receipt from the bank, and we still require reference, ETB amount and the
+// exact receiving account to match.
+const SOURCES_WITHOUT_STATUS = new Set(["cbe-pdf", "mb-json", "awash-html"]);
 
 const extractReceipt = (data) => {
   if (!data || typeof data !== "object") return null;
@@ -197,10 +207,7 @@ const extractReceipt = (data) => {
 const hasExplicitSuccess = (data) => {
   if (!data || typeof data !== "object") return false;
   if (data.ok === true || data.success === true || data.verified === true) return true;
-  const status = statusValue(data).toLowerCase();
-  return ["completed", "complete", "success", "successful", "succeeded", "paid", "settled", "confirmed", "approved"].some(
-    (token) => status === token || status.includes(token)
-  );
+  return isSuccessfulStatus(data);
 };
 
 const errorCode = (data) => {
@@ -281,7 +288,15 @@ const normalizeReceipt = (receipt) => {
       receipt?.data?.status,
     ];
 
-    return candidates.find((candidate) => typeof candidate !== "undefined" && candidate !== null && String(candidate).trim());
+    return candidates.find((candidate) => candidate !== undefined && candidate !== null && String(candidate).trim());
+  };
+
+  // A status the receipt does carry must be a success value. Sources that
+  // document no status field are confirmed by the bank-fetched receipt itself.
+  const statusConfirmed = () => {
+    const status = receiptStatus();
+    if (status !== undefined) return isSuccessfulStatus(status);
+    return SOURCES_WITHOUT_STATUS.has(receipt?.source);
   };
 
   switch (receipt?.source) {
@@ -294,7 +309,7 @@ const normalizeReceipt = (receipt) => {
         receiverAccount: receipt.creditedPartyAccountNo,
         destinationProvider: "telebirr",
         currencyOk: currencyIsEtb(receipt.settledAmount),
-        statusOk: isSuccessfulStatus(receiptStatus()),
+        statusOk: statusConfirmed(),
       };
 
     case "cbe-pdf":
@@ -307,7 +322,7 @@ const normalizeReceipt = (receipt) => {
         receiverAccount: receipt.receiverAccount,
         destinationProvider: "cbe",
         currencyOk: currencyIsEtb(receipt.transferredAmount, receipt.currency),
-        statusOk: isSuccessfulStatus(receiptStatus()),
+        statusOk: statusConfirmed(),
       };
 
     case "zemen-pdf":
@@ -319,7 +334,7 @@ const normalizeReceipt = (receipt) => {
         receiverAccount: receipt.recipientAccount,
         destinationProvider: "zemen",
         currencyOk: currencyIsEtb(receipt.settledAmount, receipt.currency),
-        statusOk: isSuccessfulStatus(receiptStatus()),
+        statusOk: statusConfirmed(),
       };
 
     case "boa-json":
@@ -331,7 +346,7 @@ const normalizeReceipt = (receipt) => {
         receiverAccount: receipt.receiverAccount,
         destinationProvider: "boa",
         currencyOk: currencyIsEtb(receipt.transferredAmount, receipt.currency),
-        statusOk: isSuccessfulStatus(receiptStatus()),
+        statusOk: statusConfirmed(),
       };
 
     case "awash-html":
@@ -343,7 +358,7 @@ const normalizeReceipt = (receipt) => {
         receiverAccount: receipt.transaction?.beneficiaryAccount,
         destinationProvider: payoutProvider({ bankName: receipt.transaction?.beneficiaryBank }),
         currencyOk: currencyIsEtb(receipt.transaction?.amount),
-        statusOk: isSuccessfulStatus(receiptStatus()),
+        statusOk: statusConfirmed(),
       };
 
     default:

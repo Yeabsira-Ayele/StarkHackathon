@@ -180,28 +180,64 @@ test('accepts supported bank formats only when status and destination fields are
   }
 });
 
-test('rejects CBE receipts that do not provide explicit completed-payment evidence', async () => {
+const cbeAccount = {
+  bankId: 'cbe',
+  bankName: 'CBE',
+  accountNumber: payoutAccount.accountNumber,
+  accountName: payoutAccount.accountName,
+};
+
+// links.et documents no status field for CBE and Awash receipts, so the
+// bank-fetched receipt (ok:true + reference + ETB amount + exact account) is the evidence.
+for (const [source, url] of [
+  ['cbe-pdf', 'https://apps.cbe.com.et/receipt.pdf'],
+  ['mb-json', 'https://mb.cbe.com.et/receipt'],
+]) {
+  test(`accepts a CBE ${source} receipt that has no status field`, async () => {
+    mockVerifiedReceipt({
+      source,
+      reference: 'CBE123',
+      transferredAmount: 250,
+      currency: 'ETB',
+      receiverName: 'Lewegene Charity',
+      receiverAccount: payoutAccount.accountNumber,
+    });
+
+    assert.deepEqual(await linksEt.verifyDonationReceipt(url, cbeAccount), {
+      provider: 'cbe',
+      amount: 250,
+      receiptKey: 'cbe:CBE123',
+    });
+  });
+}
+
+test('still rejects a CBE receipt with the wrong receiving account or currency', async () => {
   mockVerifiedReceipt({
     source: 'cbe-pdf',
     reference: 'CBE123',
     transferredAmount: 250,
     currency: 'ETB',
-    receiverName: 'Lewegene Charity',
+    receiverAccount: '1000000000999',
+  });
+  await assert.rejects(
+    linksEt.verifyDonationReceipt('https://apps.cbe.com.et/receipt.pdf', cbeAccount),
+    (error) => error.code === 'wrong_receiver_account'
+  );
+
+  mockVerifiedReceipt({
+    source: 'cbe-pdf',
+    reference: 'CBE124',
+    transferredAmount: 250,
+    currency: 'USD',
     receiverAccount: payoutAccount.accountNumber,
   });
-
   await assert.rejects(
-    linksEt.verifyDonationReceipt('https://apps.cbe.com.et/receipt.pdf', {
-      bankId: 'cbe',
-      bankName: 'CBE',
-      accountNumber: payoutAccount.accountNumber,
-      accountName: payoutAccount.accountName,
-    }),
-    (error) => error.code === 'payment_status_unconfirmed' && error.status === 422
+    linksEt.verifyDonationReceipt('https://apps.cbe.com.et/receipt.pdf', cbeAccount),
+    (error) => error.code === 'unsupported_currency'
   );
 });
 
-test('rejects Awash receipts without explicit completed-payment status', async () => {
+test('accepts an Awash receipt (no status field) paid to the exact destination', async () => {
   mockVerifiedReceipt({
     source: 'awash-html',
     transaction: {
@@ -213,9 +249,56 @@ test('rejects Awash receipts without explicit completed-payment status', async (
     },
   });
 
+  assert.deepEqual(
+    await linksEt.verifyDonationReceipt('https://awashpay.awashbank.com/receipt/123', payoutAccount),
+    { provider: 'awash', amount: 250, receiptKey: 'awash:AWASH123' }
+  );
+});
+
+test('rejects receipts whose status is present but not a success value', async () => {
+  for (const status of ['Failed', 'Unsuccessful', 'Incomplete', 'Not completed', 'Pending', 'Reversed']) {
+    mockVerifiedReceipt({
+      source: 'telebirr-html',
+      receiptNo: 'REF123',
+      settledAmount: '250 Birr',
+      creditedPartyName: 'Lewegene Charity',
+      creditedPartyAccountNo: payoutAccount.accountNumber,
+      transactionStatus: status,
+    });
+    await assert.rejects(
+      linksEt.verifyDonationReceipt('https://transactioninfo.ethiotelecom.et/receipt/123', payoutAccount),
+      (error) => error.code === 'payment_status_unconfirmed' && error.status === 422,
+      status
+    );
+  }
+});
+
+test('rejects a status-bearing receipt (telebirr) whose status is missing', async () => {
+  mockVerifiedReceipt({
+    source: 'telebirr-html',
+    receiptNo: 'REF123',
+    settledAmount: '250 Birr',
+    creditedPartyName: 'Lewegene Charity',
+    creditedPartyAccountNo: payoutAccount.accountNumber,
+  });
   await assert.rejects(
-    linksEt.verifyDonationReceipt('https://awashpay.awashbank.com/receipt/123', payoutAccount),
-    (error) => error.code === 'payment_status_unconfirmed' && error.status === 422
+    linksEt.verifyDonationReceipt('https://transactioninfo.ethiotelecom.et/receipt/123', payoutAccount),
+    (error) => error.code === 'payment_status_unconfirmed'
+  );
+});
+
+test('rejects a CBE receipt if a status is present and not successful', async () => {
+  mockVerifiedReceipt({
+    source: 'mb-json',
+    reference: 'CBE125',
+    transferredAmount: 250,
+    currency: 'ETB',
+    receiverAccount: payoutAccount.accountNumber,
+    status: 'Failed',
+  });
+  await assert.rejects(
+    linksEt.verifyDonationReceipt('https://mb.cbe.com.et/receipt', cbeAccount),
+    (error) => error.code === 'payment_status_unconfirmed'
   );
 });
 

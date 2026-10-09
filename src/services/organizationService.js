@@ -31,15 +31,19 @@ const signupOrganization = async (userId, body) => {
   const organization = await Organization.create({
     userId: user._id,
     name: body.name.trim(),
+    registrationNo: body.registrationNo ? body.registrationNo.trim() : undefined,
     officialEmail: email,
     phone,
     organizationType: body.organizationType,
     location: body.location.trim(),
     description: body.description.trim(),
     logo: body.logo,
+    website: body.website ? body.website.trim() : undefined,
     authorizedRepresentative: {
       name: body.authorizedRepresentative.name.trim(),
       phone: normalizePhone(body.authorizedRepresentative.phone),
+      role: body.authorizedRepresentative.role ? body.authorizedRepresentative.role.trim() : undefined,
+      email: body.authorizedRepresentative.email ? body.authorizedRepresentative.email.trim().toLowerCase() : undefined,
     },
     verificationDocuments: cleanDocuments(body.verificationDocuments),
     payoutAccounts: cleanAccounts(body.payoutAccounts),
@@ -52,7 +56,10 @@ const signupOrganization = async (userId, body) => {
     throw err;
   }
 
-  return buildAuthResponse(user);
+  return {
+    ...await buildAuthResponse(user),
+    organization: organization.toObject(),
+  };
 };
 
 const getMyOrganization = async (userId) => {

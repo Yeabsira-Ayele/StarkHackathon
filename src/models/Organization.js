@@ -19,6 +19,7 @@ const organizationSchema = new mongoose.Schema(
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
 
     name: { type: String, required: true, trim: true, maxlength: 150 },
+    registrationNo: { type: String, trim: true, maxlength: 100 },
     officialEmail: { type: String, required: true, lowercase: true, trim: true },
     phone: { type: String, required: true, trim: true },
     organizationType: {
@@ -29,10 +30,13 @@ const organizationSchema = new mongoose.Schema(
     location: { type: String, required: true, trim: true },
     description: { type: String, required: true, trim: true },
     logo: { type: String },
+    website: { type: String, trim: true },
 
     authorizedRepresentative: {
       name: { type: String, required: true, trim: true },
       phone: { type: String, required: true, trim: true },
+      role: { type: String, trim: true },
+      email: { type: String, lowercase: true, trim: true },
     },
 
     verificationDocuments: { type: [documentSchema], default: [] },

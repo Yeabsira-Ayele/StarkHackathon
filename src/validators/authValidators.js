@@ -86,6 +86,10 @@ const checkRepresentative = (fields, rep) => {
   if (!rep || !isValidPhone(rep.phone)) {
     fields['authorizedRepresentative.phone'] = 'A valid representative phone number is required';
   }
+  if (rep?.role !== undefined && typeof rep.role !== 'string') {
+    fields['authorizedRepresentative.role'] = 'Representative role must be text';
+  }
+  if (rep?.email !== undefined && rep.email !== '') checkEmail(fields, rep.email, 'authorizedRepresentative.email');
 };
 
 const checkDocuments = (fields, docs) => {
@@ -105,6 +109,9 @@ const checkDocuments = (fields, docs) => {
 const validateOrganizationSignup = (body = {}) => {
   const fields = {};
   if (!isText(body.name)) fields.name = 'Organization name is required';
+  if (body.registrationNo !== undefined && (typeof body.registrationNo !== 'string' || body.registrationNo.trim().length > 100)) {
+    fields.registrationNo = 'Registration number must be 100 characters or fewer';
+  }
   checkEmail(fields, body.officialEmail, 'officialEmail');
   checkPhone(fields, body.phone);
   if (!ORG_TYPES.includes(body.organizationType)) {
@@ -112,6 +119,14 @@ const validateOrganizationSignup = (body = {}) => {
   }
   if (!isText(body.location)) fields.location = 'Location is required';
   if (!isText(body.description)) fields.description = 'Description is required';
+  if (body.website !== undefined && body.website !== '') {
+    try {
+      const website = new URL(body.website);
+      if (!['http:', 'https:'].includes(website.protocol)) fields.website = 'Website must use HTTP or HTTPS';
+    } catch {
+      fields.website = 'A valid website URL is required';
+    }
+  }
   checkRepresentative(fields, body.authorizedRepresentative);
   checkDocuments(fields, body.verificationDocuments);
   checkPayoutAccounts(fields, body.payoutAccounts);

@@ -7,8 +7,8 @@ const { authLimiter } = require('../middleware/authRateLimit');
 
 router.post('/organizations/signup', authLimiter, requireAuth, organizationController.signup);
 
-// Logged-in organization account ("/me" routes must come before "/:id")
-router.get('/organizations/me', requireAuth, requireOrganization, organizationController.getMine);
+// Owner-scoped organization access ("/me" routes must come before "/:id")
+router.get('/organizations/me', requireAuth, organizationController.getMine);
 router.patch('/organizations/me', requireAuth, requireOrganization, organizationController.updateMine);
 
 // Admin only

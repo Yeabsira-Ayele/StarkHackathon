@@ -244,3 +244,26 @@ test('owner cannot save incomplete payout-account details', async () => {
 
   assert.equal(response.statusCode, 400);
 });
+
+test('donation-accounts returns an accountId the donation routes can resolve', async () => {
+  const savedCampaign = {
+    status: 'approved',
+    payoutAccounts: [
+      { bankId: 'telebirr', bankName: 'Telebirr', accountNumber: '251912345678', accountName: 'Lewegene Charity' },
+      { bankId: 'cbe', bankName: 'CBE', accountNumber: '1000123456789', accountName: 'Lewegene Charity' },
+    ],
+  };
+  Campaign.findById = () => ({ select: () => ({ lean: async () => savedCampaign }) });
+  const response = makeResponse();
+
+  await controller.getDonationAccounts({ params: { id: campaignId } }, response);
+
+  assert.equal(response.statusCode, 200);
+  assert.deepEqual(response.body.accounts.map((a) => a.accountId), [
+    'telebirr:251912345678',
+    'cbe:1000123456789',
+  ]);
+  // existing fields are unchanged
+  assert.equal(response.body.accounts[0].accountNumber, '251912345678');
+  assert.equal(response.body.accounts[0].bankId, 'telebirr');
+});

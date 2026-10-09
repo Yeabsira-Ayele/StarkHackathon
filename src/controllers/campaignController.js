@@ -442,7 +442,13 @@ exports.getDonationAccounts = async (req, res) => {
     const organization = campaign.organizationId
       ? await Organization.findById(campaign.organizationId).select('payoutAccounts').lean()
       : null;
-    res.json({ accounts: getCampaignPayoutAccounts(campaign, organization) });
+    // accountId is the same key the donation routes resolve with
+    // (payoutAccountId), so the donor's selection maps to exactly one saved account.
+    const accounts = getCampaignPayoutAccounts(campaign, organization).map((account) => ({
+      accountId: getPayoutAccountId(account),
+      ...account,
+    }));
+    res.json({ accounts });
   } catch (err) {
     console.error('getDonationAccounts error:', err);
     res.status(500).json({ message: 'Server error' });

@@ -60,6 +60,7 @@ Lewegene aims to make that collective effort easier by connecting people, suppor
 ## Project Links
 
 * **Live Website:** https://starkhackathon-3q2j.ethiodeploy.com/
+* **Video Demo:** https://www.youtube.com/watch?v=MTIoLTsDv_o
 
 
 ## Team Contributions

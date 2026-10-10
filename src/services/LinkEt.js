@@ -82,28 +82,15 @@ const currencyIsEtb = (amount, currency) => {
 // Provider identification
 
 const payoutProvider = (account) => {
-  const bank = `${account?.bankId || ""} ${account?.bankName || ""}`
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "");
+  const clean = (v) => String(v || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const parts = [clean(account?.bankId), clean(account?.bankName)].filter(Boolean);
+  const any = (test) => parts.some(test);
 
-  if (bank.includes("telebirr") || bank.includes("ethiotelecom")) {
-    return "telebirr";
-  }
-
-  if (bank.includes("zemen")) return "zemen";
-
-  if (bank.includes("abyssinia") || bank === "boa" || bank.includes("bankofabyssinia")) {
-    return "boa";
-  }
-
-  if (bank.includes("awash")) return "awash";
-
-  if (
-    bank === "cbe" ||
-    bank.includes("commercialbankofethiopia")
-  ) {
-    return "cbe";
-  }
+  if (any((b) => b.includes("telebirr") || b.includes("ethiotelecom"))) return "telebirr";
+  if (any((b) => b.includes("zemen"))) return "zemen";
+  if (any((b) => b.includes("abyssinia") || b === "boa" || b === "bankboa")) return "boa";
+  if (any((b) => b.includes("awash"))) return "awash";
+  if (any((b) => b === "cbe" || b === "bankcbe" || b.includes("commercialbankofethiopia"))) return "cbe";
 
   return null;
 };
@@ -117,13 +104,46 @@ const canonicalPhone = (value) => {
   return digits;
 };
 
-// Never assume a masked account is an exact account number.
-// Masked-account verification requires a separate, reliable provider-specific
-// strategy. Matching only the last four digits is not sufficient.
+const normalizeNameTokens = (name) => {
+  if (typeof name !== "string") return [];
+  const cleaned = name
+    .toUpperCase()
+    .replace(/[^\p{L}\s]/gu, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+  return cleaned ? cleaned.split(" ") : [];
+};
+
+const namesMatch = (receiptName, expectedName) => {
+  const receiptTokens = normalizeNameTokens(receiptName);
+  const expectedTokens = normalizeNameTokens(expectedName);
+
+  if (receiptTokens.length === 0 || expectedTokens.length === 0) {
+    return false;
+  }
+
+  const shorter =
+    receiptTokens.length <= expectedTokens.length
+      ? receiptTokens
+      : expectedTokens;
+  const longer =
+    receiptTokens.length <= expectedTokens.length
+      ? expectedTokens
+      : receiptTokens;
+
+  if (shorter.length < 2) {
+    return false;
+  }
+
+  const longerSet = new Set(longer);
+  return shorter.every((token) => longerSet.has(token));
+};
+
 const accountNumberMatches = (
   receiptAccount,
   expectedAccountNumber,
-  provider
+  provider,
+  names = {}
 ) => {
   if (receiptAccount == null || expectedAccountNumber == null) {
     return false;
@@ -134,30 +154,76 @@ const accountNumberMatches = (
 
   if (!receiptText || !expectedText) return false;
 
-  if (/[*xX\u2022\u00b7#]/.test(receiptText)) {
+  const hasMask = /[*xX\u2022\u00b7#]/.test(receiptText);
+
+  if (!hasMask) {
+    let actual = receiptText.replace(/\D/g, "");
+    let expected = expectedText.replace(/\D/g, "");
+
+    if (!actual || !expected) return false;
+
+    if (provider === "telebirr") {
+      actual = canonicalPhone(actual);
+      expected = canonicalPhone(expected);
+    }
+
+    return actual === expected;
+  }
+
+  if (provider !== "cbe") {
     return false;
   }
 
-  let actual = receiptText.replace(/\D/g, "");
-  let expected = expectedText.replace(/\D/g, "");
-
-  if (!actual || !expected) return false;
-
-  if (provider === "telebirr") {
-    actual = canonicalPhone(actual);
-    expected = canonicalPhone(expected);
+  const cleanedReceipt = receiptText.replace(/[\s-]/g, "");
+  const match = cleanedReceipt.match(/^(\d*)([*xX\u2022\u00b7#]+)(\d*)$/);
+  if (!match) {
+    return false;
   }
 
-  return actual === expected;
+  const prefix = match[1];
+  const suffix = match[3];
+
+  if (prefix.length + suffix.length < 4 || suffix.length < 3) {
+    return false;
+  }
+
+  const expectedDigits = expectedText.replace(/\D/g, "");
+  if (!expectedDigits) {
+    return false;
+  }
+
+  if (cleanedReceipt.length !== expectedDigits.length) {
+    return false;
+  }
+
+  if (!expectedDigits.startsWith(prefix) || !expectedDigits.endsWith(suffix)) {
+    return false;
+  }
+
+  if (!namesMatch(names.receiptName, names.expectedName)) {
+    return false;
+  }
+
+  return true;
 };
 
 const describeAccountMismatch = (
   receiptAccount,
-  expectedAccountNumber
+  expectedAccountNumber,
+  namesOrProvider = {},
+  optionalNames = {}
 ) => {
+  const names =
+    namesOrProvider &&
+    typeof namesOrProvider === "object" &&
+    ("receiptName" in namesOrProvider || "expectedName" in namesOrProvider)
+      ? namesOrProvider
+      : optionalNames;
+
   const receiptText = String(receiptAccount || "");
   const receiptDigits = receiptText.replace(/\D/g, "");
   const expectedDigits = String(expectedAccountNumber || "").replace(/\D/g, "");
+  const cleanedReceipt = receiptText.replace(/[\s-]/g, "");
 
   return {
     receiptMissing: !receiptDigits,
@@ -166,6 +232,8 @@ const describeAccountMismatch = (
     expectedDigitCount: expectedDigits.length,
     receiptLast4: receiptDigits.slice(-4),
     expectedLast4: expectedDigits.slice(-4),
+    lengthEqual: cleanedReceipt.length === expectedDigits.length,
+    namesMatch: namesMatch(names?.receiptName, names?.expectedName),
   };
 };
 
@@ -773,18 +841,26 @@ const verifyDonationReceipt = async (rawUrl, payoutAccount) => {
     );
   }
 
+  const names = {
+    receiptName: normalized.receiverName,
+    expectedName:
+      payoutAccount.accountName || payoutAccount.accountHolderName,
+  };
+
   if (
     !accountNumberMatches(
       normalized.receiverAccount,
       payoutAccount.accountNumber,
-      expectedProvider
+      expectedProvider,
+      names
     )
   ) {
     console.warn("[links.et] receiver account mismatch", {
       source: receipt.source || "cbe-pdf",
       ...describeAccountMismatch(
         normalized.receiverAccount,
-        payoutAccount.accountNumber
+        payoutAccount.accountNumber,
+        names
       ),
     });
 

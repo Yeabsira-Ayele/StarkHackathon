@@ -345,14 +345,14 @@
     "tagline": "ለኢትዮጵያ ሕዝብና ዓላማ ድጋፍ",
     "motto": "« ለወገን ደራሽ ወገን ነው። »",
     "exploreCauses": "ማሰባሰቢያዎችን ይፈልጉ",
-    "forFoundations": "ለእርዳታ ጥሪዎች",
+    "forFoundations": "ማሰባሰብ ለማስጀመር",
     "plateSerial": "የብረት ሰሌዳ ቁጥር 001",
     "plateCaption": "የአንድነትና የመረዳዳት ምልክት",
     "plateLocation": "አዲስ አበባ",
     "hero": {
       "badge": "የአካባቢ ድጋፍ በኢትዮጵያ",
       "titleLead": "መልካምነት ያድጋል",
-      "titleHighlight": "አብረን ስንሰጥ።",
+      "titleHighlight": "አብረን እናዋጣ።",
       "description": "ለወገኔ ሰዎችንና ታማኝ የማኅበረሰብ ማሰባሰቢያዎችን ያቀራርባል። ይምረጡና ቀጣዩ ምዕራፍ እንዲሳካ ያግዙ።",
       "discover": "የእርዳታ ጥሪዎችን ያግኙ",
       "startFundraising": "ማሰባሰብ ያስጀምሩ",
@@ -416,7 +416,7 @@
     }
   },
   "explore": {
-    "backHome": "መነሻ ገጽ ተመለስ",
+    "backHome": "ወደ መነሻ ገጽ",
     "title": "የድጋፍ ማሰባሰቢያዎችን ያግኙ",
     "subtitle": "ድጋፍ የሚጠባበቁ የተረጋገጡ የኢትዮጵያ የሲቪል ማኅበራት ፕሮጀክቶች",
     "count": "{{count}} ማሰባሰቢያዎች ይገኛሉ",

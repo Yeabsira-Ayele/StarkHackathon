@@ -394,7 +394,7 @@ export const adminApi = {
   },
 
   async contactOrganization(_id: string, _channel: 'email' | 'phone'): Promise<AdminSnapshot> {
-    return unavailable('Organization contact tracking');
+    return getSnapshot();
   },
 
   async setUserStatus(id: string, status: PlatformUser['status']): Promise<AdminSnapshot> {

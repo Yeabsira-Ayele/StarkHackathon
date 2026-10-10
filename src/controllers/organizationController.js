@@ -39,4 +39,9 @@ const setVerification = async (req, res) => {
   sendSuccess(res, `Organization is now ${organization.verificationStatus}`, { organization });
 };
 
-module.exports = { signup, getMine, updateMine, getPublic, list, listPublic, setVerification };
+const verifyPayoutAccount = async (req, res) => {
+  const organization = await orgService.verifyPayoutAccount(req.params.id, req.params.accountId, req.body?.verified);
+  sendSuccess(res, 'Payout account updated', { organization });
+};
+
+module.exports = { signup, getMine, updateMine, getPublic, list, listPublic, setVerification, verifyPayoutAccount };

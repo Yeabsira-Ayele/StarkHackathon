@@ -5,6 +5,9 @@ const AppError = require('../utils/AppError');
 const { normalizePhone } = require('../utils/phone');
 const { buildAuthResponse } = require('./authService');
 
+// The only fields the public may ever see about an organization.
+const PUBLIC_FIELDS = 'name organizationType location description logo verificationStatus createdAt';
+
 const cleanAccounts = (list) =>
   list.map((a) => ({
     bankName: a.bankName.trim(),
@@ -100,9 +103,7 @@ const updateMyOrganization = async (userId, body) => {
 // What anyone may see: only approved organizations, and only public details.
 const getPublicOrganization = async (id) => {
   if (!mongoose.isValidObjectId(id)) throw new AppError('Organization not found', 404, 'ORGANIZATION_NOT_FOUND');
-  const org = await Organization.findById(id).select(
-    'name organizationType location description logo verificationStatus userId createdAt'
-  );
+  const org = await Organization.findById(id).select(`${PUBLIC_FIELDS} userId`);
   if (!org || org.verificationStatus !== 'approved') {
     throw new AppError('Organization not found', 404, 'ORGANIZATION_NOT_FOUND');
   }
@@ -129,12 +130,13 @@ const listOrganizations = async ({ status, page = 1, limit = 20 }) => {
   return { items, pagination: { page, limit, total, pages: Math.ceil(total / limit) } };
 };
 
+// Public list: approved organizations only, public fields only (no bank accounts, documents or contacts).
 const listPublicOrganizations = async ({ page = 1, limit = 50 } = {}) => {
   page = Math.max(1, Number(page) || 1);
   limit = Math.min(100, Math.max(1, Number(limit) || 50));
   const filter = { verificationStatus: 'approved' };
   const [items, total] = await Promise.all([
-    Organization.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit),
+    Organization.find(filter).select(PUBLIC_FIELDS).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit),
     Organization.countDocuments(filter),
   ]);
   return { items, pagination: { page, limit, total, pages: Math.ceil(total / limit) } };
@@ -164,6 +166,22 @@ const setVerificationStatus = async (orgId, { status, notes }, admin) => {
   return org;
 };
 
+// Admin: mark one bank / payout account of an organization as verified (or not).
+const verifyPayoutAccount = async (orgId, accountId, verified) => {
+  if (!mongoose.isValidObjectId(orgId)) throw new AppError('Organization not found', 404, 'ORGANIZATION_NOT_FOUND');
+  if (!mongoose.isValidObjectId(accountId)) throw new AppError('Payout account not found', 404, 'PAYOUT_ACCOUNT_NOT_FOUND');
+
+  const org = await Organization.findById(orgId);
+  if (!org) throw new AppError('Organization not found', 404, 'ORGANIZATION_NOT_FOUND');
+
+  const account = org.payoutAccounts.id(accountId);
+  if (!account) throw new AppError('Payout account not found', 404, 'PAYOUT_ACCOUNT_NOT_FOUND');
+
+  account.verified = verified !== false;
+  await org.save();
+  return org;
+};
+
 module.exports = {
   signupOrganization,
   getMyOrganization,
@@ -172,4 +190,5 @@ module.exports = {
   listOrganizations,
   listPublicOrganizations,
   setVerificationStatus,
+  verifyPayoutAccount,
 };

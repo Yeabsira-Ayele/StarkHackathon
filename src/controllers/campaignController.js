@@ -5,7 +5,6 @@ const Donation = require('../models/Donation');
 const Organization = require('../models/Organization');
 const {
   getCampaignPayoutAccounts,
-  getPayoutAccountId,
   isValidPayoutAccount,
   stripPayoutAccounts,
 } = require('../services/campaignPayoutAccounts');
@@ -52,7 +51,6 @@ const withProgress = (campaign, verifiedTotals = {}) => {
   };
 };
 
-// GET /campaigns?category=medical&search=school&sort=newest|oldest|mostFunded&page=1&limit=10
 exports.getCampaigns = async (req, res) => {
   try {
     const { category, search, sort = 'newest' } = req.query;
@@ -72,7 +70,7 @@ exports.getCampaigns = async (req, res) => {
     }
 
     if (search) {
-      filter.title = { $regex: escapeRegex(String(search).trim()), $options: 'i' };
+      filter.title = { $regex: escapeRegex(String(search).trim()),$options: 'i' };
     }
 
     const sortOptions = {
@@ -105,7 +103,6 @@ exports.getCampaigns = async (req, res) => {
   }
 };
 
-// GET /campaigns/:id
 exports.getCampaignById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -237,8 +234,7 @@ exports.requestCampaignDelete = async (req, res) => {
   }
 };
 
-// POST /campaigns
-// Body: { title, story, goalAmount, creatorName?, category?, imageUrl? }
+// Task 1.4: Strict checking to block unapproved organizations from creating campaigns
 exports.createCampaign = async (req, res) => {
   try {
     const { title, story, goalAmount, category, imageUrl, location, impactMetric, beneficiariesTarget } = req.body;
@@ -259,20 +255,30 @@ exports.createCampaign = async (req, res) => {
     const organization = req.user.role === 'ORGANIZATION'
       ? await Organization.findOne({ userId: req.user._id }).select('_id name verificationStatus')
       : null;
+
+    if (req.user.role === 'ORGANIZATION') {
+      if (!organization) {
+        return res.status(403).json({ message: 'Organization profile not found. Please submit registration first.' });
+      }
+      if (organization.verificationStatus !== 'approved') {
+        return res.status(403).json({
+          message: `Campaign creation locked. Organization status is currently '${organization.verificationStatus}'. Admin approval required.`
+        });
+      }
+    }
+
     const campaign = await Campaign.create({
       title: title.trim(),
       story: story.trim(),
       goalAmount: parsedGoal,
       creatorName: req.user.name,
       creatorUserId: req.user._id,
-      ...(organization ? { organizationId: organization._id, organizationName: organization.name } : {}),
-      ...(organization ? { verifiedOrganization: organization.verificationStatus === 'approved' } : {}),
-      category: category || undefined, // schema default: "other"
+      ...(organization ? { organizationId: organization._id, organizationName: organization.name, verifiedOrganization: true } : {}),
+      category: category || undefined,
       imageUrl: imageUrl?.trim() || undefined,
       location: location?.trim() || undefined,
       impactMetric: impactMetric?.trim() || undefined,
       beneficiariesTarget: Number.isFinite(Number(beneficiariesTarget)) ? Number(beneficiariesTarget) : undefined,
-      // raisedAmount is intentionally not accepted from the client
     });
 
     res.status(201).json(campaign);
@@ -282,7 +288,6 @@ exports.createCampaign = async (req, res) => {
   }
 };
 
-// POST /campaigns/:id/updates
 exports.postCampaignUpdate = async (req, res) => {
   try {
     const { id } = req.params;
@@ -303,8 +308,6 @@ exports.postCampaignUpdate = async (req, res) => {
   }
 };
 
-// PATCH /campaigns/:id
-// Only whitelisted fields can be updated (never raisedAmount).
 exports.updateCampaign = async (req, res) => {
   try {
     const { id } = req.params;
@@ -414,8 +417,8 @@ exports.updateCampaign = async (req, res) => {
       { _id: id, __v: version },
       updates,
       {
-      new: true,
-      runValidators: true,
+        new: true,
+        runValidators: true,
       }
     );
 
@@ -449,9 +452,6 @@ exports.getDonationAccounts = async (req, res) => {
   }
 };
 
-// DELETE /campaigns/:id
-// Blocked once a campaign has received money, so donation records
-// are never orphaned.
 exports.deleteCampaign = async (req, res) => {
   try {
     const { id } = req.params;

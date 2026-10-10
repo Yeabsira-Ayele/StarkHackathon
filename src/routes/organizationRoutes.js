@@ -11,12 +11,20 @@ router.post('/organizations/signup', authLimiter, requireAuth, organizationContr
 router.get('/organizations/me', requireAuth, organizationController.getMine);
 router.patch('/organizations/me', requireAuth, requireOrganization, organizationController.updateMine);
 
-// Admin only
+// Public: approved organizations only, public fields only
 router.get('/organizations', organizationController.listPublic);
+
+// Admin only
 router.get('/admin/organizations', requireAuth, requireAdmin, organizationController.list);
 router.patch('/organizations/:id/verification', requireAuth, requireAdmin, organizationController.setVerification);
+router.patch(
+    '/organizations/:id/payout-accounts/:accountId/verification',
+    requireAuth,
+    requireAdmin,
+    organizationController.verifyPayoutAccount
+);
 
-// Public: approved organizations only
+// Public: one approved organization
 router.get('/organizations/:id', organizationController.getPublic);
 
 module.exports = router;
